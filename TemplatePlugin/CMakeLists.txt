@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      CACHE STRING "")
-set(VCPKG_APPLOCAL_DEPS ON)
-
 project(TemplatePlugin VERSION 1.0.0 LANGUAGES CXX)
 
 # if(CMAKE_VERSION VERSION_LESS "3.7.0")
@@ -55,7 +51,9 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE release CACHE STRING "Build Type" FORCE)
 endif()
 
-add_subdirectory(ThirdParty/spdlog EXCLUDE_FROM_ALL)
+if (NOT TARGET spdlog)
+    add_subdirectory(ThirdParty/spdlog EXCLUDE_FROM_ALL)
+endif()
 
 option(ENABLE_TEST "Enable Test" OFF)
 if (ENABLE_TEST)
@@ -64,7 +62,7 @@ if (ENABLE_TEST)
 endif()
 
 add_compile_definitions(PLUGIN_DLL_EXPORTS)
-add_library(TemplatePlugin SHARED ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
@@ -84,6 +82,5 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install)
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}> DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
 install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
 
