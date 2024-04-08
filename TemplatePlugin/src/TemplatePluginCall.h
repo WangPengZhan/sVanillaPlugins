@@ -1,19 +1,19 @@
 #pragma once
 #include <PluginConfig.h>
 
-#ifdef __cplusplus
-namespace Plugin
-{
-    class IPlugin;
-}
+typedef const char * PSTR;
+struct IPlugin;
+typedef IPlugin* PIPlugin;
 
-PLUGIN_PORT Plugin::IPlugin *PLUGIN_CALL plugin();
+#ifdef __cplusplus
 
 extern "C"
 {
 #endif
-    PLUGIN_PORT const char *PLUGIN_CALL pluginName();
-    PLUGIN_PORT const char *PLUGIN_CALL pluginVersion();
+    PIPlugin PLUGIN_API plugin();
+    PSTR PLUGIN_API pluginName();
+    PSTR PLUGIN_API pluginVersion();
+    void PLUGIN_API pluginDeinit();
 #ifdef __cplusplus
 }
 #endif
