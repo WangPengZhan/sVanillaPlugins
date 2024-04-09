@@ -1,6 +1,9 @@
-[submodule "TemplatePlugin/ThirdParty/spdlog"]
-	path = TemplatePlugin/ThirdParty/spdlog
-	url = https://github.com/gabime/spdlog.git
 [submodule "ThirdParty/vcpkg"]
 	path = ThirdParty/vcpkg
 	url = https://github.com/microsoft/vcpkg.git
+[submodule "ThirdParty/spdlog"]
+	path = ThirdParty/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "ThirdParty/googletest"]
+	path = ThirdParty/googletest
+	url = https://github.com/google/googletest.git

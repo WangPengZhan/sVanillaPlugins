@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(TemplatePlugin VERSION 1.0.0 LANGUAGES CXX)
+project(YoutubePlugin VERSION 1.0.0 LANGUAGES CXX)
 
 # if(CMAKE_VERSION VERSION_LESS "3.7.0")
-    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # endif()
 
 # set(CMAKE_CXX_FLAGS "-U__FILE__ -D__FILE__='\"$(subst $(dir $<),,$<)\"'")
@@ -11,7 +11,7 @@ include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wno-builtin-macro-redefined SUPPORT_CXX_WNO_BUILTIN_MACRO_REDEFINED)
 if (SUPPORT_CXX_WNO_BUILTIN_MACRO_REDEFINED)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-builtin-macro-redefined")
-else()
+else ()
     message("CXXCompiler can't support Wno-builtin-macro-redefined")
 endif (SUPPORT_CXX_WNO_BUILTIN_MACRO_REDEFINED)
 
@@ -35,37 +35,36 @@ find_package(CURL REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 # 如果OpenSSL被找到，包含OpenSSL的头文件目录
-if(OPENSSL_FOUND)
+if (OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
-endif()
+endif ()
 
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spdlog
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
 
-file(GLOB_RECURSE SOURCES "src/*.cpp" "rc/*.h")
-
-if(NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE release CACHE STRING "Build Type" FORCE)
-endif()
+endif ()
 
 if (NOT TARGET spdlog)
-    add_subdirectory(ThirdParty/spdlog EXCLUDE_FROM_ALL)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/ThirdParty/spdlog EXCLUDE_FROM_ALL SPDLOG)
 endif()
 
 option(ENABLE_TEST "Enable Test" OFF)
+set(ENABLE_TEST ON)
 if (ENABLE_TEST)
     enable_testing()
     add_subdirectory(test)
-endif()
+endif ()
 
 add_compile_definitions(PLUGIN_DLL_EXPORTS)
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES} ${HEADERS})
+
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
+        PRIVATE
         nlohmann_json::nlohmann_json
         CURL::libcurl
         spdlog
@@ -73,14 +72,14 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 add_custom_command(TARGET ${PROJECT_NAME}
-    POST_BUILD
+        POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:spdlog> $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
 # install
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install)
 install(TARGETS ${PROJECT_NAME}
-    BUNDLE DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        BUNDLE DESTINATION .
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
 

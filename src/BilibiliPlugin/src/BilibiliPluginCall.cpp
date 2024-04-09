@@ -1,8 +1,8 @@
 
-#include "TemplatePluginCall.h"
-#include "TemplatePlugin.h"
+#include "BilibiliPluginCall.h"
+#include "BilibiliPlugin.h"
 
-TemplatePlugin *pPlugin = new TemplatePlugin;
+BilibiliPlugin *pPlugin = new BilibiliPlugin;
 
 PIPlugin plugin()
 {
