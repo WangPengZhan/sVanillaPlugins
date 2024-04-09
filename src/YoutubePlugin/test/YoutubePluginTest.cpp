@@ -6,7 +6,7 @@ using namespace testing;
 class YoutubePluginTest : public Test
 {
 public:
-    YoutubePlugin *plugin = new YoutubePlugin;
+    YoutubePlugin* plugin = new YoutubePlugin;
 
     void SetUp() override
     {

@@ -4,8 +4,8 @@
 class BilibiliPlugin : public Plugin::IPlugin
 {
 public:
-    const std::string &pluginName() const override;
-    const std::string &pluginVersion() const override;
+    const std::string& pluginName() const override;
+    const std::string& pluginVersion() const override;
 
 private:
     std::string m_name{"template"};

@@ -1,14 +1,14 @@
 #include "YoutubePluginCall.h"
 #include "YoutubePlugin.h"
 
-YoutubePlugin *pPlugin = new YoutubePlugin;
+YoutubePlugin* pPlugin = new YoutubePlugin;
 
 PIPlugin plugin()
 {
     return reinterpret_cast<PIPlugin>(pPlugin);
 }
 
-const char *pluginName()
+const char* pluginName()
 {
     if (!pPlugin)
     {
@@ -18,7 +18,7 @@ const char *pluginName()
     return pPlugin->pluginName().c_str();
 }
 
-const char *pluginVersion()
+const char* pluginVersion()
 {
     if (!pPlugin)
     {
@@ -28,8 +28,8 @@ const char *pluginVersion()
     return pPlugin->pluginVersion().c_str();
 }
 
-void  pluginDeinit()
-{    
+void pluginDeinit()
+{
     if (pPlugin)
     {
         delete pPlugin;

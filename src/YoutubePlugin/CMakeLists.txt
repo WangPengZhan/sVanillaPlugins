@@ -50,7 +50,7 @@ endif ()
 
 if (NOT TARGET spdlog)
     add_subdirectory(${CMAKE_SOURCE_DIR}/ThirdParty/spdlog EXCLUDE_FROM_ALL SPDLOG)
-endif()
+endif ()
 
 option(ENABLE_TEST "Enable Test" OFF)
 set(ENABLE_TEST ON)

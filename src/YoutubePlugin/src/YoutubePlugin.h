@@ -4,8 +4,8 @@
 class YoutubePlugin : public Plugin::IPlugin
 {
 public:
-    [[nodiscard]] const std::string &pluginName() const override;
-    [[nodiscard]] const std::string &pluginVersion() const override;
+    [[nodiscard]] const std::string& pluginName() const override;
+    [[nodiscard]] const std::string& pluginVersion() const override;
 
 private:
     std::string m_name{"youtube"};
