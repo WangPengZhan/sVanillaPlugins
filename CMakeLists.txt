@@ -30,6 +30,8 @@ if (PLUGINS)
 endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES _PLUGINS_ "${PLUGINS}")
 
+set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install)
+
 option(ENABLE_TEST "Enable Test" OFF)
 if (ENABLE_TEST)
     enable_testing()
