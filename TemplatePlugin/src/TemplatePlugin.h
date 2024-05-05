@@ -1,7 +1,7 @@
 #pragma once
 #include <IPlugin.h>
 
-class TemplatePlugin : public Plugin::IPlugin
+class TemplatePlugin : public plugin::IPlugin
 {
 public:
     const std::string &pluginName() const override;

@@ -2,7 +2,7 @@
 #include <string>
 #include <atomic>
 
-namespace Plugin
+namespace plugin
 {
 
 #define C_EXPORT_PLUGIN 0
@@ -29,4 +29,4 @@ namespace Plugin
     };
 #endif
 
-} // namespace Plugin
+} // namespace plugin

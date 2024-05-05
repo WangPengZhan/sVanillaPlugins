@@ -4,7 +4,7 @@
 
 TemplatePlugin *pPlugin = new TemplatePlugin;
 
-PIPlugin plugin()
+PIPlugin pluginObject()
 {
     return reinterpret_cast<PIPlugin>(pPlugin);
 }
@@ -29,8 +29,8 @@ const char *pluginVersion()
     return pPlugin->pluginVersion().c_str();
 }
 
-void  pluginDeinit()
-{    
+void pluginDeinit()
+{
     if (pPlugin)
     {
         delete pPlugin;
