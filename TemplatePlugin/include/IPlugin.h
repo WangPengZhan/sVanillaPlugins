@@ -1,8 +1,7 @@
 #pragma once
 #include <string>
-#include <atomic>
 
-namespace plugin
+namespace Plugin
 {
 
 #define C_EXPORT_PLUGIN 0
@@ -11,11 +10,24 @@ namespace plugin
 
     typedef const char *(PluginNameFunc)();
     typedef const char *(PluginVersionFunc)();
+    typedef int(PluginIDFunc)();
+    typedef void(PluginDeinitFunc)();
+    typedef const char *(PluginDescriptionFunc)();
 
     struct IPlugin
     {
-        PluginNameFunc pluginName;
-        PluginVersionFunc pluginFunc;
+        ~IPlugin()
+        {
+            if (pluginDeinit)
+            {
+                pluginDeinit();
+            }
+        }
+        PluginNameFunc pluginName = nullptr;
+        PluginVersionFunc pluginVersion = nullptr;
+        PluginIDFunc pluginID = nullptr;
+        PluginDescriptionFunc pluginDescription = nullptr;
+        PluginDeinitFunc pluginDeinit = nullptr;
     };
 
 #else
@@ -26,7 +38,9 @@ namespace plugin
 
         virtual const std::string &pluginName() const = 0;
         virtual const std::string &pluginVersion() const = 0;
+        virtual int pluginID() const = 0;
+        virtual const std::string &pluginDescription() const = 0;
     };
 #endif
 
-} // namespace plugin
+} // namespace Plugin

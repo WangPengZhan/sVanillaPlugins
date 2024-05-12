@@ -4,7 +4,7 @@
 
 TemplatePlugin *pPlugin = new TemplatePlugin;
 
-PIPlugin pluginObject()
+PIPlugin plugin()
 {
     return reinterpret_cast<PIPlugin>(pPlugin);
 }
@@ -36,4 +36,24 @@ void pluginDeinit()
         delete pPlugin;
         pPlugin = nullptr;
     }
+}
+
+int PLUGIN_API pluginID()
+{
+    if (!pPlugin)
+    {
+        return -1;
+    }
+
+    return pPlugin->pluginID();
+}
+
+PSTR PLUGIN_API pluginDescription()
+{
+    if (!pPlugin)
+    {
+        return "";
+    }
+
+    return pPlugin->pluginDescription().c_str();
 }
