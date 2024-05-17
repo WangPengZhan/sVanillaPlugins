@@ -33,6 +33,7 @@ set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
 find_package(CURL REQUIRED)
 # 寻找OpenSSL库
 find_package(OpenSSL REQUIRED)
+find_package(spdlog REQUIRED)
 
 # 如果OpenSSL被找到，包含OpenSSL的头文件目录
 if(OPENSSL_FOUND)
@@ -42,7 +43,6 @@ endif()
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spdlog
 )
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "rc/*.h")
@@ -51,9 +51,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE release CACHE STRING "Build Type" FORCE)
 endif()
 
-if (NOT TARGET spdlog)
-    add_subdirectory(ThirdParty/spdlog EXCLUDE_FROM_ALL)
-endif()
 
 option(ENABLE_TEST "Enable Test" OFF)
 if (ENABLE_TEST)
@@ -68,19 +65,13 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         nlohmann_json::nlohmann_json
         CURL::libcurl
-        spdlog
+        spdlog::spdlog
         ${OPENSSL_LIBRARIES}
 )
 
-add_custom_command(TARGET ${PROJECT_NAME}
-    POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:spdlog> $<TARGET_FILE_DIR:${PROJECT_NAME}>
-)
 
 # install
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install)
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
-
