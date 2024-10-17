@@ -30,9 +30,3 @@ if (PLUGINS)
 endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES _PLUGINS_ "${PLUGINS}")
 
-option(ENABLE_TEST "Enable Test" OFF)
-if (ENABLE_TEST)
-    enable_testing()
-    add_subdirectory(test)
-endif ()
-
