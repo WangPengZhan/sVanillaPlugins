@@ -1,0 +1,12 @@
+[submodule "ThirdParty/vcpkg"]
+	path = ThirdParty/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
+[submodule "BiliBiliPlugin/ThirdParty/spdlog"]
+	path = BiliBiliPlugin/ThirdParty/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "BiliBiliPlugin/ThirdParty/sVanillaPluginCommon"]
+	path = BiliBiliPlugin/ThirdParty/sVanillaPluginCommon
+	url = https://github.com/WangPengZhan/sVanillaPluginCommon.git
+[submodule "TemplatePlugin"]
+	path = TemplatePlugin
+	url = https://github.com/WangPengZhan/sVanillaTemplatePlugin.git
