@@ -10,3 +10,6 @@
 [submodule "TemplatePlugin"]
 	path = TemplatePlugin
 	url = https://github.com/WangPengZhan/sVanillaTemplatePlugin.git
+[submodule "YoutubePlugin/ThirdParty/sVanillaPluginCommon"]
+	path = YoutubePlugin/ThirdParty/sVanillaPluginCommon
+	url = https://github.com/WangPengZhan/sVanillaPluginCommon.git
