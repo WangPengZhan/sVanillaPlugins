@@ -312,6 +312,13 @@ struct FrameworkUpdates
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FrameworkUpdates, entityBatchUpdate)
 };
 
+struct ThumbnailObj
+{
+    std::vector<Thumbnail> thumbnails;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ThumbnailObj, thumbnails)
+};
+
 struct VideoDetails
 {
     std::string videoId;
@@ -321,7 +328,7 @@ struct VideoDetails
     bool isOwnerViewing;
     std::string shortDescription;
     bool isCrawlable;
-    std::vector<Thumbnail> thumbnails;
+    ThumbnailObj thumbnail;
     bool allowRatings;
     std::string viewCount;
     std::string author;
@@ -330,7 +337,7 @@ struct VideoDetails
     bool isLiveContent;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(VideoDetails, videoId, title, lengthSeconds, channelId, isOwnerViewing, shortDescription, isCrawlable,
-                                                thumbnails, allowRatings, viewCount, author, isPrivate, isUnpluggedCorpus, isLiveContent)
+                                                thumbnail, allowRatings, viewCount, author, isPrivate, isUnpluggedCorpus, isLiveContent)
 };
 
 struct PlayerMicroformatRenderer
@@ -371,7 +378,7 @@ struct MainResponse
     }
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MainResponse, responseContext, playabilityStatus, trackingParams, onResponseReceivedEndpoints,
-                                                adBreakHeartbeatParams, frameworkUpdates, videoDetails)
+                                                adBreakHeartbeatParams, frameworkUpdates, videoDetails, microformat)
 };
 
 }  // namespace youtubeapi

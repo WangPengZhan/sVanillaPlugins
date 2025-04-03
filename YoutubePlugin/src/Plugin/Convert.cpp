@@ -24,11 +24,13 @@ adapter::VideoView convertVideoView(const youtubeapi::MainResponse& data)
 
     adapter::BaseVideoView item;
 
+    const auto& thumbnails = data.videoDetails.thumbnail.thumbnails;
     item.Identifier = data.videoDetails.videoId;
     item.AlternateId = data.videoDetails.videoId;
+    item.VideoId = data.videoDetails.videoId;
     item.Title = data.videoDetails.title;
     item.Publisher = data.videoDetails.author;
-    item.Cover = data.videoDetails.thumbnails.empty() ? "" : data.videoDetails.thumbnails.back().url;
+    item.Cover = thumbnails.empty() ? "" : thumbnails.back().url;
     try
     {
         item.Duration = formatDuration(std::stoll(data.videoDetails.lengthSeconds));
