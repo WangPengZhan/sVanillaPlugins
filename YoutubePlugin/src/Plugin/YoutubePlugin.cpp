@@ -31,10 +31,13 @@ bool YoutubePlugin::canParseUrl(const std::string& url)
 adapter::VideoView YoutubePlugin::getVideoView(const std::string& url)
 {
     adapter::VideoView views;
+
     std::string id = getID(url);
     auto& client = youtubeapi::YoutubeClient::globalClient();
-    client.getVideoInfo(id);
+    auto mainRespone = client.getVideoInfo(id);
     client.getBaseJs(client.getIFrameVersion());
+    views = convertVideoView(mainRespone);
+
     return views;
 }
 

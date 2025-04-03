@@ -21,7 +21,7 @@ public:
     [[nodiscard]] bool isLogined() const;
     void setCookies(const std::string& cookies);
 
-    void getVideoInfo(const std::string& videoId);
+    MainResponse getVideoInfo(const std::string& videoId);
 
     std::string getIFrameVersion();
 

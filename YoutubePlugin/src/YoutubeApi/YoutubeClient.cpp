@@ -187,18 +187,21 @@ nlohmann::json YoutubeClient::getDataFromRespones(const std::string& respones)
     nlohmann::json json;
     try
     {
+        std::ofstream file("output.json");
+        file << respones;
+        file.close();
         json = nlohmann::json::parse(respones);
         util::JsonProcess::removeNullValues(json);
     }
     catch (std::exception& e)
     {
-        // Youtube_LOG_ERROR("Error parsing response: {}", e.what());
+        std::string error = e.what();
     }
 
     return json;
 }
 
-void YoutubeClient::getVideoInfo(const std::string& videoId)
+MainResponse YoutubeClient::getVideoInfo(const std::string& videoId)
 {
     network::CurlHeader header;
     header.add(youtube_user_agent);
@@ -213,6 +216,19 @@ void YoutubeClient::getVideoInfo(const std::string& videoId)
     std::string response;
     std::string url = youtubePlayerUrl + std::string("?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&hl=en&prettyPrint=false");
     post(url, response, param, header, false);
+
+    MainResponse ret;
+
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << "error: " << e.what() << std::endl;
+    }
+
+    return ret;
 }
 
 std::string YoutubeClient::getIFrameVersion()

@@ -1,5 +1,6 @@
 #include "Convert.h"
 #include "Util/TimerUtil.h"
+#include "BilibiliPluginMessage.h"
 
 adapter::VideoView convertVideoView(const biliapi::VideoView& data)
 {
@@ -71,7 +72,7 @@ adapter::BaseVideoView convertEpisodes(const biliapi::UgcEpisode& data)
     item.Duration = formatDuration(data.page.duration);
     item.Description = !data.arc.desc.empty() ? data.arc.desc : data.page.part;
     item.PublishDate = convertTimestamp(data.arc.pubdate);
-    item.pluginType = 1;
+    item.pluginType = biliplugin::pluginID;
 
     return item;
 }
@@ -84,7 +85,7 @@ adapter::BaseVideoView convertPages(const biliapi::VideoPage& data)
     item.Title = data.part;
     item.Cover = data.first_frame;
     item.Duration = formatDuration(data.duration);
-    item.pluginType = 1;
+    item.pluginType = biliplugin::pluginID;
 
     return item;
 }
@@ -101,7 +102,7 @@ adapter::BaseVideoView convertSingleVideo(const biliapi::VideoView& data)
     item.Duration = formatDuration(data.duration);
     item.Description = data.desc;
     item.PublishDate = convertTimestamp(data.pubdate);
-    item.pluginType = 1;
+    item.pluginType = biliplugin::pluginID;
 
     return item;
 }
@@ -117,7 +118,7 @@ adapter::BaseVideoView convertHistory(const biliapi::HistoryInfo& data)
     item.Duration = formatDuration(data.duration);
     item.Description = data.new_desc;
     item.PublishDate = convertTimestamp(data.view_at);
-    item.pluginType = 1;
+    item.pluginType = biliplugin::pluginID;
 
     return item;
 }

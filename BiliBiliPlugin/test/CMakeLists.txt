@@ -30,14 +30,12 @@ target_include_directories(${PluginTest}
 target_link_libraries(${PluginTest}
     PRIVATE
         TemplatePlugin
-        GTest::gtest 
-        GTest::gmock 
         GTest::gtest_main 
-        GTest::gmock_main
 )
 
 add_custom_command(TARGET ${PluginTest}
     POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:spdlog> $<TARGET_FILE_DIR:${PluginTest}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:FFmpeg> $<TARGET_FILE_DIR:${PluginTest}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:TemplatePlugin> $<TARGET_FILE_DIR:${PluginTest}>
 )
