@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "Convert.h"
 #include "Util/TimerUtil.h"
 #include "YoutubePluginMessage.h"
