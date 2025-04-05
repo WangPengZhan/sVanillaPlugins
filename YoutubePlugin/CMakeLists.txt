@@ -73,17 +73,32 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        nlohmann_json::nlohmann_json
         CURL::libcurl
         spdlog
         ${OPENSSL_LIBRARIES}
-        AriaClient
-        NetWork
-        Util
-        PluginDownload
         FFmpeg
-        PluginCommon
 )
+
+set(STATIC_LIBS
+    AriaClient
+    NetWork
+    Util
+    PluginDownload
+    PluginCommon
+    nlohmann_json::nlohmann_json
+)
+
+if(UNIX AND NOT APPLE)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            -Wl,--whole-archive ${STATIC_LIBS} -Wl,--no-whole-archive
+    )
+else()
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            ${STATIC_LIBS}
+    )
+endif()
 
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
