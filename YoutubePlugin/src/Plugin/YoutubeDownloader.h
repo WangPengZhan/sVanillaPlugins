@@ -8,13 +8,13 @@
 namespace download
 {
 
-class BiliDownloader : public FileDownloader
+class YoutubeDownloader : public FileDownloader
 {
 public:
-    BiliDownloader();
-    BiliDownloader(std::list<std::string> videoUris, std::list<std::string> audioUri = {}, std::string path = "", std::string filename = "");
-    explicit BiliDownloader(ResourseInfo info);
-    ~BiliDownloader() = default;
+    YoutubeDownloader();
+    YoutubeDownloader(std::list<std::string> videoUris, std::list<std::string> audioUri = {}, std::string path = "", std::string filename = "");
+    explicit YoutubeDownloader(ResourseInfo info);
+    ~YoutubeDownloader() = default;
 
     void start() override;
     void stop() override;
@@ -50,6 +50,6 @@ private:
     bool m_haveTwoPart;
 };
 
-void freeDownload(BiliDownloader* downloader);
+void freeDownload(YoutubeDownloader* downloader);
 
 }  // namespace download

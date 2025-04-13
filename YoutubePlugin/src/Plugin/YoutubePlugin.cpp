@@ -2,6 +2,7 @@
 #include "YoutubeApi/YoutubeClient.h"
 #include "YoutubeApi/YoutubeApi.h"
 #include "YoutubeApi/YoutubeUrl.h"
+#include "YoutubeApi/YoutubeConstants.h"
 #include "YoutubeResource.h"
 #include "YoutubeDownloader.h"
 #include "Convert.h"
@@ -43,7 +44,33 @@ adapter::VideoView YoutubePlugin::getVideoView(const std::string& url)
 
 std::shared_ptr<download::FileDownloader> YoutubePlugin::getDownloader(const VideoInfoFull& videoInfo)
 {
-    return {};
+    auto copyedVideoInfo = videoInfo;
+    copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
+
+    auto& youtubeClient = youtubeapi::YoutubeClient::globalClient();
+    const auto result = youtubeClient.getStreamInfo(copyedVideoInfo.videoView->Identifier);
+    if (result.empty())
+    {
+        return {};
+    }
+
+    download::ResourseInfo info;
+    std::string videoUrl = result.front().url + "&range=0-" + result.front().contentLength;
+    if (result.size() != 1)
+    {
+        std::string audioUrl = result.back().url + "&range=0-" + result.back().contentLength;
+        info.audioUris = {audioUrl};
+    }
+
+    info.videoUris = {videoUrl};
+    auto fileName = videoInfo.fileName();
+    info.option.out = fileName + ".mp4";
+    info.option.dir = videoInfo.downloadConfig->downloadDir;
+    const std::list<std::string> h = {youtubeapi::youtube_referer, youtubeapi::youtube_user_agent};
+    info.option.header = h;
+
+    auto youtubeDownloader = std::shared_ptr<download::YoutubeDownloader>(new download::YoutubeDownloader(info), download::freeDownload);
+    return youtubeDownloader;
 }
 
 LoginProxy YoutubePlugin::loginer()

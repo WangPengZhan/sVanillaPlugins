@@ -54,13 +54,20 @@ struct ResponseContext
                                                 webResponseContextExtensionData)
 };
 
-struct Thumbnail
+struct ThumbnailData
 {
     std::string url;
     int width;
     int height;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Thumbnail, url, width, height)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ThumbnailData, url, width, height)
+};
+
+struct Thumbnail
+{
+    std::vector<ThumbnailData> thumbnails;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Thumbnail, thumbnails)
 };
 
 struct UrlEndpoint
@@ -108,20 +115,7 @@ struct PlayerErrorMessageRenderer
     std::vector<Run> subreason;
     std::vector<Run> reason;
     ButtonRenderer proceedButton;
-    struct Thumbnail
-    {
-        struct ThumbnailData
-        {
-            std::string url;
-            int width;
-            int height;
-
-            NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ThumbnailData, url, width, height)
-        };
-        std::vector<ThumbnailData> thumbnails;
-
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Thumbnail, thumbnails)
-    } thumbnail;
+    Thumbnail thumbnail;
     struct Icon
     {
         std::string iconType;
@@ -166,7 +160,7 @@ struct PlayabilityStatus
 
     std::string contextParams;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(PlayabilityStatus, status, reason, errorScreen, skip, pictureInPicture, contextParams)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(PlayabilityStatus, status, playableInEmbed, reason, errorScreen, skip, pictureInPicture, contextParams)
 };
 
 struct Format
@@ -210,21 +204,21 @@ struct Range
 
 struct AdaptiveFormat
 {
-    int itag;
+    int itag{};
     std::string url;
     std::string mimeType;
-    int bitrate;
-    int width;
-    int height;
+    int bitrate{};
+    int width{};
+    int height{};
     Range initRange;
     Range indexRange;
     std::string lastModified;
     std::string contentLength;
     std::string quality;
-    int fps;
+    int fps{};
     std::string qualityLabel;
     std::string projectionType;
-    int averageBitrate;
+    int averageBitrate{};
     ColorInfo colorInfo;
     std::string approxDurationMs;
 
@@ -237,9 +231,11 @@ struct StreamingData
     std::string expiresInSeconds;
     std::vector<Format> formats;
     std::vector<AdaptiveFormat> adaptiveFormats;
+    std::string hlsManifestUrl;
+    double aspectRatio{};
     std::string serverAbrStreamingUrl;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(StreamingData, expiresInSeconds, formats, adaptiveFormats, serverAbrStreamingUrl)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(StreamingData, expiresInSeconds, formats, adaptiveFormats, hlsManifestUrl, aspectRatio, serverAbrStreamingUrl)
 };
 
 struct UpdateEntityCommand
@@ -312,13 +308,6 @@ struct FrameworkUpdates
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FrameworkUpdates, entityBatchUpdate)
 };
 
-struct ThumbnailObj
-{
-    std::vector<Thumbnail> thumbnails;
-
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ThumbnailObj, thumbnails)
-};
-
 struct VideoDetails
 {
     std::string videoId;
@@ -328,7 +317,7 @@ struct VideoDetails
     bool isOwnerViewing;
     std::string shortDescription;
     bool isCrawlable;
-    ThumbnailObj thumbnail;
+    Thumbnail thumbnail;
     bool allowRatings;
     std::string viewCount;
     std::string author;
@@ -362,6 +351,7 @@ struct MainResponse
     FrameworkUpdates frameworkUpdates;
     VideoDetails videoDetails;
     Microformat microformat;
+    StreamingData streamingData;
 
     bool isAvailable() const
     {
@@ -378,7 +368,7 @@ struct MainResponse
     }
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MainResponse, responseContext, playabilityStatus, trackingParams, onResponseReceivedEndpoints,
-                                                adBreakHeartbeatParams, frameworkUpdates, videoDetails, microformat)
+                                                adBreakHeartbeatParams, frameworkUpdates, videoDetails, microformat, streamingData)
 };
 
 }  // namespace youtubeapi

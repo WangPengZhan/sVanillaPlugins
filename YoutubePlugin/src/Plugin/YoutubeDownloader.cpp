@@ -5,7 +5,7 @@
 
 namespace download
 {
-BiliDownloader::BiliDownloader()
+YoutubeDownloader::YoutubeDownloader()
     : m_finished(false)
     , m_haveTwoPart(false)
 {
@@ -13,7 +13,7 @@ BiliDownloader::BiliDownloader()
     m_audioDownloader.setStatus(Ready);
 }
 
-BiliDownloader::BiliDownloader(std::list<std::string> videoUris, std::list<std::string> audioUris, std::string path, std::string filename)
+YoutubeDownloader::YoutubeDownloader(std::list<std::string> videoUris, std::list<std::string> audioUris, std::string path, std::string filename)
     : m_finished(false)
     , m_haveTwoPart(false)
     , m_path(std::move(path))
@@ -28,7 +28,7 @@ BiliDownloader::BiliDownloader(std::list<std::string> videoUris, std::list<std::
     m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
 }
 
-BiliDownloader::BiliDownloader(ResourseInfo info)
+YoutubeDownloader::YoutubeDownloader(ResourseInfo info)
     : m_resourseInfo(std::move(info))
     , m_haveTwoPart(false)
     , m_path(m_resourseInfo.option.dir)
@@ -44,7 +44,7 @@ BiliDownloader::BiliDownloader(ResourseInfo info)
     m_uris = m_resourseInfo.videoUris;
 }
 
-void BiliDownloader::start()
+void YoutubeDownloader::start()
 {
     m_videoDownloader.start();
     if (m_haveTwoPart)
@@ -55,7 +55,7 @@ void BiliDownloader::start()
     m_status = Downloading;
 }
 
-void BiliDownloader::stop()
+void YoutubeDownloader::stop()
 {
     m_videoDownloader.stop();
     if (m_haveTwoPart)
@@ -65,7 +65,7 @@ void BiliDownloader::stop()
     m_status = Waitting;
 }
 
-void BiliDownloader::pause()
+void YoutubeDownloader::pause()
 {
     m_videoDownloader.pause();
     if (m_haveTwoPart)
@@ -75,7 +75,7 @@ void BiliDownloader::pause()
     m_status = Paused;
 }
 
-void BiliDownloader::resume()
+void YoutubeDownloader::resume()
 {
     m_videoDownloader.resume();
     if (m_haveTwoPart)
@@ -85,11 +85,11 @@ void BiliDownloader::resume()
     m_status = Downloading;
 }
 
-void BiliDownloader::downloadStatus()
+void YoutubeDownloader::downloadStatus()
 {
     if (m_videoDownloader.status() == Error || (m_haveTwoPart && m_audioDownloader.status() == Error))
     {
-        // DOWNLOAD_LOG_ERROR("BiliDownloader downloadStatus error, filename: {}", filename());
+        // DOWNLOAD_LOG_ERROR("YoutubeDownloader downloadStatus error, filename: {}", filename());
         m_status = Error;
         return;
     }
@@ -128,61 +128,61 @@ void BiliDownloader::downloadStatus()
     }
 }
 
-void BiliDownloader::finish()
+void YoutubeDownloader::finish()
 {
     m_finished = true;
 }
 
-void BiliDownloader::setVideoUris(const std::list<std::string>& videoUris)
+void YoutubeDownloader::setVideoUris(const std::list<std::string>& videoUris)
 {
     m_videoDownloader.setUris(videoUris);
 }
 
-void BiliDownloader::setAudioUris(const std::list<std::string>& audioUri)
+void YoutubeDownloader::setAudioUris(const std::list<std::string>& audioUri)
 {
     m_audioDownloader.setUris(audioUri);
     m_haveTwoPart = !audioUri.empty();
 }
 
-void BiliDownloader::setPath(std::string path)
+void YoutubeDownloader::setPath(std::string path)
 {
     m_path = std::move(path);
     m_audioDownloader.setPath(m_path);
     m_videoDownloader.setPath(m_path);
 }
 
-const std::string& BiliDownloader::path() const
+const std::string& YoutubeDownloader::path() const
 {
     return m_path;
 }
 
-void BiliDownloader::setFilename(std::string filename)
+void YoutubeDownloader::setFilename(std::string filename)
 {
     m_filename = std::move(filename);
     setAriaFileName();
 }
 
-const std::string& BiliDownloader::filename() const
+const std::string& YoutubeDownloader::filename() const
 {
     return m_filename;
 }
 
-const std::list<std::string>& BiliDownloader::uris() const
+const std::list<std::string>& YoutubeDownloader::uris() const
 {
     return m_uris;
 }
 
-bool BiliDownloader::isFinished() const
+bool YoutubeDownloader::isFinished() const
 {
     return m_finished;
 }
 
-std::string BiliDownloader::nowDownload() const
+std::string YoutubeDownloader::nowDownload() const
 {
     return std::string();
 }
 
-void BiliDownloader::setAriaFileName()
+void YoutubeDownloader::setAriaFileName()
 {
     std::u8string u8BaseName = std::filesystem::u8path(m_filename).stem().u8string();
     std::string baseName = std::string(reinterpret_cast<const char*>(u8BaseName.data()), u8BaseName.size());
@@ -190,7 +190,7 @@ void BiliDownloader::setAriaFileName()
     m_audioDownloader.setFilename(baseName + "_audio.mp3");
 }
 
-void freeDownload(BiliDownloader* downloader)
+void freeDownload(YoutubeDownloader* downloader)
 {
     if (downloader)
     {

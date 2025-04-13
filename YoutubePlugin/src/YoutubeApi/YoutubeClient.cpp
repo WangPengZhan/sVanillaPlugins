@@ -16,13 +16,6 @@
 
 namespace youtubeapi
 {
-constexpr char youtube_origin[] = "Origin: https://www.youtube.com";
-inline const std::string youtube_accept_encoding = "Accept-Encoding: gzip, deflate, br, zstd";
-inline const std::string youtube_accept_language = "Accept-Language: en,zh-CN;q=0.9,zh;q=0.8";
-inline const std::string youtube_user_agent = "User-Agent: com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X)";
-// inline const std::string youtube_user_agent = "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0
-// Safari/537.36";
-inline const std::string youtube_default_cookies = "SOCS=CAISEwgDEgk2NzM5OTg2ODUaAmVuIAEaBgiA6p23Bg; domain=youtube.com";
 
 std::string extractCipherInfo(const std::string& content)
 {
@@ -182,6 +175,34 @@ void YoutubeClient::setCookies(const std::string& cookies)
     }
 }
 
+std::string YoutubeClient::getVisitorData()
+{
+    network::CurlHeader header;
+    header.add(youtube_user_agent);
+    header.add("Accept: application/json");
+
+    std::string response;
+    get(swJsDataUrl, response, header, false, CurlOptions(), false);
+    if (response.starts_with(")]}'"))
+    {
+        response.erase(0, 4);
+    }
+
+    std::string result;
+    try
+    {
+        nlohmann::json json = nlohmann::json::parse(response);
+        result = json[0][2][0][0][13];
+    }
+    catch (std::exception& e)
+    {
+        std::string error = e.what();
+    }
+
+
+    return result;
+}
+
 nlohmann::json YoutubeClient::getDataFromRespones(const std::string& respones)
 {
     nlohmann::json json;
@@ -212,6 +233,7 @@ MainResponse YoutubeClient::getVideoInfo(const std::string& videoId)
 
     nlohmann::json content = nlohmann::json::parse(youtubePostContent);
     content["videoId"] = videoId;
+    content["context"]["client"]["visitorData"] = visitorData();
     std::string param = content.dump();
     std::string response;
     std::string url = youtubePlayerUrl + std::string("?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&hl=en&prettyPrint=false");
@@ -256,10 +278,78 @@ std::string YoutubeClient::getBaseJs(std::string version)
     return response;
 }
 
+std::vector<AdaptiveFormat> YoutubeClient::getStreamInfo(const std::string& videoId)
+{
+    auto videoInfo = getVideoInfo(videoId);
+    if (videoInfo.streamingData.adaptiveFormats.empty())
+    {
+        return {};
+    }
+
+    std::vector<AdaptiveFormat> video;
+    std::vector<AdaptiveFormat> audio;
+    for (const auto& adaptiveFormat : videoInfo.streamingData.adaptiveFormats)
+    {
+        if (adaptiveFormat.mimeType.starts_with("video/mp4"))
+        {
+            video.push_back(adaptiveFormat);
+        }
+
+        if (adaptiveFormat.mimeType.starts_with("audio/mp4"))
+        {
+            audio.push_back(adaptiveFormat);
+        }
+    }
+
+    if (video.empty())
+    {
+        return {};
+    }
+
+
+    std::sort(video.begin(), video.end(), [](const AdaptiveFormat& lhs, const AdaptiveFormat& rhs) {
+        if (lhs.width != rhs.width)
+        {
+            return lhs.width > rhs.width;
+        }
+
+        if (lhs.bitrate != rhs.bitrate)
+        {
+            return lhs.bitrate > rhs.bitrate;
+        }
+
+        return lhs.qualityLabel > rhs.qualityLabel;
+    });
+
+    std::sort(audio.begin(), audio.end(), [](const AdaptiveFormat& lhs, const AdaptiveFormat& rhs) {
+        return lhs.bitrate > rhs.bitrate;
+    });
+
+    std::vector result{video.front()};
+    if (!audio.empty())
+    {
+        result.push_back(audio.front());
+    }
+
+    return result;
+}
+
 bool YoutubeClient::logout()
 {
     setCookies("SOCS=CAISEwgDEgk2NzM5OTg2ODUaAmVuIAEaBgiA6p23Bg; domain=youtube.com");
     return true;
+}
+
+std::string YoutubeClient::visitorData()
+{
+    std::lock_guard<std::mutex> lock(m_vistorDataMutex);
+    if (!m_visitorData.empty())
+    {
+        return m_visitorData;
+    }
+
+    m_visitorData = getVisitorData();
+    return m_visitorData;
 }
 
 void YoutubeClient::initDefaultHeaders()
