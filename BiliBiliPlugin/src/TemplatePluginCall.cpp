@@ -1,4 +1,8 @@
 #include "Plugin/BiliBiliPlugin.h"
+#include "BiliApi/BilibiliLog.h"
+#include "BiliApi/BilibiliUtils.h"
+
+#include <iostream>
 
 #include <TemplatePluginCall.h>
 
@@ -37,6 +41,23 @@ void initLog()
     registerLogger("Network");
     registerLogger("FFmpeg");
     registerLogger("BiliBili");
+}
+
+void initDir(const char* dir)
+{
+    BiliBiliPlugin::setDir(dir);
+    biliapi::setCookieDataDir(dir);
+    try
+    {
+        if (!spdlog::get(biliModuleName))
+        {
+            spdlog::rotating_logger_mt<spdlog::async_factory>(biliModuleName, std::string(dir) + "log/" + biliModuleName + ".log", logFileMaxSize, 100);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
 }
 
 PluginHandle pluginInit()

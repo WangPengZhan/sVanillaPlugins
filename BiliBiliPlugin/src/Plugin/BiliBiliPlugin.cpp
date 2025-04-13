@@ -6,12 +6,15 @@
 #include "BiliBiliDownloader.h"
 #include "Convert.h"
 #include "BilibiliPluginMessage.h"
+#include "BiliApi/BilibiliLog.h"
 
 #include <Util/UrlProccess.h>
 
 PluginMessage BiliBiliPlugin::m_pluginMessage = {
     biliplugin::pluginID, biliplugin::name, biliplugin::version, biliplugin::description, biliplugin::domain,
 };
+
+std::string BiliBiliPlugin::m_dir;
 
 const PluginMessage& BiliBiliPlugin::pluginMessage() const
 {
@@ -30,7 +33,9 @@ bool BiliBiliPlugin::canParseUrl(const std::string& url)
 
 adapter::VideoView BiliBiliPlugin::getVideoView(const std::string& url)
 {
+    BILIBILI_LOG_INFO("getVideoView url: {}", url);
     std::string id = getID(url);
+    BILIBILI_LOG_INFO("id: {}", id);
     auto videoView = biliapi::BilibiliClient::globalClient().getVideoView(id);
     const auto views = convertVideoView(videoView.data);
     return views;
@@ -53,11 +58,11 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
     }
 
     long long fnval = 16;
-    // MLogI("getPlayUrl has exist: {}, qn: {}, fnval: {}", copyedVideoInfo.getGuid(), qn, fnval);
+    BILIBILI_LOG_INFO("getPlayUrl has exist: {}, qn: {}, fnval: {}", copyedVideoInfo.getGuid(), qn, fnval);
     const auto result = biliClient.getPlayUrl(std::stoll(copyedVideoInfo.videoView->VideoId), qn, copyedVideoInfo.videoView->Identifier, fnval);
     if (result.code != 0)
     {
-        // MLogW(svanilla::cDownloadModule, "getPlayUrl error {}, error message: {}", result.code, result.message);
+        BILIBILI_LOG_WARN("getPlayUrl error {}, error message: {}", result.code, result.message);
         return {};
     }
 
@@ -115,4 +120,14 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
 LoginProxy BiliBiliPlugin::loginer()
 {
     return LoginProxy(m_login);
+}
+
+void BiliBiliPlugin::setDir(std::string dir)
+{
+    m_dir = dir;
+}
+
+const std::string& BiliBiliPlugin::getDir()
+{
+    return m_dir;
 }

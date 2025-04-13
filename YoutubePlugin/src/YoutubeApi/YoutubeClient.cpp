@@ -9,139 +9,12 @@
 #include "Util/JsonProcess.h"
 #include "YoutubeLog.h"
 #include "YoutubeUtils.h"
-#include "NetWork/NetworkLog.h"
 #include "NetWork/HeaderBodyResponseWrapper.h"
 #include "NetWork/CurlCpp/CurlCookie.h"
 #include "NetWork/CurlCpp/CurlOption.h"
 
 namespace youtubeapi
 {
-
-std::string extractCipherInfo(const std::string& content)
-{
-    // std::regex timestampRegex(R"(signatureTimestamp|sts):(\d{5})");
-    // std::smatch timestampMatch;
-    // if (std::regex_search(content, timestampMatch, timestampRegex))
-    //{
-    //     std::string signatureTimestamp = timestampMatch[1].str();
-    //     if (signatureTimestamp.empty())
-    //     {
-    //         return std::nullopt;
-    //     }
-
-    //    // Find where the player calls the cipher functions
-    //    std::regex cipherCallsiteRegex(R"([$_\w]+=function\([$_\w]+\){([$_\w]+)=\1\.split\(['"]{2}\);.*?return \1\.join\(['"]{2}\)})");
-    //    std::smatch cipherCallsiteMatch;
-    //    if (std::regex_search(content, cipherCallsiteMatch, cipherCallsiteRegex))
-    //    {
-    //        std::string cipherCallsite = cipherCallsiteMatch[0].str();
-    //        if (cipherCallsite.empty())
-    //        {
-    //            return std::nullopt;
-    //        }
-
-    //        // Find the object that defines the cipher functions
-    //        std::regex cipherContainerRegex(R"(([$_\w]+)\.[$_\w]+\([$_\w]+,\d+\);)");
-    //        std::smatch cipherContainerMatch;
-    //        if (std::regex_search(cipherCallsite, cipherContainerMatch, cipherContainerRegex))
-    //        {
-    //            std::string cipherContainerName = cipherContainerMatch[1].str();
-    //            if (cipherContainerName.empty())
-    //            {
-    //                return std::nullopt;
-    //            }
-
-    //            // Find the definition of the cipher functions
-    //            std::regex cipherDefinitionRegex(R"(var\s)" + std::regex_escape(cipherContainerName) + R"(={.*?};)");
-    //            std::smatch cipherDefinitionMatch;
-    //            if (std::regex_search(content, cipherDefinitionMatch, cipherDefinitionRegex))
-    //            {
-    //                std::string cipherDefinition = cipherDefinitionMatch[0].str();
-    //                if (cipherDefinition.empty())
-    //                {
-    //                    return std::nullopt;
-    //                }
-
-    //                // Identify the swap cipher function
-    //                std::regex swapFuncRegex(R"(([$_\w]+):function\([$_\w]+,[$_\w]+\){+[^}]*?%[^}]*?})");
-    //                std::smatch swapFuncMatch;
-    //                std::string swapFuncName;
-    //                if (std::regex_search(cipherDefinition, swapFuncMatch, swapFuncRegex))
-    //                {
-    //                    swapFuncName = swapFuncMatch[1].str();
-    //                }
-
-    //                // Identify the splice cipher function
-    //                std::regex spliceFuncRegex(R"(([$_\w]+):function\([$_\w]+,[$_\w]+\){+[^}]*?splice[^}]*?})");
-    //                std::smatch spliceFuncMatch;
-    //                std::string spliceFuncName;
-    //                if (std::regex_search(cipherDefinition, spliceFuncMatch, spliceFuncRegex))
-    //                {
-    //                    spliceFuncName = spliceFuncMatch[1].str();
-    //                }
-
-    //                // Identify the reverse cipher function
-    //                std::regex reverseFuncRegex(R"(([$_\w]+):function\([$_\w]+\){+[^}]*?reverse[^}]*?})");
-    //                std::smatch reverseFuncMatch;
-    //                std::string reverseFuncName;
-    //                if (std::regex_search(cipherDefinition, reverseFuncMatch, reverseFuncRegex))
-    //                {
-    //                    reverseFuncName = reverseFuncMatch[1].str();
-    //                }
-
-    //                // Extract operations
-    //                std::vector<ICipherOperation*> operations;
-    //                std::stringstream cipherCallsiteStream(cipherCallsite);
-    //                std::string statement;
-    //                while (std::getline(cipherCallsiteStream, statement, ';'))
-    //                {
-    //                    std::regex funcCallRegex(R"([$_\w]+\.([$_\w]+)\([$_\w]+,\d+\))");
-    //                    std::smatch funcCallMatch;
-    //                    if (std::regex_search(statement, funcCallMatch, funcCallRegex))
-    //                    {
-    //                        std::string calledFuncName = funcCallMatch[1].str();
-    //                        if (calledFuncName.empty())
-    //                        {
-    //                            continue;
-    //                        }
-
-    //                        if (calledFuncName == swapFuncName)
-    //                        {
-    //                            std::regex indexRegex(R"(\([$_\w]+,(\d+)\))");
-    //                            std::smatch indexMatch;
-    //                            if (std::regex_search(statement, indexMatch, indexRegex))
-    //                            {
-    //                                int index = ParseInt(indexMatch[1].str());
-    //                                operations.push_back(new SwapCipherOperation(index));
-    //                            }
-    //                        }
-    //                        else if (calledFuncName == spliceFuncName)
-    //                        {
-    //                            std::regex indexRegex(R"(\([$_\w]+,(\d+)\))");
-    //                            std::smatch indexMatch;
-    //                            if (std::regex_search(statement, indexMatch, indexRegex))
-    //                            {
-    //                                int index = ParseInt(indexMatch[1].str());
-    //                                operations.push_back(new SpliceCipherOperation(index));
-    //                            }
-    //                        }
-    //                        else if (calledFuncName == reverseFuncName)
-    //                        {
-    //                            operations.push_back(new ReverseCipherOperation());
-    //                        }
-    //                    }
-    //                }
-
-    //                return CipherManifest(signatureTimestamp, operations);
-    //            }
-    //        }
-    //    }
-    //}
-
-    // return std::nullopt;
-
-    return {};
-}
 
 YoutubeClient::YoutubeClient()
     : network::NetWork()
@@ -171,6 +44,7 @@ void YoutubeClient::setCookies(const std::string& cookies)
     m_cookies.setContent(cookies + youtube_default_cookies);
     if (!std::string(m_cookies).empty())
     {
+        std::lock_guard lock(m_mutexRequest);
         m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies);
     }
 }
@@ -197,8 +71,8 @@ std::string YoutubeClient::getVisitorData()
     catch (std::exception& e)
     {
         std::string error = e.what();
+        YOUTUBE_LOG_WARN("getVisitorData error: {}", error);
     }
-
 
     return result;
 }
@@ -208,9 +82,6 @@ nlohmann::json YoutubeClient::getDataFromRespones(const std::string& respones)
     nlohmann::json json;
     try
     {
-        std::ofstream file("output.json");
-        file << respones;
-        file.close();
         json = nlohmann::json::parse(respones);
         util::JsonProcess::removeNullValues(json);
     }
@@ -224,6 +95,7 @@ nlohmann::json YoutubeClient::getDataFromRespones(const std::string& respones)
 
 MainResponse YoutubeClient::getVideoInfo(const std::string& videoId)
 {
+    YOUTUBE_LOG_WARN("getVideoInfo videoId: {}", videoId);
     network::CurlHeader header;
     header.add(youtube_user_agent);
     header.add(youtube_origin);
@@ -248,6 +120,7 @@ MainResponse YoutubeClient::getVideoInfo(const std::string& videoId)
     catch (const std::exception& e)
     {
         std::cout << "error: " << e.what() << std::endl;
+        YOUTUBE_LOG_WARN("getVideoInfo error: {}", e.what());
     }
 
     return ret;
@@ -272,6 +145,7 @@ std::string YoutubeClient::getIFrameVersion()
 
 std::string YoutubeClient::getBaseJs(std::string version)
 {
+    YOUTUBE_LOG_INFO("getBaseJs version: {}", version);
     std::string url = fmt::format(youtubeBaseJs, version);
     std::string response;
     get(url, response, network::CurlHeader(), true, CurlOptions(), true);
@@ -283,6 +157,7 @@ std::vector<AdaptiveFormat> YoutubeClient::getStreamInfo(const std::string& vide
     auto videoInfo = getVideoInfo(videoId);
     if (videoInfo.streamingData.adaptiveFormats.empty())
     {
+        YOUTUBE_LOG_WARN("getStreamInfo adaptiveFormats is empty videoId: {}", videoId);
         return {};
     }
 
@@ -303,9 +178,9 @@ std::vector<AdaptiveFormat> YoutubeClient::getStreamInfo(const std::string& vide
 
     if (video.empty())
     {
+        YOUTUBE_LOG_WARN("getStreamInfo video is empty videoId: {}", videoId);
         return {};
     }
-
 
     std::sort(video.begin(), video.end(), [](const AdaptiveFormat& lhs, const AdaptiveFormat& rhs) {
         if (lhs.width != rhs.width)

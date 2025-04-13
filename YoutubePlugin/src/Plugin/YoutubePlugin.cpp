@@ -13,6 +13,7 @@
 PluginMessage YoutubePlugin::m_pluginMessage = {
     youtubelugin::pluginID, youtubelugin::name, youtubelugin::version, youtubelugin::description, youtubelugin::domain,
 };
+std::string YoutubePlugin::m_dir;
 
 const PluginMessage& YoutubePlugin::pluginMessage() const
 {
@@ -76,4 +77,14 @@ std::shared_ptr<download::FileDownloader> YoutubePlugin::getDownloader(const Vid
 LoginProxy YoutubePlugin::loginer()
 {
     return LoginProxy(m_login);
+}
+
+void YoutubePlugin::setDir(std::string dir)
+{
+    m_dir = dir;
+}
+
+const std::string& YoutubePlugin::getDir()
+{
+    return m_dir;
 }

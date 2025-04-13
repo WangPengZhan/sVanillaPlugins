@@ -18,7 +18,11 @@ public:
 
     LoginProxy loginer() override;
 
+    static void setDir(std::string dir);
+    static const std::string& getDir();
+
 private:
+    static std::string m_dir;
     static PluginMessage m_pluginMessage;
     YoutubeLogin m_login;
 };

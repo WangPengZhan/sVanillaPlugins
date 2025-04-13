@@ -16,3 +16,6 @@
 [submodule "YoutubePlugin/ThirdParty/sVanillaPluginCommon"]
 	path = YoutubePlugin/ThirdParty/sVanillaPluginCommon
 	url = https://github.com/WangPengZhan/sVanillaPluginCommon.git
+[submodule "YoutubePlugin/ThirdParty/spdlog"]
+	path = YoutubePlugin/ThirdParty/spdlog
+	url = https://github.com/gabime/spdlog.git

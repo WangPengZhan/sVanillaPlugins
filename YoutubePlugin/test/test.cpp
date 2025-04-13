@@ -39,6 +39,7 @@ namespace
 
 TEST(YoutubPlugin_Test, PluginInfo)
 {
+    initDir("");
     auto handle = pluginInit();
     auto plugin = reinterpret_cast<YoutubePlugin *>(handle);
     auto info = plugin->pluginMessage();
@@ -58,12 +59,12 @@ TEST(YoutubPlugin_Test, VideoInfo)
 TEST(YoutubPlugin_Test, downloader)
 {
     auto handle = pluginInit();
-    auto plugin = reinterpret_cast<YoutubePlugin*>(handle);
+    auto plugin = reinterpret_cast<YoutubePlugin *>(handle);
     auto views = plugin->getVideoView("https://www.youtube.com/watch?v=q-F7M2PmgeI");
     ASSERT_FALSE(views.empty()) << "Video view should not be empty";
     VideoInfoFull videinfo;
     videinfo.videoView = std::make_shared<adapter::BaseVideoView>(views.front());
-	videinfo.downloadConfig = std::make_shared<DownloadConfig>();
+    videinfo.downloadConfig = std::make_shared<DownloadConfig>();
     auto downloader = plugin->getDownloader(videinfo);
     downloader->start();
     ASSERT_FALSE(downloader) << "Video view should not be empty";
