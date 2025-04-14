@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <TemplatePluginCall.h>
+#include <LoggerRegisterHelpper.h>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/rotating_file_sink.h>
@@ -19,7 +20,7 @@ void initDir(const char* dir)
     {
         if (!spdlog::get(youtubeModuleName))
         {
-            spdlog::rotating_logger_mt<spdlog::async_factory>(youtubeModuleName, std::string(dir) + "log/" + youtubeModuleName + ".log", logFileMaxSize, 100);
+            LoggerRegisterHelpper::registerLogger(youtubeModuleName, std::string(dir) + "log/" + youtubeModuleName + ".log");
         }
     }
     catch (const std::exception& e)
@@ -44,4 +45,9 @@ void pluginDeinit()
         delete pPlugin;
         pPlugin = nullptr;
     }
+}
+
+void deinit()
+{
+    LoggerRegisterHelpper::unregisterLogger(youtubeModuleName);
 }
