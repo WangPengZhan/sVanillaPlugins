@@ -58,7 +58,7 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
     }
 
     long long fnval = 16;
-    BILIBILI_LOG_INFO("getPlayUrl has exist: {}, qn: {}, fnval: {}", copyedVideoInfo.getGuid(), qn, fnval);
+    BILIBILI_LOG_INFO("getDownloader, guid: {}, qn: {}, fnval: {}", copyedVideoInfo.getGuid(), qn, fnval);
     const auto result = biliClient.getPlayUrl(std::stoll(copyedVideoInfo.videoView->VideoId), qn, copyedVideoInfo.videoView->Identifier, fnval);
     if (result.code != 0)
     {

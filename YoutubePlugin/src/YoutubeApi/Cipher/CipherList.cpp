@@ -54,7 +54,7 @@ std::string SwapCipher::decipher(const std::string& input)
     {
         return input;
     }
-      
+
     std::string result = input;
     std::swap(result[0], result[i]);
     return result;
