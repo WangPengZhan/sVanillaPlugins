@@ -49,12 +49,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE release CACHE STRING "Build Type" FORCE)
 endif()
 
-if (NOT TARGET spdlog)
-    set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as a shared library")
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spdlog EXCLUDE_FROM_ALL)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon)
-endif()
-
 option(ENABLE_TEST "Enable Test" OFF)
 if (ENABLE_TEST)
     enable_testing()
@@ -68,9 +62,9 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spdlog
-        ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon/PluginCommon
-        ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon
+        ${CMAKE_SOURCE_DIR}/ThirdParty/spdlog
+        ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon/PluginCommon
+        ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon
 )
 
 target_link_libraries(${PROJECT_NAME}

@@ -4,18 +4,6 @@
 [submodule "ThirdParty/sVanillaPluginCommon"]
 	path = ThirdParty/sVanillaPluginCommon
 	url = https://github.com/WangPengZhan/sVanillaPluginCommon.git
-[submodule "BiliBiliPlugin/ThirdParty/spdlog"]
-	path = BiliBiliPlugin/ThirdParty/spdlog
-	url = https://github.com/gabime/spdlog.git
-[submodule "BiliBiliPlugin/ThirdParty/sVanillaPluginCommon"]
-	path = BiliBiliPlugin/ThirdParty/sVanillaPluginCommon
-	url = https://github.com/WangPengZhan/sVanillaPluginCommon.git
 [submodule "TemplatePlugin"]
 	path = TemplatePlugin
 	url = https://github.com/WangPengZhan/sVanillaTemplatePlugin.git
-[submodule "YoutubePlugin/ThirdParty/sVanillaPluginCommon"]
-	path = YoutubePlugin/ThirdParty/sVanillaPluginCommon
-	url = https://github.com/WangPengZhan/sVanillaPluginCommon.git
-[submodule "YoutubePlugin/ThirdParty/spdlog"]
-	path = YoutubePlugin/ThirdParty/spdlog
-	url = https://github.com/gabime/spdlog.git

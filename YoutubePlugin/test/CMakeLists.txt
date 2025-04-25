@@ -14,17 +14,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_executable(${PluginTest} ${SOURCES})
 add_test(NAME ${PluginTest} COMMAND ${PluginTest})
 
-if (NOT TARGET spdlog)
-    set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as a shared library")
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/spdlog)
-endif()
-
 target_include_directories(${PluginTest}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/../src
-        ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/spdlog
-        ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sVanillaPluginCommon/PluginCommon
-        ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sVanillaPluginCommon
+        ${CMAKE_SOURCE_DIR}/ThirdParty/spdlog
+        ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon/PluginCommon
+        ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon
 )
 
 target_link_libraries(${PluginTest}
