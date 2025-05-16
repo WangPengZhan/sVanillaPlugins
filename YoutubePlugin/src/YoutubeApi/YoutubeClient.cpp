@@ -42,10 +42,11 @@ bool YoutubeClient::isLogined() const
 void YoutubeClient::setCookies(const std::string& cookies)
 {
     m_cookies.setContent(cookies + youtube_default_cookies);
+
     if (!std::string(m_cookies).empty())
     {
         std::lock_guard lock(m_mutexRequest);
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies);
+        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".youtube.com"));
     }
 }
 
@@ -249,7 +250,7 @@ void YoutubeClient::initDefaultOptions()
     m_commonOptions.insert({verbose->getOption(), verbose});
     if (!std::string(m_cookies).empty())
     {
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies);
+        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".youtube.com"));
     }
 }
 

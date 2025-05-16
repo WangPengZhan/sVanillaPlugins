@@ -198,8 +198,8 @@ LoginStatusScanning BilibiliClient::getLoginStatus(const std::string& qrcodeKey)
     {
         BILIBILI_LOG_INFO("Login success!");
         std::lock_guard lk(m_mutexRequest);
-        m_cookies.setContent(header.at(network::set_cookies));
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies);
+        m_cookies.addCurlCookies(header.at(network::set_cookies));
+        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".bilibili.com"));
     }
 
     LoginStatusScanning ret;

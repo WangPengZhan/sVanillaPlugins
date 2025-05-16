@@ -1,4 +1,5 @@
-set(PluginTest YoutubePlugin_test)
+set(TestTarget YoutubePlugin)
+set(PluginTest ${TestTarget}_test)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false *.h *.cpp)
 set(SOURCES ${TEST_SOURCES} ${TESTED_SOURCES} ${TESTED_DEPANDED_SOURCES})
 
@@ -12,6 +13,9 @@ include_directories(
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_executable(${PluginTest} ${SOURCES})
+set_target_properties(${PluginTest} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:${TestTarget}>
+)
 add_test(NAME ${PluginTest} COMMAND ${PluginTest})
 
 target_include_directories(${PluginTest}
@@ -24,7 +28,7 @@ target_include_directories(${PluginTest}
 
 target_link_libraries(${PluginTest}
     PRIVATE
-        YoutubePlugin
+        ${TestTarget}
         GTest::gtest_main 
 )
 
@@ -32,7 +36,7 @@ add_custom_command(TARGET ${PluginTest}
     POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:spdlog> $<TARGET_FILE_DIR:${PluginTest}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:FFmpeg> $<TARGET_FILE_DIR:${PluginTest}>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:YoutubePlugin> $<TARGET_FILE_DIR:${PluginTest}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${TestTarget}> $<TARGET_FILE_DIR:${PluginTest}>
 )
 
 file(GLOB VCPAKG_DEP_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/ThirdParty/vcpkg/packages/*")
