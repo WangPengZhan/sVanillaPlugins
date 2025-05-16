@@ -1,4 +1,4 @@
-set(TestTarget BiliBiliPlugin)
+set(TestTarget WeiboPlugin)
 set(PluginTest ${TestTarget}_test)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false *.h *.cpp)
 set(SOURCES ${TEST_SOURCES} ${TESTED_SOURCES} ${TESTED_DEPANDED_SOURCES})
@@ -66,3 +66,4 @@ if (VCPAKG_DEP_DIRS)
         endif ()
     endforeach ()
 endif ()
+

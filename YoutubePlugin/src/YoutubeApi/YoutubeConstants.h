@@ -37,5 +37,5 @@ constexpr char youtube_referer[] = "Referer: https://www.youtube.com";
 inline const std::string youtube_accept_encoding = "Accept-Encoding: gzip, deflate, br, zstd";
 inline const std::string youtube_accept_language = "Accept-Language: en,zh-CN;q=0.9,zh;q=0.8";
 inline const std::string youtube_user_agent = "User-Agent: com.google.ios.youtube/19.45.4 (iPhone16,2; U; CPU iOS 18_1_0 like Mac OS X; US)";
-inline const std::string youtube_default_cookies = "SOCS=CAISEwgDEgk2NzM5OTg2ODUaAmVuIAEaBgiA6p23Bg; domain=youtube.com";
+inline const std::string youtube_default_cookies = "SOCS=CAISEwgDEgk2NzM5OTg2ODUaAmVuIAEaBgiA6p23Bg; domain=.youtube.com";
 }  // namespace youtubeapi

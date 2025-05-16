@@ -2,9 +2,14 @@
 
 #include <BaseVideoView.h>
 
+#include <fstream>
+
 #include "BiliBiliResource.h"
 #include "BiliApi/BilibiliClient.h"
 #include "Util/TimerUtil.h"
+#include "BilibiliPlugin.h"
+#include "Util/LocaleHelper.h"
+#include "QrCodeGenerator.h"
 
 namespace
 {
@@ -82,7 +87,15 @@ bool BiliBiliLogin::getScanContext(std::string& content)
     }
 
     m_qrcodeKey = login.data.qrcode_key;
-    content = login.data.url;
+
+    std::string path = BiliBiliPlugin::getDir() + "bilibili_qrc.svg";
+    std::string locale = util::utf8ToLocale(path);
+
+    std::ofstream file(locale);
+    file << QrCodeGenerator::generateQR(login.data.url);
+    file.close();
+
+    content = path;
     return true;
 }
 

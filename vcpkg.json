@@ -1,7 +1,7 @@
 {
     "name": "svanillaplugins",
     "version-string": "1.0.0",
-    "builtin-baseline": "2718aa52a31977b792af7e9c2f83eaf4ddcd932d",
+    "builtin-baseline": "b02e341c927f16d991edbd915d8ea43eac52096c",
     "dependencies": [
         {
             "name": "curl",

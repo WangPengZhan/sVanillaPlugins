@@ -198,8 +198,8 @@ LoginStatusScanning BilibiliClient::getLoginStatus(const std::string& qrcodeKey)
     {
         BILIBILI_LOG_INFO("Login success!");
         std::lock_guard lk(m_mutexRequest);
-        m_cookies.setContent(header.at(network::set_cookies));
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies);
+        m_cookies.addCurlCookies(header.at(network::set_cookies));
+        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".bilibili.com"));
     }
 
     LoginStatusScanning ret;
@@ -239,7 +239,7 @@ LogoutExitV2 BilibiliClient::getLogoutExitV2()
 {
     std::string response;
 
-    auto keys = m_cookies.keys();
+    auto keys = m_cookies.cookie(".bilibili.com").keys();
     int haveId = 3;
 
     for (const auto& key : keys)
@@ -253,17 +253,17 @@ LogoutExitV2 BilibiliClient::getLogoutExitV2()
     if (haveId == 0)
     {
         std::string cookie = "Cookie: ";
-        cookie += std::string(cookie_dedeUserId) + "=" + m_cookies.value(cookie_dedeUserId);
+        cookie += std::string(cookie_dedeUserId) + "=" + m_cookies.cookie(".bilibili.com").value(cookie_dedeUserId);
         cookie += "; ";
-        cookie += std::string(cookie_biliJct) + "=" + m_cookies.value(cookie_biliJct);
+        cookie += std::string(cookie_biliJct) + "=" + m_cookies.cookie(".bilibili.com").value(cookie_biliJct);
         cookie += "; ";
-        cookie += std::string(cookie_sessdata) + "=" + m_cookies.value(cookie_sessdata);
+        cookie += std::string(cookie_sessdata) + "=" + m_cookies.cookie(".bilibili.com").value(cookie_sessdata);
 
         network::CurlHeader header;
         header.add("Content-Type: application/x-www-form-urlencoded");
         header.add(cookie);
 
-        std::string param = "biliCSRF=" + m_cookies.value(cookie_biliJct);
+        std::string param = "biliCSRF=" + m_cookies.cookie(".bilibili.com").value(cookie_biliJct);
 
         post(PassportURL::Logout, response, param, header, false);
     }
@@ -311,7 +311,7 @@ History BilibiliClient::getHistory(HistoryQueryParam param)
 
 bool BilibiliClient::isLogined() const
 {
-    return !m_cookies.value("SESSDATA").empty();
+    return !m_cookies.cookie(".bilibili.com").value("SESSDATA").empty();
 }
 
 void BilibiliClient::resetWbi()

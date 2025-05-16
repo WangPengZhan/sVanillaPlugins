@@ -5,8 +5,8 @@
 
 bool isValidUrl(const std::string& url)
 {
-    std::regex bilibiliPattern(R"((http|https):\/\/((www|m|space)\.)?(youtube\.com|b23\.tv))");
-    return std::regex_search(url, bilibiliPattern);
+    std::regex youtubePattern(R"((http|https):\/\/((www|m|space)\.)?(youtu\.be|youtube\.com|b23\.tv))");
+    return std::regex_search(url, youtubePattern);
 }
 
 static bool isValidID(const std::string& videoId)
