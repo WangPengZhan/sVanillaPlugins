@@ -9,9 +9,14 @@ public:
     LoginSatus getLoginStatus() override;
     bool getScanContext(std::string& content) override;
     void loginSuccess() override;
-    UserInfo getUserInfo(std::string dir) override;
+
+    std::string cookies() const override;
+    void setCookies(std::string cookies) override;
+    bool refreshCookies(std::string cookies) override;
     bool isLogin() const override;
     bool logout() override;
+
+    UserInfo getUserInfo(std::string dir) override;
     std::vector<adapter::BaseVideoView> history() override;
 
     // resource

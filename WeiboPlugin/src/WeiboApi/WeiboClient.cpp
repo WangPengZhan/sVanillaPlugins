@@ -21,6 +21,77 @@ static constexpr int minutes = 60;
 static constexpr int hours = 24;
 static constexpr int daySeconds = hours * minutes * seconds;  // 24*60*60
 
+struct VideoTemplate
+{
+    int width;
+    int height;
+    int fps;
+    int reserved;
+
+    auto operator<=>(const VideoTemplate&) const = default;
+};
+
+std::vector<std::string_view> split(std::string_view str, char delim)
+{
+    std::vector<std::string_view> result;
+    size_t start = 0;
+    while (true)
+    {
+        size_t end = str.find(delim, start);
+        if (end == std::string_view::npos)
+        {
+            result.emplace_back(str.substr(start));
+            break;
+        }
+        result.emplace_back(str.substr(start, end - start));
+        start = end + 1;
+    }
+    return result;
+}
+
+std::string_view extractTemplateParam(std::string_view url)
+{
+    size_t start = url.find("template=");
+    if (start == std::string_view::npos)
+        return {};
+    start += 9;  // length of "template="
+    size_t end = url.find('&', start);
+    return (end == std::string_view::npos) ? url.substr(start) : url.substr(start, end - start);
+}
+
+VideoTemplate parseTemplate(std::string_view tpl)
+{
+    auto xsplit = split(tpl, 'x');
+    if (xsplit.size() != 2)
+        return {0, 0, 0, 0};
+
+    auto dots = split(xsplit[1], '.');
+    if (dots.size() != 3)
+        return {0, 0, 0, 0};
+
+    return {std::stoi(std::string(xsplit[0])), std::stoi(std::string(dots[0])), std::stoi(std::string(dots[1])), std::stoi(std::string(dots[2]))};
+}
+
+std::string getBestTemplate(const std::map<std::string, std::string>& templates)
+{
+    std::string bestName;
+    VideoTemplate bestTpl{0, 0, 0, 0};
+
+    for (const auto& [name, url] : templates)
+    {
+        auto tplStr = extractTemplateParam(url);
+        auto tpl = parseTemplate(tplStr);
+
+        if (tpl > bestTpl)
+        {
+            bestTpl = tpl;
+            bestName = name;
+        }
+    }
+
+    return bestName;
+}
+
 std::string_view extractJsonFromJsonp(std::string_view jsonp)
 {
     size_t start = jsonp.find('(');
@@ -70,10 +141,6 @@ ComponentPlayPlayinfoResponse WeiboClient::getPlayInfoByMid(const std::string& m
     header.add(referer);
 
     post(url, response, param, header, false, CurlOptions(), true);
-
-    std::ofstream test("test.json");
-    test << response;
-    test.close();
 
     ComponentPlayPlayinfoResponse ret;
     try
@@ -130,7 +197,31 @@ std::string WeiboClient::getStreamInfo(const std::string& wid)
         mid = wid.substr(wid.find(":") + 1);
     }
     auto ret = getPlayInfoByMid(mid);
+
+    const auto baseName = getBestTemplate(ret.data.Component_Play_Playinfo.urls);
+    if (!baseName.empty())
+    {
+        return "http:" + ret.data.Component_Play_Playinfo.urls[baseName];
+    }
     return ret.data.Component_Play_Playinfo.stream_url;
+}
+
+bool WeiboClient::downloadImage(const std::string& url, const std::filesystem::path& path)
+{
+    FILE* file = fopen(path.string().c_str(), "wb");
+    if (!file)
+    {
+        std::string str = strerror(errno);
+        WEIBO_LOG_ERROR("fopen error: {}, filePath: {}", str, path.string());
+        return false;
+    }
+
+    network::CurlHeader header;
+    header.add(std::string("referer: ") + weiboapi::weiboHomeUrl);
+    get(url, file, header, true);
+    fclose(file);
+
+    return true;
 }
 
 QRCResponse WeiboClient::getLoginUrl()
@@ -182,6 +273,7 @@ bool WeiboClient::getQrcImage(const std::string& url, const std::filesystem::pat
 
 LoginScaningStatus WeiboClient::getLoginStatus(const std::string& qrid)
 {
+    WEIBO_LOG_INFO("qrid: {}", qrid);
     namespace chr = std::chrono;
     std::string response;
     std::string timestamp = std::to_string(chr::duration_cast<chr::milliseconds>(chr::system_clock::now().time_since_epoch()).count());
@@ -202,6 +294,7 @@ LoginScaningStatus WeiboClient::getLoginStatus(const std::string& qrid)
 
 LoginInfo WeiboClient::loginWeibo(const std::string alt)
 {
+    WEIBO_LOG_INFO("alt: {}", alt);
     namespace chr = std::chrono;
     std::string response;
     std::string timestamp = std::to_string(chr::duration_cast<chr::milliseconds>(chr::system_clock::now().time_since_epoch()).count());
@@ -239,7 +332,7 @@ bool WeiboClient::crossDomainRequest(std::vector<std::string> urls)
         auto header = parseHeader(response.header);
         if (header.end() != header.find(network::set_cookies))
         {
-            // WEIBO_LOG_INFO("Login success!");
+            WEIBO_LOG_INFO("Login success!");
             std::lock_guard lk(m_mutexRequest);
             std::string cookie = header.at(network::set_cookies);
             if (url == weiboapi::weiboHomeUrl)
@@ -248,7 +341,7 @@ bool WeiboClient::crossDomainRequest(std::vector<std::string> urls)
                 cookie += network::domain_key;
                 cookie += "=.weibo.com";
             }
-            m_cookies.addCurlCookies(cookie);
+            m_cookies.addCurlCookie(cookie);
             m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".weibo.com"));
         }
     }
@@ -264,6 +357,18 @@ bool WeiboClient::isLogined() const
 std::string WeiboClient::cookie() const
 {
     return network::CurlCookieOpt(m_cookies.cookie(".weibo.com")).shortContent();
+}
+
+std::string WeiboClient::cookies() const
+{
+    return std::string(m_cookies);
+}
+
+void WeiboClient::setCookies(std::string cookies)
+{
+    std::lock_guard lk(m_mutexRequest);
+    m_cookies = network::CurlCookies(cookies);
+    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".weibo.com"));
 }
 
 void WeiboClient::getDetailInfo(const std::string& mid)

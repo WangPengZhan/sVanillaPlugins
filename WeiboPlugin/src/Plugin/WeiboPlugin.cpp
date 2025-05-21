@@ -8,6 +8,7 @@
 #include "Convert.h"
 #include "WeiboPluginMessage.h"
 #include "WeiboApi/WeiboLog.h"
+#include "Util/LocaleHelper.h"
 
 #include <Util/UrlProccess.h>
 
@@ -56,6 +57,20 @@ adapter::VideoView WeiboPlugin::getVideoView(const std::string& url)
         id = id.substr(4);
         auto ret = m_client.getPlayInfoByWid(id);
         views = convertVideoView(ret);
+    }
+
+    for (auto& view : views)
+    {
+        std::string path = m_dir + "cover/" + view.VideoId + std::to_string(std::rand() % 10000) + ".jpg";
+        if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
+        {
+            std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+        }
+
+        if (m_client.downloadImage(view.Cover, path))
+        {
+            view.Cover = util::localeToUtf8(path);
+        }
     }
 
     return views;

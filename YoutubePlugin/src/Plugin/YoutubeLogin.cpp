@@ -12,9 +12,24 @@ std::string YoutubeLogin::loginUrl() const
     return std::string("https://accounts.google.com/ServiceLogin?continue=https://www.youtube.com");
 }
 
-void YoutubeLogin::setCookies(std::string cookies) const
+void YoutubeLogin::setCookie(std::string cookie)
+{
+    youtubeapi::YoutubeClient::globalClient().setCookie(cookie);
+}
+
+void YoutubeLogin::setCookies(std::string cookies)
 {
     youtubeapi::YoutubeClient::globalClient().setCookies(cookies);
+}
+
+std::string YoutubeLogin::cookies() const
+{
+    return youtubeapi::YoutubeClient::globalClient().cookies();
+}
+
+bool YoutubeLogin::refreshCookies(std::string cookies)
+{
+    return false;
 }
 
 std::unordered_set<std::string> YoutubeLogin::mustKeys() const

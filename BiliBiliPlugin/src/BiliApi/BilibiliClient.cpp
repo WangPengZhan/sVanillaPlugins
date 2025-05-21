@@ -7,6 +7,7 @@
 #include "BilibiliClient.h"
 #include "BiliApiConstants.h"
 #include "Util/JsonProcess.h"
+#include "Util/LocaleHelper.h"
 #include "BilibiliLog.h"
 #include "BilibiliUtils.h"
 #include "NetWork/NetworkLog.h"
@@ -309,6 +310,18 @@ History BilibiliClient::getHistory(HistoryQueryParam param)
     return history;
 }
 
+std::string BilibiliClient::cookies() const
+{
+    return std::string(m_cookies);
+}
+
+void BilibiliClient::setCookies(std::string cookies)
+{
+    std::lock_guard lk(m_mutexRequest);
+    m_cookies = network::CurlCookies(cookies);
+    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".bilibili.com"));
+}
+
 bool BilibiliClient::isLogined() const
 {
     return !m_cookies.cookie(".bilibili.com").value("SESSDATA").empty();
@@ -320,8 +333,8 @@ void BilibiliClient::resetWbi()
     const auto key = navData.data.wbi_img;
     if (!key.img_url.empty() && !key.sub_url.empty())
     {
-        const auto img_url = std::filesystem::u8path(key.img_url).stem().string();
-        const auto sub_url = std::filesystem::u8path(key.sub_url).stem().string();
+        const auto img_url = std::filesystem::path(util::utf8ToLocale(key.img_url)).stem().string();
+        const auto sub_url = std::filesystem::path(util::utf8ToLocale(key.sub_url)).stem().string();
         nlohmann::json j;
         j.emplace("mixin_key", GetMixinKey(img_url + sub_url));
         j.emplace("Expires", (std::time(nullptr) + daySeconds) / daySeconds);  // 有效期一天

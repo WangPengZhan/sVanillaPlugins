@@ -39,15 +39,29 @@ bool YoutubeClient::isLogined() const
     return !m_cookies.cookie(".youtube.com").value(youtubeMustKey).empty();
 }
 
-void YoutubeClient::setCookies(const std::string& cookies)
+void YoutubeClient::setCookie(const std::string& cookie)
 {
-    m_cookies.setContent(cookies + youtube_default_cookies);
+    network::CurlCookies cookies;
+    cookies.addCurlCookie(network::CurlCookie::parseCookie(cookie + youtube_default_cookies));
+    m_cookies = cookies;
 
     if (!std::string(m_cookies).empty())
     {
         std::lock_guard lock(m_mutexRequest);
         m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".youtube.com"));
     }
+}
+
+void YoutubeClient::setCookies(const std::string& cookies)
+{
+    std::lock_guard lk(m_mutexRequest);
+    m_cookies = network::CurlCookies(cookies);
+    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".youtube.com"));
+}
+
+std::string YoutubeClient::cookies() const
+{
+    return std::string(m_cookies);
 }
 
 std::string YoutubeClient::getVisitorData()

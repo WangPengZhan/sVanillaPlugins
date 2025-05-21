@@ -14,5 +14,4 @@
 namespace weiboapi
 {
 
-
-}  // namespace biliapi
+}  // namespace weiboapi

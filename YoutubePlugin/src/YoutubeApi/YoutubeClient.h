@@ -20,7 +20,10 @@ public:
     static YoutubeClient& globalClient();
 
     [[nodiscard]] bool isLogined() const;
+    void setCookie(const std::string& cookies);
+
     void setCookies(const std::string& cookies);
+    std::string cookies() const;
 
     std::string getVisitorData();
     MainResponse getVideoInfo(const std::string& videoId);

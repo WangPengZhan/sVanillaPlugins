@@ -54,11 +54,15 @@ public:
 
     VideoViewOrigin getVideoView(const std::string& bvid);
     PlayUrlOrigin getPlayUrl(long long cid, long long qn, const std::string& bvid, long long fnval);
+
     LoginUrlOrigin getLoginUrl();
     LoginStatusScanning getLoginStatus(const std::string& qrcodeKey);
     Nav getNavInfo();
     LogoutExitV2 getLogoutExitV2();
     History getHistory(HistoryQueryParam param);
+
+    std::string cookies() const;
+    void setCookies(std::string cookies);
 
     [[nodiscard]] bool isLogined() const;
 

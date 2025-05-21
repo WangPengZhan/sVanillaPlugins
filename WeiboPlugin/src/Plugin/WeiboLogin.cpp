@@ -50,11 +50,15 @@ WeiboLogin::LoginSatus WeiboLogin::getLoginStatus()
 bool WeiboLogin::getScanContext(std::string& content)
 {
     auto qrc = m_client.getLoginUrl();
-    std::string path = WeiboPlugin::getDir() + "weibo_qrc.png";
-    std::string locale = util::utf8ToLocale(path);
-    bool ret = m_client.getQrcImage("https:" + qrc.data.image, locale);
+    std::string path = WeiboPlugin::getDir() + "login/weibo_qrc.png";
+    if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
+    {
+        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+    }
+
+    bool ret = m_client.getQrcImage("https:" + qrc.data.image, path);
     m_qrid = qrc.data.qrid;
-    content = path;
+    content = util::localeToUtf8(path);
 
     return ret;
 }
@@ -76,6 +80,21 @@ UserInfo WeiboLogin::getUserInfo(std::string dir)
     UserInfo userInfo;
 
     return userInfo;
+}
+
+std::string WeiboLogin::cookies() const
+{
+    return m_client.cookies();
+}
+
+void WeiboLogin::setCookies(std::string cookies)
+{
+    m_client.setCookies(cookies);
+}
+
+bool WeiboLogin::refreshCookies(std::string cookies)
+{
+    return false;
 }
 
 bool WeiboLogin::isLogin() const

@@ -7,7 +7,7 @@
 #include "BiliBiliResource.h"
 #include "BiliApi/BilibiliClient.h"
 #include "Util/TimerUtil.h"
-#include "BilibiliPlugin.h"
+#include "BiliBiliPlugin.h"
 #include "Util/LocaleHelper.h"
 #include "QrCodeGenerator.h"
 
@@ -88,14 +88,17 @@ bool BiliBiliLogin::getScanContext(std::string& content)
 
     m_qrcodeKey = login.data.qrcode_key;
 
-    std::string path = BiliBiliPlugin::getDir() + "bilibili_qrc.svg";
-    std::string locale = util::utf8ToLocale(path);
+    std::string path = BiliBiliPlugin::getDir() + "login/bilibili_qrc.svg";
+    if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
+    {
+        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+    }
 
-    std::ofstream file(locale);
+    std::ofstream file(path);
     file << QrCodeGenerator::generateQR(login.data.url);
     file.close();
 
-    content = path;
+    content = util::localeToUtf8(path);
     return true;
 }
 
@@ -125,6 +128,21 @@ UserInfo BiliBiliLogin::getUserInfo(std::string dir)
     }
 
     return userInfo;
+}
+
+std::string BiliBiliLogin::cookies() const
+{
+    return biliapi::BilibiliClient::globalClient().cookies();
+}
+
+void BiliBiliLogin::setCookies(std::string cookies)
+{
+    biliapi::BilibiliClient::globalClient().setCookies(cookies);
+}
+
+bool BiliBiliLogin::refreshCookies(std::string cookies)
+{
+    return false;
 }
 
 bool BiliBiliLogin::isLogin() const

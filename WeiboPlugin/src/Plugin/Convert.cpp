@@ -7,7 +7,6 @@ adapter::VideoView convertVideoView(const weiboapi::ComponentPlayPlayinfoRespons
     adapter::VideoView views;
 
     adapter::BaseVideoView baseView;
-
     const auto& playInfo = data.data.Component_Play_Playinfo;
     baseView.Identifier = playInfo.id;
     baseView.AlternateId = playInfo.mid;

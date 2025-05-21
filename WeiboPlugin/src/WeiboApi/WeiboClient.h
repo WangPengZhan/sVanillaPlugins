@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-#include "WeiBoApi.h"
+#include "WeiboApi.h"
 #include "NetWork/CNetWork.h"
 #include "NetWork/CurlCpp/CurlCookieJar.h"
 
@@ -22,6 +22,7 @@ public:
     UserMblogResponse getUserMlog(const std::string& uid);
 
     std::string getStreamInfo(const std::string& wid);
+    bool downloadImage(const std::string& url, const std::filesystem::path& path);
 
     QRCResponse getLoginUrl();
     bool getQrcImage(const std::string& url, const std::filesystem::path& path);
@@ -30,6 +31,9 @@ public:
     bool crossDomainRequest(std::vector<std::string> urls);
     [[nodiscard]] bool isLogined() const;
     std::string cookie() const;
+
+    std::string cookies() const;
+    void setCookies(std::string cookies);
 
     void getDetailInfo(const std::string& mid);
 

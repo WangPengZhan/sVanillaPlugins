@@ -84,9 +84,8 @@ struct User
     bool special_follow;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(User, id, screen_name, profile_image_url, profile_url, close_blue_v, description, follow_me, following,
-                                                follow_count, cover_image_phone, avatar_hd, statuses_count, verified, verified_type, gender,
-                                                mbtype, svip, urank, mbrank, followers_count_str, verified_type_ext, verified_reason, like, like_me,
-                                                special_follow)
+                                                follow_count, cover_image_phone, avatar_hd, statuses_count, verified, verified_type, gender, mbtype, svip,
+                                                urank, mbrank, followers_count_str, verified_type_ext, verified_reason, like, like_me, special_follow)
 };
 
 struct Geo
