@@ -558,16 +558,6 @@ public:
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(LogoutExitV2, code, status, ts, message, data)
 };
 
-class Cookie
-{
-public:
-    std::time_t Expires;
-    std::string SESSDATA;
-    std::string bili_jct;
-
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Cookie, Expires, SESSDATA, bili_jct)
-};
-
 class MixinKey
 {
 public:

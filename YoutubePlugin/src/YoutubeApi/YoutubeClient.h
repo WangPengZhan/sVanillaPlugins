@@ -20,7 +20,7 @@ public:
     static YoutubeClient& globalClient();
 
     [[nodiscard]] bool isLogined() const;
-    void setCookie(const std::string& cookies);
+    void setCookie(const std::string& cookie);
 
     void setCookies(const std::string& cookies);
     std::string cookies() const;

@@ -34,49 +34,6 @@ void replaceCharacter(std::string& source, const std::string& from, const std::s
     source.swap(newString);
 }
 
-void saveJson(const std::string& filename, const nlohmann::json& content)
-{
-    std::ofstream o(filename);
-    if (!o)
-    {
-        throw std::runtime_error("Error opening file: " + filename);
-    }
-    o << content;
-    o.close();
-}
-
-nlohmann::json readJson(const std::string& filename)
-{
-    std::ifstream file(filename);
-    if (!file)
-    {
-        return nlohmann::json::object();
-    }
-    if (file.peek() == std::ifstream::traits_type::eof())
-    {
-        return nlohmann::json::object();
-    }
-
-    nlohmann::json j;
-    try
-    {
-        file >> j;
-    }
-    catch (nlohmann::json::parse_error& e)
-    {
-        throw std::runtime_error("Error parsing JSON: " + std::string(e.what()));
-    }
-    return j;
-}
-
-void updateData(const std::string& key, const nlohmann::json& value)
-{
-    const std::string filename = cookieDataFilePath();
-    nlohmann::json j = readJson(filename);
-    j[key] = value;
-    saveJson(filename, j);
-}
-
 std::string filterCharacters(const std::string& input)
 {
     const std::string charsToFilter = "!\'()*";

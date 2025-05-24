@@ -12,9 +12,6 @@ inline const std::vector mixinKeyEncTab = {46, 47, 18, 2,  53, 8,  23, 32, 15, 5
                                            42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7,  16, 24, 55, 40, 61, 26, 17, 0,  1,
                                            60, 51, 30, 4,  22, 25, 54, 21, 56, 59, 6,  63, 57, 62, 11, 36, 20, 34, 44, 52};
 void replaceCharacter(std::string& source, const std::string& from, const std::string& to);
-void saveJson(const std::string& filename, const nlohmann::json& content);
-nlohmann::json readJson(const std::string& filename);
-void updateData(const std::string& key, const nlohmann::json& value);
 std::string filterCharacters(const std::string& input);
 std::string urlEncode(const std::string& decoded);
 std::string urlDecode(const std::string& encoded);
@@ -24,28 +21,4 @@ bool isExpired(const std::time_t& expires);
 void setCookieDataDir(const std::string& dir);
 std::string cookieDataFilePath();
 
-template <typename Result>
-bool readData(Result& result, const std::string& key)
-{
-    auto filePath = cookieDataFilePath();
-    nlohmann::json j = readJson(filePath);
-    if (!j.is_object() || !j.contains(key))
-    {
-        return false;
-    }
-
-    nlohmann::json cookie = j[key];
-    if (!cookie.is_object())
-    {
-        return false;
-    }
-
-    if (cookie.contains("Expires") && isExpired(cookie["Expires"].get<std::time_t>()))
-    {
-        return false;
-    }
-
-    result = Result(cookie);
-    return true;
-}
 }  // namespace biliapi

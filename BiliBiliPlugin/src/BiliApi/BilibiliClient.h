@@ -69,7 +69,6 @@ public:
     void resetWbi();
     void encodeWithWbi(ParamType& params);
 
-    static void parseCookie(const std::string& url);
     static nlohmann::json getDataFromRespones(const std::string& respones);
 
     static network::CurlHeader passPortHeaders();
@@ -80,6 +79,7 @@ protected:
 
 private:
     network::CurlCookies m_cookies;  // we sellect this mode for debug
+    MixinKey m_mixinKey;
 };
 
 }  // namespace biliapi

@@ -200,7 +200,7 @@ LoginStatusScanning BilibiliClient::getLoginStatus(const std::string& qrcodeKey)
         BILIBILI_LOG_INFO("Login success!");
         std::lock_guard lk(m_mutexRequest);
         m_cookies.addCurlCookies(header.at(network::set_cookies));
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".bilibili.com"));
+        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie("bilibili.com"));
     }
 
     LoginStatusScanning ret;
@@ -240,7 +240,7 @@ LogoutExitV2 BilibiliClient::getLogoutExitV2()
 {
     std::string response;
 
-    auto keys = m_cookies.cookie(".bilibili.com").keys();
+    auto keys = m_cookies.cookie("bilibili.com").keys();
     int haveId = 3;
 
     for (const auto& key : keys)
@@ -254,17 +254,17 @@ LogoutExitV2 BilibiliClient::getLogoutExitV2()
     if (haveId == 0)
     {
         std::string cookie = "Cookie: ";
-        cookie += std::string(cookie_dedeUserId) + "=" + m_cookies.cookie(".bilibili.com").value(cookie_dedeUserId);
+        cookie += std::string(cookie_dedeUserId) + "=" + m_cookies.cookie("bilibili.com").value(cookie_dedeUserId);
         cookie += "; ";
-        cookie += std::string(cookie_biliJct) + "=" + m_cookies.cookie(".bilibili.com").value(cookie_biliJct);
+        cookie += std::string(cookie_biliJct) + "=" + m_cookies.cookie("bilibili.com").value(cookie_biliJct);
         cookie += "; ";
-        cookie += std::string(cookie_sessdata) + "=" + m_cookies.cookie(".bilibili.com").value(cookie_sessdata);
+        cookie += std::string(cookie_sessdata) + "=" + m_cookies.cookie("bilibili.com").value(cookie_sessdata);
 
         network::CurlHeader header;
         header.add("Content-Type: application/x-www-form-urlencoded");
         header.add(cookie);
 
-        std::string param = "biliCSRF=" + m_cookies.cookie(".bilibili.com").value(cookie_biliJct);
+        std::string param = "biliCSRF=" + m_cookies.cookie("bilibili.com").value(cookie_biliJct);
 
         post(PassportURL::Logout, response, param, header, false);
     }
@@ -319,12 +319,12 @@ void BilibiliClient::setCookies(std::string cookies)
 {
     std::lock_guard lk(m_mutexRequest);
     m_cookies = network::CurlCookies(cookies);
-    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".bilibili.com"));
+    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie("bilibili.com"));
 }
 
 bool BilibiliClient::isLogined() const
 {
-    return !m_cookies.cookie(".bilibili.com").value("SESSDATA").empty();
+    return !m_cookies.cookie("bilibili.com").value("SESSDATA").empty();
 }
 
 void BilibiliClient::resetWbi()
@@ -336,20 +336,20 @@ void BilibiliClient::resetWbi()
         const auto img_url = std::filesystem::path(util::utf8ToLocale(key.img_url)).stem().string();
         const auto sub_url = std::filesystem::path(util::utf8ToLocale(key.sub_url)).stem().string();
         nlohmann::json j;
-        j.emplace("mixin_key", GetMixinKey(img_url + sub_url));
-        j.emplace("Expires", (std::time(nullptr) + daySeconds) / daySeconds);  // 有效期一天
-        updateData("mixinKey", j);
+        m_mixinKey.mixin_key = GetMixinKey(img_url + sub_url);
+        m_mixinKey.Expires = (std::time(nullptr) + daySeconds) / daySeconds;
     }
 }
 
 void BilibiliClient::encodeWithWbi(ParamType& params)
 {
-    MixinKey mixinKey;
-    if (!readData(mixinKey, "mixinKey"))
+    if (m_mixinKey.mixin_key.empty() || isExpired(m_mixinKey.Expires))
     {
+        // 如果 mixinKey 过期或不存在，则从 Nav 中获取最新的 mixinKey
+        BILIBILI_LOG_INFO("mixinKey expired or not exist, get from Nav");
         resetWbi();
-        readData(mixinKey, "mixinKey");
     }
+
     // 添加 wts 字段
     const time_t curr_time = time(nullptr);
     params.emplace("wts", std::to_string(curr_time));
@@ -370,31 +370,7 @@ void BilibiliClient::encodeWithWbi(ParamType& params)
     });
 
     // 计算 w_rid 字段
-    params.emplace("w_rid", MD5Hash(query + mixinKey.mixin_key));
-}
-
-void BilibiliClient::parseCookie(const std::string& url)
-{
-    nlohmann::json result;
-    std::string params = url.substr(url.find('?') + 1);  // 获取参数部分
-    std::stringstream ss(params);
-    std::string param;
-    while (std::getline(ss, param, '&'))
-    {
-        std::string key = param.substr(0, param.find('='));
-        std::string value = param.substr(param.find('=') + 1);
-        if (key == "Expires")
-        {
-            // 将 Expires 时间戳字符串转换为天数, 以便与 mixinKey 日更同步
-            auto expires = static_cast<std::time_t>(std::stoll(value));
-            result.emplace("Expires", expires / daySeconds);
-        }
-        else if (key == cookie_sessdata || key == cookie_biliJct)
-        {
-            result.emplace(key, value);
-        }
-    }
-    updateData("cookie", result);
+    params.emplace("w_rid", MD5Hash(query + m_mixinKey.mixin_key));
 }
 
 nlohmann::json BilibiliClient::getDataFromRespones(const std::string& respones)
