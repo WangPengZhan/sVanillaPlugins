@@ -5,12 +5,12 @@
 #include "IPlugin.h"
 #include "TemplatePluginCall.h"
 
-TEST(TemplatePlugin_Test, test)
+TEST(HLSPlugin_Test, test)
 {
     std::cout << "test";
 }
 
-TEST(TemplatePlugin_Test, INFO)
+TEST(HLSPlugin_Test, INFO)
 {
     initDir("D:/");
     auto hanlde = pluginInit();
@@ -37,5 +37,4 @@ TEST(TemplatePlugin_Test, INFO)
     downloader->start();
 
     std::this_thread::sleep_for(std::chrono::seconds(200));
-
 }

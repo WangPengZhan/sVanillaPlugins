@@ -61,6 +61,24 @@ std::string PendingInfo::getUri() const
     return baseUri + uri;
 }
 
+bool StreamInfo::isVideoStream() const
+{
+    if (codecs.find("avc1") != std::string::npos || codecs.find("hev1") != std::string::npos || codecs.find("vp09") != std::string::npos ||
+        codecs.find("av01") != std::string::npos)
+    {
+        return true;
+    }
+    if (!resolution.empty())
+    {
+        return true;
+    }
+    if (!video.empty())
+    {
+        return true;
+    }
+    return false;
+}
+
 bool StreamInfo::parseContent(std::string_view content)
 {
     if (!content.starts_with(ext_x_stream_inf))

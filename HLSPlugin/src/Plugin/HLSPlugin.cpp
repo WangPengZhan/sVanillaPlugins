@@ -20,6 +20,7 @@ bool cutImage(const hlsapi::M3U8Playlist& plyalist, std::string& imagePath)
 {
     if (plyalist.segments.empty())
     {
+        HLS_LOG_ERROR("segments is empty, image path: {}", imagePath);
         return false;
     }
 
@@ -31,17 +32,17 @@ bool cutImage(const hlsapi::M3U8Playlist& plyalist, std::string& imagePath)
     {
         std::filesystem::create_directories(std::filesystem::path(tsFileName).parent_path());
     }
-    client.downloadTsToFiles(segment.getUri(), tsFileName, plyalist.keyInfo);
+    client.downloadTsToFiles(segment.getUri(), util::localeToUtf8(tsFileName), plyalist.keyInfo);
 
     std::vector<std::string> ffmpegArgs;
 
     ffmpegArgs.push_back("-i");
-    ffmpegArgs.push_back(tsFileName);
+    ffmpegArgs.push_back(util::localeToUtf8(tsFileName));
     ffmpegArgs.push_back("-ss");
     ffmpegArgs.push_back("00:00:00");
     ffmpegArgs.push_back("-vframes");
     ffmpegArgs.push_back("1");
-    ffmpegArgs.push_back(imagePath);
+    ffmpegArgs.push_back(util::localeToUtf8(imagePath));
     ffmpegArgs.push_back("-y");
 
     ffmpeg::FFmpegHelper::globalInstance().startFFmpeg(
@@ -113,7 +114,7 @@ adapter::VideoView HLSPlugin::getVideoView(const std::string& url)
         auto& streamInfo = parser.master().streams;
         for (const auto& stream : streamInfo)
         {
-            if (!stream.resolution.empty())
+            if (stream.isVideoStream())
             {
                 auto mediaInfoM3u8 = hlsapi::HLSClient::globalClient().downloadM3u8(stream.getUri());
                 mediaInfoM3u8 = hlsapi::trim(mediaInfoM3u8);

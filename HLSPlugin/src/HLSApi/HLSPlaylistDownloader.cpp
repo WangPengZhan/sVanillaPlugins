@@ -51,6 +51,7 @@ const std::string& HLSPlaylistDownloader::dir() const
 {
     return m_dir;
 }
+
 bool HLSPlaylistDownloader::downloadTsToFiles(const std::vector<M3U8Playlist>& playlists)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -60,13 +61,12 @@ bool HLSPlaylistDownloader::downloadTsToFiles(const std::vector<M3U8Playlist>& p
         {
             DownloadInfo info;
             info.uri = segment.getUri();
-            info.filename = dir() + std::to_string(m_downloadInfos.size()) + ".ts";
+            info.filename = util::localeToUtf8(dir() + std::to_string(m_downloadInfos.size()) + ".ts");
             info.keyInfo = playlist.keyInfo;
             m_downloadInfos.push_back(std::move(info));
         }
+        m_totalCount += static_cast<int>(playlist.segments.size());
     }
-
-    m_totalCount += static_cast<int>(m_downloadInfos.size());
 
     return true;
 }
@@ -88,7 +88,7 @@ bool HLSPlaylistDownloader::addDownloadInfo(const MediaSegment& mediaSegment, co
     std::lock_guard<std::mutex> lock(m_mutex);
     DownloadInfo info;
     info.uri = mediaSegment.getUri();
-    info.filename = dir() + std::to_string(m_downloadInfos.size()) + ".ts";
+    info.filename = util::localeToUtf8(dir() + std::to_string(m_downloadInfos.size()) + ".ts");
     info.keyInfo = keyInfo;
     m_downloadInfos.push_back(std::move(info));
     m_totalCount += 1;
@@ -152,7 +152,7 @@ void HLSPlaylistDownloader::mergeTs(const std::string& output)
 
     ffmpeg::MergeTsInfo mergeInfo;
     mergeInfo.concatFile = util::localeToUtf8(concatFilePath);
-    mergeInfo.targetVideo = output;
+    mergeInfo.targetVideo = util::localeToUtf8(output);
     ffmpeg::FFmpegHelper().startFFmpeg(
         mergeInfo,
         [mergeInfo, sortedFiles]() {

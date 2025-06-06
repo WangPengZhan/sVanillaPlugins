@@ -5,6 +5,7 @@
 #include "Util/LocaleHelper.h"
 #include "Plugin/HLSPlugin.h"
 #include "HLSApi/HLSClient.h"
+#include "HLSApi/HLSLog.h"
 
 namespace download
 {
@@ -22,6 +23,7 @@ HLSDownloader::HLSDownloader(std::shared_ptr<hlsapi::HLSClient> client, std::uno
     : m_finished(false)
     , m_client(std::move(client))
 {
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
     m_tempDir = HLSPlugin::getDir() + "HLS_" + std::to_string(std::rand() % 10000) + "_" + std::to_string(std::time(nullptr)) + "/";
     if (!std::filesystem::exists(std::filesystem::path(m_tempDir)))
     {
@@ -147,13 +149,13 @@ void HLSDownloader::downloadStatus()
             switch (type)
             {
             case hlsapi::MediaInfo::Video:
-                merge.video = m_tempDir + "video.mp4";
+                merge.video = util::localeToUtf8(m_tempDir) + "video.mp4";
                 break;
             case hlsapi::MediaInfo::Audio:
-                merge.audio = m_tempDir + "audio.m4a";
+                merge.audio = util::localeToUtf8(m_tempDir) + "audio.m4a";
                 break;
             case hlsapi::MediaInfo::Subtitle:
-                merge.subtitle = m_tempDir + "subtitle.srt";
+                merge.subtitle = util::localeToUtf8(m_tempDir) + "subtitle.srt";
                 break;
             default:
                 break;
@@ -163,6 +165,7 @@ void HLSDownloader::downloadStatus()
 
     ffmpeg::FFmpegHelper::mergeVideo(merge);
     m_status = Finished;
+    HLS_LOG_INFO("HLS download finished, merged video: {}", merge.targetVideo);
 }
 
 void HLSDownloader::finish()

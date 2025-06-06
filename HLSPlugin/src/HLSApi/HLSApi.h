@@ -40,6 +40,8 @@ struct StreamInfo : PendingInfo
     std::string pathwayId;
     int programId{};
 
+    bool isVideoStream() const;
+
     bool parseContent(std::string_view content);
 };
 

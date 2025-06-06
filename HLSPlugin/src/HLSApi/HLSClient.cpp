@@ -128,6 +128,7 @@ bool HLSClient::downloadTsToFiles(const std::string& uri, const std::string& fil
     if (!file)
     {
         std::string str = strerror(errno);
+        HLS_LOG_ERROR("Failed to open file: {}, error: {}", filename, str);
         return false;
     }
 
