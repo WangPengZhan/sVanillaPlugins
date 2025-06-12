@@ -7,6 +7,11 @@
 #include "YoutubeApi/YoutubeConstants.h"
 #include "Util/TimerUtil.h"
 
+bool YoutubeLogin::supportLogin() const
+{
+    return true;
+}
+
 std::string YoutubeLogin::loginUrl() const
 {
     return std::string("https://accounts.google.com/ServiceLogin?continue=https://www.youtube.com");

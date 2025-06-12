@@ -82,6 +82,11 @@ UserInfo WeiboLogin::getUserInfo(std::string dir)
     return userInfo;
 }
 
+bool WeiboLogin::supportLogin() const
+{
+    return true;
+}
+
 std::string WeiboLogin::cookies() const
 {
     return m_client.cookies();

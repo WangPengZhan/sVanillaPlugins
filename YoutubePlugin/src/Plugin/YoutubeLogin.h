@@ -6,6 +6,8 @@ class YoutubeLogin : public AbstractLoginWeb
 {
 public:
     // thread-safe
+
+    bool supportLogin() const override;
     std::string loginUrl() const override;
     void setCookie(std::string cookie) override;
     std::unordered_set<std::string> mustKeys() const override;

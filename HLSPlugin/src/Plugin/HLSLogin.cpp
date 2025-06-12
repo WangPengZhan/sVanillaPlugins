@@ -13,6 +13,11 @@ HLSLogin::LoginSatus HLSLogin::getLoginStatus()
     return Error;
 }
 
+bool HLSLogin::supportLogin() const
+{
+    return false;
+}
+
 bool HLSLogin::getScanContext(std::string& content)
 {
     return true;

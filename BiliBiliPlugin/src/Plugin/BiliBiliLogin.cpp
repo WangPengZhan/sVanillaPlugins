@@ -130,6 +130,11 @@ UserInfo BiliBiliLogin::getUserInfo(std::string dir)
     return userInfo;
 }
 
+bool BiliBiliLogin::supportLogin() const
+{
+    return true;
+}
+
 std::string BiliBiliLogin::cookies() const
 {
     return biliapi::BilibiliClient::globalClient().cookies();

@@ -10,6 +10,7 @@ public:
     bool getScanContext(std::string& content) override;
     void loginSuccess() override;
 
+    bool supportLogin() const override;
     std::string cookies() const override;
     void setCookies(std::string cookies) override;
     bool refreshCookies(std::string cookies) override;
