@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 #include <list>
+#include <iostream>
 
 namespace weiboapi
 {
@@ -614,7 +615,31 @@ struct Scrubber
     int interval;
     std::vector<std::string> urls;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Scrubber, width, height, col, row, interval, urls)
+    friend void to_json(nlohmann::json& nlohmann_json_j, const Scrubber& nlohmann_json_t)
+    {
+        nlohmann_json_j["width"] = nlohmann_json_t.width;
+        nlohmann_json_j["height"] = nlohmann_json_t.height;
+        nlohmann_json_j["col"] = nlohmann_json_t.col;
+        nlohmann_json_j["row"] = nlohmann_json_t.row;
+        nlohmann_json_j["interval"] = nlohmann_json_t.interval;
+        nlohmann_json_j["urls"] = nlohmann_json_t.urls;
+    }
+
+    friend void from_json(const nlohmann::json& nlohmann_json_j, Scrubber& nlohmann_json_t)
+    {
+        if (!nlohmann_json_j.is_object())
+        {
+            return;
+        }
+
+        const Scrubber nlohmann_json_default_obj{};
+        nlohmann_json_t.width = nlohmann_json_j.value("width", nlohmann_json_default_obj.width);
+        nlohmann_json_t.height = nlohmann_json_j.value("height", nlohmann_json_default_obj.height);
+        nlohmann_json_t.col = nlohmann_json_j.value("col", nlohmann_json_default_obj.col);
+        nlohmann_json_t.row = nlohmann_json_j.value("row", nlohmann_json_default_obj.row);
+        nlohmann_json_t.interval = nlohmann_json_j.value("interval", nlohmann_json_default_obj.interval);
+        nlohmann_json_t.urls = nlohmann_json_j.value("urls", nlohmann_json_default_obj.urls);
+    }
 };
 
 struct Reward
@@ -629,6 +654,53 @@ struct Reward
     User user;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Reward, version_state, state, welfare, desc, reward_button_scheme, reward_params, mid, user)
+};
+
+struct WeiboUrls
+{
+    std::map<std::string, std::string> urls;
+
+    friend void to_json(nlohmann::json& nlohmann_json_j, const WeiboUrls& nlohmann_json_t)
+    {
+        nlohmann_json_j = nlohmann_json_t.urls;
+    }
+    friend void from_json(const nlohmann::json& nlohmann_json_j, WeiboUrls& nlohmann_json_t)
+    {
+        try
+        {
+            if (nlohmann_json_j.is_object())
+            {
+                nlohmann_json_t.urls.clear();
+                for (const auto& [key, value] : nlohmann_json_j.items())
+                {
+                    nlohmann_json_t.urls[key] = value.get<std::string>();
+                }
+            }
+            else if (nlohmann_json_j.is_array())
+            {
+                nlohmann_json_t.urls.clear();
+                for (const auto& item : nlohmann_json_j)
+                {
+                    if (!item.is_object())
+                    {
+                        continue;
+                    }
+                    for (auto it = item.begin(); it != item.end(); ++it)
+                    {
+                        nlohmann_json_t.urls[it.key()] = it.value().get<std::string>();
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Error parsing WeiboUrls: " << e.what() << std::endl;
+        }
+    }
 };
 
 struct ComponentPlayPlayinfo
@@ -663,7 +735,7 @@ struct ComponentPlayPlayinfo
     int attitudes_count;
 
     std::string title;
-    std::map<std::string, std::string> urls;
+    WeiboUrls urls;
 
     std::string cover_image;
     std::string duration;

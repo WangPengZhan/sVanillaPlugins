@@ -198,10 +198,10 @@ std::string WeiboClient::getStreamInfo(const std::string& wid)
     }
     auto ret = getPlayInfoByMid(mid);
 
-    const auto baseName = getBestTemplate(ret.data.Component_Play_Playinfo.urls);
+    const auto baseName = getBestTemplate(ret.data.Component_Play_Playinfo.urls.urls);
     if (!baseName.empty())
     {
-        return "http:" + ret.data.Component_Play_Playinfo.urls[baseName];
+        return "http:" + ret.data.Component_Play_Playinfo.urls.urls[baseName];
     }
     return ret.data.Component_Play_Playinfo.stream_url;
 }

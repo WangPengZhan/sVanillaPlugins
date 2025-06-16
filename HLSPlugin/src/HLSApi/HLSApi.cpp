@@ -31,18 +31,18 @@ std::unordered_map<std::string_view, std::string_view> parseAttributes(std::stri
             break;
         }
         auto key = line.substr(start, eq - start);
-        size_t val_start = eq + 1;
+        size_t valStart = eq + 1;
         std::string_view val;
-        if (line[val_start] == '"')
+        if (line[valStart] == '"')
         {
-            size_t end = line.find('"', val_start + 1);
-            val = line.substr(val_start + 1, end - val_start - 1);
+            size_t end = line.find('"', valStart + 1);
+            val = line.substr(valStart + 1, end - valStart - 1);
             start = (line.find(',', end) != std::string_view::npos) ? line.find(',', end) + 1 : line.size();
         }
         else
         {
-            size_t end = line.find(',', val_start);
-            val = line.substr(val_start, end - val_start);
+            size_t end = line.find(',', valStart);
+            val = line.substr(valStart, end - valStart);
             start = (end != std::string_view::npos) ? end + 1 : line.size();
         }
         attrs[key] = val;
@@ -51,11 +51,46 @@ std::unordered_map<std::string_view, std::string_view> parseAttributes(std::stri
     return attrs;
 }
 
+size_t findNthOccurrence(const std::string& str, char c, int n)
+{
+    size_t pos = 0;
+    int count = 0;
+
+    while (count < n && (pos = str.find(c, pos + 1)) != std::string::npos)
+    {
+        count++;
+    }
+
+    return (count == n) ? pos : std::string::npos;
+}
+
 std::string PendingInfo::getUri() const
 {
     if (uri.starts_with("http://") || uri.starts_with("https://"))
     {
         return uri;
+    }
+
+    if (uri.starts_with('/'))
+    {
+        auto pos = findNthOccurrence(baseUri, '/', 3);
+        if (pos != std::string::npos)
+        {
+            return baseUri.substr(0, pos) + uri;
+        }
+    }
+
+    std::string basePath = baseUri;
+    if (uri.starts_with("../"))
+    {
+        std::string_view relativePath = uri;
+        std::string basePath = baseUri.ends_with('/') ? baseUri.substr(0, baseUri.size() - 1) : baseUri;
+        while (relativePath.starts_with("../"))
+        {
+            basePath = basePath.substr(0, basePath.find_last_of('/'));
+            relativePath = relativePath.substr(3);
+        }
+        return basePath + '/' + relativePath.data();
     }
 
     return baseUri + uri;

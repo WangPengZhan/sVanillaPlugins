@@ -131,7 +131,7 @@ adapter::VideoView HLSPlugin::getVideoView(const std::string& url)
         plyalist = parser.playlist();
     }
 
-    std::string path = m_dir + cover + "/" + "HLS_" + std::to_string(std::rand() % 1000000) + ".jpg";
+    std::string path = m_dir + cover + "/" + "HLS_" + std::to_string(time(nullptr)) + "_" + std::to_string(std::rand() % 1000000) + ".jpg";
     if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
     {
         std::filesystem::create_directories(std::filesystem::path(path).parent_path());
