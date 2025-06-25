@@ -27,11 +27,7 @@ HLSPlaylistDownloader::HLSPlaylistDownloader(HLSClient& client)
 
 HLSPlaylistDownloader::~HLSPlaylistDownloader()
 {
-    stopDownload();
-    for (auto& thread : m_downloadThreads)
-    {
-        thread.join();
-    }
+    exitDownload();
 }
 
 HLSClient& HLSPlaylistDownloader::client() const
@@ -173,36 +169,60 @@ void HLSPlaylistDownloader::mergeTs(const std::string& output)
 
 void HLSPlaylistDownloader::startDownload()
 {
-    std::vector<std::thread> threads;
-    threads.reserve(5);
-    for (int i = 0; i < 5; ++i)
+    if (m_downloadThreads.empty())
     {
-        threads.emplace_back(std::thread(&HLSPlaylistDownloader::downloadTsFile, this));
+        std::vector<std::thread> threads;
+        threads.reserve(5);
+        for (int i = 0; i < 5; ++i)
+        {
+            threads.emplace_back(std::thread(&HLSPlaylistDownloader::downloadTsFile, this));
+        }
+        m_downloadThreads = std::move(threads);
     }
-    m_downloadThreads = std::move(threads);
 
     m_stop = false;
+    m_resume = true;
     m_condition.notify_all();
 }
 
 void HLSPlaylistDownloader::stopDownload()
 {
-    m_stop = true;
+    m_resume = false;
     m_condition.notify_all();
+}
+
+void HLSPlaylistDownloader::exitDownload()
+{
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_downloadInfos.clear();
+    }
+    m_stop = true;
+    m_resume = true;
+    m_condition.notify_all();
+    for (auto& thread : m_downloadThreads)
+    {
+        if (thread.joinable())
+        {
+            thread.join();
+        }
+    }
 }
 
 void HLSPlaylistDownloader::downloadTsFile()
 {
+    HLS_LOG_INFO("Downloaded TS file start, task size: {}", m_downloadInfos.size());
     while (true)
     {
         DownloadInfo downloadInfo;
         {
             std::unique_lock<std::mutex> lock(m_mutex);
             m_condition.wait(lock, [&] {
-                return m_stop || !m_downloadInfos.empty();
+                return (m_stop || !m_downloadInfos.empty()) && m_resume;
             });
             if (m_stop && m_downloadInfos.empty())
             {
+                HLS_LOG_INFO("Downloaded TS file exit!");
                 return;
             }
             downloadInfo = std::move(m_downloadInfos.front());

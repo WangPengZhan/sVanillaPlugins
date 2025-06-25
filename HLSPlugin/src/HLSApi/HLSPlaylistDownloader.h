@@ -47,6 +47,7 @@ public:
 
     void startDownload();
     void stopDownload();
+    void exitDownload();
 
 protected:
     void downloadTsFile();
@@ -57,6 +58,7 @@ private:
     std::mutex m_mutex;
     std::condition_variable m_condition;
     std::atomic_bool m_stop;
+    std::atomic_bool m_resume{true};
     std::atomic_int m_totalCount{0};
     std::atomic_int m_finishedCount{0};
     std::list<DownloadInfo> m_downloadInfos;
