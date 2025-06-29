@@ -160,6 +160,7 @@ std::shared_ptr<download::FileDownloader> HLSPlugin::getDownloader(const VideoIn
 {
     auto copyedVideoInfo = videoInfo;
     copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
+    copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     auto hlsClient = std::make_shared<hlsapi::HLSClient>();
     std::string url = copyedVideoInfo.videoView->Identifier;
@@ -243,7 +244,7 @@ std::shared_ptr<download::FileDownloader> HLSPlugin::getDownloader(const VideoIn
     {
         fileName = std::string(getUrlLast(copyedVideoInfo.videoView->Identifier)) + "_" + std::to_string(std::rand() % 10000);
     }
-    hlsDownlaoder->setFilename(fileName + ".mp4");
+    hlsDownlaoder->setFilename(fileName);
     return hlsDownlaoder;
 }
 

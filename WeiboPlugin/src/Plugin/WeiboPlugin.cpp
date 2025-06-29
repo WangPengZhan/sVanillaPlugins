@@ -80,6 +80,7 @@ std::shared_ptr<download::FileDownloader> WeiboPlugin::getDownloader(const Video
 {
     auto copyedVideoInfo = videoInfo;
     copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
+    copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     const auto result = m_client.getStreamInfo(copyedVideoInfo.videoView->Identifier);
     if (result.empty())
@@ -91,8 +92,8 @@ std::shared_ptr<download::FileDownloader> WeiboPlugin::getDownloader(const Video
     std::string videoUrl = result;
 
     info.videoUris = {videoUrl};
-    auto fileName = videoInfo.fileName();
-    info.option.out = fileName + ".mp4";
+    auto fileName = videoInfo.fileName(true);
+    info.option.out = fileName;
     info.option.dir = videoInfo.downloadConfig->downloadDir;
 
     std::list<std::string> h = {std::string("User-Agent: ") + network::chrome, std::string("Referer: ") + weiboapi::weiboHomeUrl};

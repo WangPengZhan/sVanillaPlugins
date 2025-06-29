@@ -45,6 +45,7 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
 {
     auto copyedVideoInfo = videoInfo;
     copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
+    copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     auto& biliClient = biliapi::BilibiliClient::globalClient();
     long long qn = 64;
@@ -107,8 +108,8 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
     download::ResourseInfo info;
     info.videoUris = video_urls;
     info.audioUris = audio_urls;
-    auto fileName = videoInfo.fileName();
-    info.option.out = fileName + ".mp4";
+    auto fileName = videoInfo.fileName(true);
+    info.option.out = fileName;
     info.option.dir = videoInfo.downloadConfig->downloadDir;
     const std::list<std::string> h = {"Referer: https://www.bilibili.com", std::string("User-Agent: ") + network::chrome};
     info.option.header = h;

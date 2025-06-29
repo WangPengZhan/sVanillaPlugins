@@ -89,6 +89,8 @@ void HLSDownloader::resume()
 
 void HLSDownloader::downloadStatus()
 {
+    m_info.total = 0;
+    m_info.complete = 0;
     for (auto& [type, downloader] : m_downloadedFiles)
     {
         if (downloader)

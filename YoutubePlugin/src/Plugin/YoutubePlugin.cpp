@@ -47,6 +47,7 @@ std::shared_ptr<download::FileDownloader> YoutubePlugin::getDownloader(const Vid
 {
     auto copyedVideoInfo = videoInfo;
     copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
+    copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     auto& youtubeClient = youtubeapi::YoutubeClient::globalClient();
     const auto result = youtubeClient.getStreamInfo(copyedVideoInfo.videoView->Identifier);
@@ -64,8 +65,8 @@ std::shared_ptr<download::FileDownloader> YoutubePlugin::getDownloader(const Vid
     }
 
     info.videoUris = {videoUrl};
-    auto fileName = videoInfo.fileName();
-    info.option.out = fileName + ".mp4";
+    auto fileName = videoInfo.fileName(true);
+    info.option.out = fileName;
     info.option.dir = videoInfo.downloadConfig->downloadDir;
     const std::list<std::string> h = {youtubeapi::youtube_referer, youtubeapi::youtube_user_agent};
     info.option.header = h;
