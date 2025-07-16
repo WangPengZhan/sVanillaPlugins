@@ -2,13 +2,27 @@
 
 #include <regex>
 
+namespace
+{
+std::regex widPattern(R"(https?://(?:m\.weibo\.cn/(?:status|detail)|(?:www\.)?weibo\.com/\d+)/([a-zA-Z0-9]+))");
+std::regex tvPattern(R"(https?://(?:video\.weibo\.com/show\?fid=|weibo\.com/tv/show/|h5\.video\.weibo\.com/show/)(\d+:[a-fA-f0-9]+))");
+
+std::vector<std::regex> validUrlPatterns = {widPattern, tvPattern};
+}  // namespace
+
 bool isValidUrl(const std::string& url)
 {
     try
     {
-        std::regex weiboPattern(
-            R"(https?://(?:(?:m\.weibo\.cn/(?:status|detail)|(?:www\.)?weibo\.com/\d+)/([a-zA-Z0-9]+)|(?:video\.weibo\.com/show\?fid=|weibo\.com/tv/show/|h5\.video\.weibo\.com/show/)(\d+:\d+)))");
-        return std::regex_search(url, weiboPattern);
+        for (const auto& pattern : validUrlPatterns)
+        {
+            if (std::regex_match(url, pattern))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
     catch (const std::regex_error& e)
     {

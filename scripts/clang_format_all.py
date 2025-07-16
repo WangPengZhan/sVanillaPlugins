@@ -18,7 +18,7 @@ def format_dir(dir):
                 format_code(file_path)
  
 def main():
-    src_dir = ['BiliBiliPlugin', 'TemplatePlugin', 'YoutubePlugin', 'WeiboPlugin', 'HLSPlugin']
+    src_dir = ['BiliBiliPlugin', 'TemplatePlugin', 'YoutubePlugin', 'WeiboPlugin', 'HLSPlugin', 'NeteaseCloudMusicPlugin']
     for dir in src_dir:
         format_dir(dir)
  
