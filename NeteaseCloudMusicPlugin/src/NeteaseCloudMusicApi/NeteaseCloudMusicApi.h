@@ -218,11 +218,10 @@ struct FreeTrialPrivilege
     bool resConsumable;
     bool userConsumable;
     std::string listenType;
-    std::string cannotListenReason;
     std::string playReason;
     std::string freeLimitTagType;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FreeTrialPrivilege, resConsumable, userConsumable, listenType, cannotListenReason, playReason, freeLimitTagType)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FreeTrialPrivilege, resConsumable, userConsumable, listenType, playReason, freeLimitTagType)
 };
 
 struct ChargeInfo

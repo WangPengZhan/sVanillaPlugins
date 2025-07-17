@@ -9,6 +9,7 @@
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicClient.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicUtils.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicConstants.h"
+#include "NeteaseCloudMusicApi/NeteaseCloudMusicApi.h"
 
 namespace
 {
@@ -106,7 +107,8 @@ TEST(NeteaseCloudMusic, registerAnonimous)
 TEST(NeteaseCloudMusic, getLoginKey)
 {
     netease::NeteaseCloudMusicClient client;
-    client.getLoginKey();
+    auto key = client.getLoginKey();
+    auto status = client.getLoginStatus(key.unikey);
 }
 
 TEST(NeteaseCloudMusic, getSongDetails)

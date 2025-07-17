@@ -124,7 +124,7 @@ std::shared_ptr<download::FileDownloader> NeteaseCloudMusicPlugin::getDownloader
     }
     case ContentType::SONG:
     {
-        auto data = m_client.getSongPlayUrl({std::stoull(copyedVideoInfo.videoView->VideoId)});
+        auto data = m_client.getSongPlayUrl({std::stoull(copyedVideoInfo.videoView->VideoId)}, netease::SoundLevel::Lossless);
         if (!data.data.empty())
         {
             url = data.data[0].url;

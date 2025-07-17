@@ -161,6 +161,7 @@ NeteaseCloudMusicClient::NeteaseCloudMusicClient()
     generateData();
     m_option.cryptoType = CryptoType::WeApi;
     createCookies(m_option);
+    registerAnonimous();
 }
 
 NeteaseCloudMusicClient& NeteaseCloudMusicClient::globalClient()
@@ -172,12 +173,17 @@ NeteaseCloudMusicClient& NeteaseCloudMusicClient::globalClient()
 LoginUnikey NeteaseCloudMusicClient::getLoginKey()
 {
     const std::string url = home + "/weapi/" + Login::QRUnikey.substr(5);
-    network::CurlHeader headers = createHeaders(m_option);
-    headers.add("Cookie: " + std::string(m_option.cookie.cookie(domain)));
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+    network::CurlHeader headers = createHeaders(option);
+    headers.add("Cookie: " + std::string(option.cookie.cookie(domain)));
     nlohmann::ordered_json data = nlohmann::ordered_json::object();
     data["type"] = 3;
     data[s_csrf_token] = "";
-    std::string postFields = getPostFields(m_option.cryptoType, data);
+    std::string postFields = getPostFields(option.cryptoType, data);
 
     std::string response;
     post(url, response, postFields, headers, false);
@@ -198,25 +204,22 @@ LoginUnikey NeteaseCloudMusicClient::getLoginKey()
 
 LoginStatus NeteaseCloudMusicClient::getLoginStatus(const std::string& key)
 {
-    const std::string url = home + "/weapi/" + Login::MVUrl.substr(5);
-    network::CurlHeader headers = createHeaders(m_option);
-    headers.add("Cookie: " + std::string(m_option.cookie.cookie(domain)));
+    const std::string url = home + "/weapi/" + Login::QRCheck.substr(5);
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+    network::CurlHeader headers = createHeaders(option);
+    headers.add("Cookie: " + std::string(option.cookie.cookie(domain)));
     nlohmann::ordered_json data = nlohmann::ordered_json::object();
     data["key"] = key;
     data["type"] = 3;
     data[s_csrf_token] = "";
-    std::string postFields = getPostFields(m_option.cryptoType, data);
+    std::string postFields = getPostFields(option.cryptoType, data);
 
     network::ResponseHeaderAndBody response;
     post(url, response, postFields, headers, false);
-    auto header = parseHeader(response.header);
-    if (header.end() != header.find(network::set_cookies))
-    {
-        NETEASE_LOG_INFO("Login success!");
-        std::lock_guard lk(m_mutexRequest);
-        m_option.cookie = network::CurlCookies(header.at(network::set_cookies));
-        m_option.bIsLogin = true;
-    }
 
     LoginStatus ret;
     try
@@ -227,6 +230,15 @@ LoginStatus NeteaseCloudMusicClient::getLoginStatus(const std::string& key)
     {
         std::cout << "error: " << e.what() << std::endl;
         NETEASE_LOG_WARN("getLoginStatus error: {}", e.what());
+    }
+
+    auto header = parseHeader(response.header);
+    if (header.end() != header.find(network::set_cookies) && ret.code == 803)
+    {
+        NETEASE_LOG_INFO("Login success!");
+        std::lock_guard lk(m_mutexRequest);
+        m_option.cookie = network::CurlCookies(header.at(network::set_cookies));
+        m_option.bIsLogin = true;
     }
 
     return ret;
@@ -246,9 +258,14 @@ SongDetails NeteaseCloudMusicClient::getSongDetails(std::vector<uint64_t> ids)
     data["c"] = jsonIds.dump();
     data[s_csrf_token] = "";
 
-    network::CurlHeader headers = createHeaders(m_option);
-    headers.add("Cookie: " + std::string(m_option.cookie.cookie(domain)));
-    std::string postFields = getPostFields(m_option.cryptoType, data);
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+    network::CurlHeader headers = createHeaders(option);
+    headers.add("Cookie: " + std::string(option.cookie.cookie(domain)));
+    std::string postFields = getPostFields(option.cryptoType, data);
 
     std::string response;
     post(url, response, postFields, headers, false);
@@ -269,8 +286,14 @@ SongDetails NeteaseCloudMusicClient::getSongDetails(std::vector<uint64_t> ids)
 
 SongPlayUrl NeteaseCloudMusicClient::getSongPlayUrl(std::vector<uint64_t> ids, SoundLevel level)
 {
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+
     const std::string url = home + "/weapi/" + Login::SongUrl.substr(5);
-    auto cookie = m_option.cookie.cookie(domain);
+    auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json jsonIds = ids;
     nlohmann::ordered_json data;
     data["ids"] = jsonIds.dump();
@@ -278,9 +301,9 @@ SongPlayUrl NeteaseCloudMusicClient::getSongPlayUrl(std::vector<uint64_t> ids, S
     data["encodeType"] = level == SoundLevel::Sky ? "c51" : "flac";
     data[s_csrf_token] = "";
 
-    network::CurlHeader headers = createHeaders(m_option);
+    network::CurlHeader headers = createHeaders(option);
     headers.add("Cookie: " + std::string(cookie));
-    std::string postFields = getPostFields(m_option.cryptoType, data);
+    std::string postFields = getPostFields(option.cryptoType, data);
 
     std::string response;
     post(url, response, postFields, headers, false);
@@ -301,14 +324,21 @@ SongPlayUrl NeteaseCloudMusicClient::getSongPlayUrl(std::vector<uint64_t> ids, S
 
 AblumDetails NeteaseCloudMusicClient::getAblum(std::string id)
 {
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+
     const std::string url = home + "/weapi/" + Login::Album.substr(5) + "/" + id;
-    auto cookie = m_option.cookie.cookie(domain);
+
+    auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data[s_csrf_token] = "";
 
-    network::CurlHeader headers = createHeaders(m_option);
+    network::CurlHeader headers = createHeaders(option);
     headers.add("Cookie: " + std::string(cookie));
-    std::string postFields = getPostFields(m_option.cryptoType, data);
+    std::string postFields = getPostFields(option.cryptoType, data);
 
     std::string response;
     post(url, response, postFields, headers, false);
@@ -329,17 +359,23 @@ AblumDetails NeteaseCloudMusicClient::getAblum(std::string id)
 
 PlaylistDetails NeteaseCloudMusicClient::getPlaylist(std::string id)
 {
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+
     const std::string url = home + "/weapi/" + Login::PlaylistDetail.substr(5);
-    auto cookie = m_option.cookie.cookie(domain);
+    auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data["id"] = id;
     data["n"] = 100000;
     data["s"] = 10000;
     data[s_csrf_token] = "";
 
-    network::CurlHeader headers = createHeaders(m_option);
+    network::CurlHeader headers = createHeaders(option);
     headers.add("Cookie: " + std::string(cookie));
-    std::string postFields = getPostFields(m_option.cryptoType, data);
+    std::string postFields = getPostFields(option.cryptoType, data);
 
     std::string response;
     post(url, response, postFields, headers, false);
@@ -360,15 +396,21 @@ PlaylistDetails NeteaseCloudMusicClient::getPlaylist(std::string id)
 
 MVResponse NeteaseCloudMusicClient::getMVDetail(std::string id)
 {
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+
     const std::string url = home + "/weapi/" + Login::MVDetail.substr(5);
-    auto cookie = m_option.cookie.cookie(domain);
+    auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data["id"] = id;
     data[s_csrf_token] = "";
 
-    network::CurlHeader headers = createHeaders(m_option);
+    network::CurlHeader headers = createHeaders(option);
     headers.add("Cookie: " + std::string(cookie));
-    std::string postFields = getPostFields(m_option.cryptoType, data);
+    std::string postFields = getPostFields(option.cryptoType, data);
 
     std::string response;
     post(url, response, postFields, headers, false);
@@ -389,16 +431,22 @@ MVResponse NeteaseCloudMusicClient::getMVDetail(std::string id)
 
 MVPlayUrl NeteaseCloudMusicClient::getMVPlayUrl(std::string id)
 {
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+
     const std::string url = home + "/weapi/" + Login::MVUrl.substr(5);
-    auto cookie = m_option.cookie.cookie(domain);
+    auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data["id"] = id;
     data["r"] = 1080;
     data[s_csrf_token] = "";
 
-    network::CurlHeader headers = createHeaders(m_option);
+    network::CurlHeader headers = createHeaders(option);
     headers.add("Cookie: " + std::string(cookie));
-    std::string postFields = getPostFields(m_option.cryptoType, data);
+    std::string postFields = getPostFields(option.cryptoType, data);
 
     std::string response;
     post(url, response, postFields, headers, false);
@@ -538,17 +586,23 @@ std::string NeteaseCloudMusicClient::getPostFields(CryptoType cryptoType, const 
 
 void NeteaseCloudMusicClient::registerAnonimous()
 {
-    network::CurlHeader headers = createHeaders(m_option);
-    headers.add("Cookie: " + std::string(m_option.cookie.cookie(domain)));
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+
+    network::CurlHeader headers = createHeaders(option);
+    headers.add("Cookie: " + std::string(option.cookie.cookie(domain)));
 
     const std::string url = home + "/weapi/" + Login::Anonimous.substr(5);
     network::ResponseHeaderAndBody response;
-    std::string postFields = getPostFields(m_option.cryptoType, m_data);
+    std::string postFields = getPostFields(option.cryptoType, m_data);
     post(url, response, postFields, headers, false);
     auto header = parseHeader(response.header);
     if (header.end() != header.find(network::set_cookies))
     {
-        // NETEASE_LOG_INFO("Register Anonimous success!");
+        NETEASE_LOG_INFO("Register Anonimous success!");
         std::lock_guard lk(m_mutexRequest);
         m_option.cookie = network::CurlCookies(header.at(network::set_cookies));
         m_option.bIsLogin = false;

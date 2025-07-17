@@ -37,7 +37,7 @@ adapter::VideoView convertVideoView(const netease::SongDetails& data)
         view.Cover = song.al.picUrl;
         view.Duration = formatDuration(song.dt / 1000);
         view.Description = song.rt;
-        view.PublishDate = convertTimestamp(song.publishTime);
+        view.PublishDate = convertTimestamp(song.publishTime / 1000);
         view.PlayListTitle = "";
         view.fileExtension = ".mp3";
         view.pluginType = netease::pluginID;
