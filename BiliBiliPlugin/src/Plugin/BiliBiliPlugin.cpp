@@ -36,6 +36,11 @@ adapter::VideoView BiliBiliPlugin::getVideoView(const std::string& url)
     BILIBILI_LOG_INFO("getVideoView url: {}", url);
     std::string id = getID(url);
     BILIBILI_LOG_INFO("id: {}", id);
+    if (id.empty())
+    {
+        return {};
+    }
+
     auto videoView = biliapi::BilibiliClient::globalClient().getVideoView(id);
     const auto views = convertVideoView(videoView.data);
     return views;
