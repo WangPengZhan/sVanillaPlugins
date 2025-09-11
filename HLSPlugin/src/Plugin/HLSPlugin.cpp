@@ -73,6 +73,16 @@ std::string_view getUrlLast(std::string_view url)
     return url;
 }
 
+void downloadkey(hlsapi::M3U8Playlist& playlist)
+{
+    std::string url = playlist.keyInfo.getUri();
+    if (!url.empty() && playlist.keyInfo.method != hlsapi::KeyInfo::None && playlist.keyInfo.keyFormat.empty())
+    {
+        network::NetWork client;
+        client.get(url, playlist.keyInfo.keyFormat);
+    }
+}
+
 PluginMessage HLSPlugin::m_pluginMessage = {
     hlsplugin::pluginID, hlsplugin::name, hlsplugin::version, hlsplugin::description, hlsplugin::domain,
 };
@@ -130,6 +140,7 @@ adapter::VideoView HLSPlugin::getVideoView(const std::string& url)
     {
         plyalist = parser.playlist();
     }
+    downloadkey(plyalist);
 
     std::string path = m_dir + cover + "/" + "HLS_" + std::to_string(time(nullptr)) + "_" + std::to_string(std::rand() % 1000000) + ".jpg";
     if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
@@ -235,6 +246,11 @@ std::shared_ptr<download::FileDownloader> HLSPlugin::getDownloader(const VideoIn
     else
     {
         mediaInfoMap[hlsapi::MediaInfo::Video] = parser.playlist();
+    }
+
+    for (auto& [_, playlist] : mediaInfoMap)
+    {
+        downloadkey(playlist);
     }
 
     auto hlsDownlaoder = std::shared_ptr<download::HLSDownloader>(new download::HLSDownloader(hlsClient, mediaInfoMap), download::freeDownload);

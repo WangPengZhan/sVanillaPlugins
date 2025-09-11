@@ -135,6 +135,8 @@ bool HLSClient::downloadTsToFiles(const std::string& uri, const std::string& fil
     get(uri, file);
     fclose(file);
 
+    DecryptFileForTs(filename, keyInfo);
+
     return true;
 }
 

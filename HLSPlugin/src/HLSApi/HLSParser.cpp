@@ -94,6 +94,8 @@ void HLSParser::parseLine(std::string_view line)
     {
         KeyInfo key;
         key.parseContent(line);
+        key.originalUri = m_originUri;
+        key.baseUri = m_baseUri;
         m_playlist.keyInfo = std::move(key);
     }
     else if (line.starts_with(ext_x_byterange))
