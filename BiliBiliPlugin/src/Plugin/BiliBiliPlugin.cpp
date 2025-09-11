@@ -65,7 +65,7 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
 
     long long fnval = 16;
     BILIBILI_LOG_INFO("getDownloader, guid: {}, qn: {}, fnval: {}", copyedVideoInfo.getGuid(), qn, fnval);
-    const auto result = biliClient.getPlayUrl(std::stoll(copyedVideoInfo.videoView->VideoId), qn, copyedVideoInfo.videoView->Identifier, fnval);
+    const auto result = biliClient.getPlayUrl(std::stoll(copyedVideoInfo.videoView->Option2), qn, copyedVideoInfo.videoView->Identifier, fnval);
     if (result.code != 0)
     {
         BILIBILI_LOG_WARN("getPlayUrl error {}, error message: {}", result.code, result.message);
@@ -110,7 +110,7 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
         }
     }
 
-    download::ResourseInfo info;
+    download::ResourceInfo info;
     info.videoUris = video_urls;
     info.audioUris = audio_urls;
     auto fileName = videoInfo.fileName(true);

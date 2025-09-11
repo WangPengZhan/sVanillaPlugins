@@ -31,7 +31,7 @@ NeteaseCloudMusicDownloader::NeteaseCloudMusicDownloader(std::list<std::string> 
     m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
 }
 
-NeteaseCloudMusicDownloader::NeteaseCloudMusicDownloader(ResourseInfo info)
+NeteaseCloudMusicDownloader::NeteaseCloudMusicDownloader(ResourceInfo info)
     : m_resourseInfo(std::move(info))
     , m_haveTwoPart(false)
     , m_path(m_resourseInfo.option.dir)
@@ -65,7 +65,7 @@ void NeteaseCloudMusicDownloader::stop()
     {
         m_audioDownloader.stop();
     }
-    m_status = Waitting;
+    m_status = Waiting;
 }
 
 void NeteaseCloudMusicDownloader::pause()

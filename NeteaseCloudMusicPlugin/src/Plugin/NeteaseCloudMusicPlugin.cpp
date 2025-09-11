@@ -6,13 +6,14 @@
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicLog.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicUrl.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicApi.h"
+#include "NeteaseCloudMusicApi/NeteaseCloudMusicConstants.h"
 #include "NeteaseCloudMusicPluginMessage.h"
 #include "NeteaseCloudMusicResource.h"
 #include "NeteaseCloudMusicDownloader.h"
 #include "Convert.h"
 
 PluginMessage NeteaseCloudMusicPlugin::m_pluginMessage = {
-    netease::pluginID, netease::name, netease::version, netease::description, netease::home,
+    neteaseplugin::pluginID, neteaseplugin::name, neteaseplugin::version, neteaseplugin::description, neteaseplugin::home,
 };
 
 std::string NeteaseCloudMusicPlugin::m_dir;
@@ -71,7 +72,7 @@ adapter::VideoView NeteaseCloudMusicPlugin::getVideoView(const std::string& url)
     }
     case netease::IDType::Album:
     {
-        auto albumDetails = m_client.getAblum(std::to_string(idNum));
+        auto albumDetails = m_client.getAlbum(std::to_string(idNum));
         std::vector<uint64_t> ids;
         for (const auto& song : albumDetails.songs)
         {
@@ -118,13 +119,13 @@ std::shared_ptr<download::FileDownloader> NeteaseCloudMusicPlugin::getDownloader
     {
     case ContentType::MV:
     {
-        auto data = m_client.getMVPlayUrl(copyedVideoInfo.videoView->VideoId);
+        auto data = m_client.getMVPlayUrl(copyedVideoInfo.videoView->Identifier);
         url = data.data.url;
         break;
     }
     case ContentType::SONG:
     {
-        auto data = m_client.getSongPlayUrl({std::stoull(copyedVideoInfo.videoView->VideoId)}, netease::SoundLevel::Lossless);
+        auto data = m_client.getSongPlayUrl({std::stoull(copyedVideoInfo.videoView->Identifier)}, netease::SoundLevel::Lossless);
         if (!data.data.empty())
         {
             url = data.data[0].url;
@@ -135,7 +136,7 @@ std::shared_ptr<download::FileDownloader> NeteaseCloudMusicPlugin::getDownloader
         break;
     }
 
-    download::ResourseInfo info;
+    download::ResourceInfo info;
     info.videoUris = {url};
     auto fileName = videoInfo.fileName(true);
     info.option.out = fileName;

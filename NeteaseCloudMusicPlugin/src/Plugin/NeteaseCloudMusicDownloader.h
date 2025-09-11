@@ -12,7 +12,7 @@ class NeteaseCloudMusicDownloader : public FileDownloader
 public:
     NeteaseCloudMusicDownloader();
     NeteaseCloudMusicDownloader(std::list<std::string> videoUris, std::list<std::string> audioUri = {}, std::string path = "", std::string filename = "");
-    explicit NeteaseCloudMusicDownloader(ResourseInfo info);
+    explicit NeteaseCloudMusicDownloader(ResourceInfo info);
     ~NeteaseCloudMusicDownloader() = default;
 
     void start() override;
@@ -38,7 +38,7 @@ private:
     void setAriaFileName();
 
 private:
-    ResourseInfo m_resourseInfo;
+    ResourceInfo m_resourseInfo;
     std::string m_path;
     std::string m_filename;
     std::string m_uniqueId;

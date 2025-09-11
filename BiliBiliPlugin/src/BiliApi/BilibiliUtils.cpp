@@ -79,18 +79,16 @@ std::string MD5Hash(const std::string& str)
 {
     unsigned char mdValue[EVP_MAX_MD_SIZE];
     unsigned int mdLen;
-    // 创建和初始化摘要上下文
+
     EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
     const EVP_MD* md = EVP_md5();
-    // 初始化摘要操作
+
     EVP_DigestInit_ex(mdctx, md, nullptr);
-    // 提供要进行摘要计算的数据
     EVP_DigestUpdate(mdctx, str.c_str(), str.length());
-    // 获取摘要结果
     EVP_DigestFinal_ex(mdctx, mdValue, &mdLen);
-    // 清理上下文
+
     EVP_MD_CTX_free(mdctx);
-    // 将摘要结果转换为字符串形式
+
     std::ostringstream oss;
     for (unsigned int i = 0; i < mdLen; i++)
     {

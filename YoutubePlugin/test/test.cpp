@@ -24,7 +24,7 @@ void formatVideoView(const adapter::VideoView& views)
     std::cout << "views size: " << views.size() << std::endl;
     for (const auto& view : views)
     {
-        std::cout << "Video ID: " << view.VideoId << std::endl;
+        std::cout << "Video ID: " << view.Identifier << std::endl;
         std::cout << "Title: " << view.Title << std::endl;
         std::cout << "Publisher: " << view.Publisher << std::endl;
         std::cout << "Cover: " << view.Cover << std::endl;
@@ -62,10 +62,10 @@ TEST(YoutubPlugin_Test, downloader)
     auto plugin = reinterpret_cast<YoutubePlugin*>(handle);
     auto views = plugin->getVideoView("https://www.youtube.com/watch?v=q-F7M2PmgeI");
     ASSERT_FALSE(views.empty()) << "Video view should not be empty";
-    VideoInfoFull videinfo;
-    videinfo.videoView = std::make_shared<adapter::BaseVideoView>(views.front());
-    videinfo.downloadConfig = std::make_shared<DownloadConfig>();
-    auto downloader = plugin->getDownloader(videinfo);
+    VideoInfoFull videoInfo;
+    videoInfo.videoView = std::make_shared<adapter::BaseVideoView>(views.front());
+    videoInfo.downloadConfig = std::make_shared<DownloadConfig>();
+    auto downloader = plugin->getDownloader(videoInfo);
     downloader->start();
     ASSERT_FALSE(downloader) << "Video view should not be empty";
     formatVideoView(views);

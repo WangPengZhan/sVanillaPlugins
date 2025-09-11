@@ -61,7 +61,7 @@ adapter::VideoView WeiboPlugin::getVideoView(const std::string& url)
 
     for (auto& view : views)
     {
-        std::string path = m_dir + "cover/" + view.VideoId + std::to_string(std::rand() % 10000) + ".jpg";
+        std::string path = m_dir + "cover/" + view.Identifier + std::to_string(std::rand() % 10000) + ".jpg";
         if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
         {
             std::filesystem::create_directories(std::filesystem::path(path).parent_path());
@@ -88,7 +88,7 @@ std::shared_ptr<download::FileDownloader> WeiboPlugin::getDownloader(const Video
         return {};
     }
 
-    download::ResourseInfo info;
+    download::ResourceInfo info;
     std::string videoUrl = result;
 
     info.videoUris = {videoUrl};

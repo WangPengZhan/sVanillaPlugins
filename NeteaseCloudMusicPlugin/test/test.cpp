@@ -27,7 +27,7 @@ void formatVideoView(const adapter::VideoView& views)
     std::cout << "views size: " << views.size() << std::endl;
     for (const auto& view : views)
     {
-        std::cout << "Video ID: " << view.VideoId << std::endl;
+        std::cout << "Video ID: " << view.Identifier << std::endl;
         std::cout << "Title: " << view.Title << std::endl;
         std::cout << "Publisher: " << view.Publisher << std::endl;
         std::cout << "Cover: " << view.Cover << std::endl;
@@ -58,23 +58,23 @@ TEST(NeteaseCloudMusic, aesEncrypt)
     constexpr char expact[] = "rNw9p+FHsMQJby9FopcVf8JURqwae8XTuqQ1KJwcBqW/fwOpmeV4vfohFGA93q/3uq+F6GMe0XKPJ7M+1DNvXmkzFWzWnmoDto0eH5L4E0ZVG6F+7gJo39K/"
                               "JN7HZFDkyHHJBWJS8wyxdcB7l52arQ2LkOoVVWW7wq4EuvR3LJ2NRyeCIO8YASxS9HB33ZCc";
     constexpr char secretKey[] = "ICcMJJu5PDHi502D";
-    auto reuslt = netease::aesEncrypt(weapi_input, mode, key, iv, "base64");
-    EXPECT_EQ(reuslt, expact);
+    auto result = netease::aesEncrypt(weapi_input, mode, key, iv, "base64");
+    EXPECT_EQ(result, expact);
 
     constexpr char second_expact[] =
         "rC7cWyXQUtPylKLg6gpCSYyzgHI72Bh4ZTEgkbgHrV+1vVgsLWjmayXfqsvRJzx/"
         "Z0Yf6ZPV59j18hUaXxxoNUw574Q4ZiGTHbFEFNywi0Ykfk5MRKsJI0B+TLtiCrM7xBbfix15rpk2wH+8vCPcGxEylDNLCBgRe4WulZqzdZI3aVTf8HbOdqID5aNdOzZsmHjt3zlN/"
         "+di+gcZHMv1gbfqLInomW3aPfm1e7G/bDr0bbW7nDGb1UIMUpGqcAVx8rxu0o0fPPPczUmR+mBZUw==";
-    reuslt = netease::aesEncrypt(reuslt, mode, secretKey, iv, "base64");
-    EXPECT_EQ(reuslt, second_expact);
+    result = netease::aesEncrypt(result, mode, secretKey, iv, "base64");
+    EXPECT_EQ(result, second_expact);
 }
 
 TEST(NeteaseCloudMusic, cloudMusicDllEncodeID)
 {
     constexpr char id[] = R"(5EB26EA49AE37590BF1618A40D227A1E286F98F4AF0F89AE4565)";
     constexpr char expact[] = "n2ajvcolCXIBkynlYKPukA==";
-    auto reuslt = netease::cloudMusicDllEncodeID(id);
-    EXPECT_EQ(reuslt, expact);
+    auto result = netease::cloudMusicDllEncodeID(id);
+    EXPECT_EQ(result, expact);
 }
 
 TEST(NeteaseCloudMusic, getAnonimousEncodeID)
@@ -82,8 +82,8 @@ TEST(NeteaseCloudMusic, getAnonimousEncodeID)
     constexpr char id[] = R"(5EB26EA49AE37590BF1618A40D227A1E286F98F4AF0F89AE4565)";
     constexpr char expact[] = "NUVCMjZFQTQ5QUUzNzU5MEJGMTYxOEE0MEQyMjdBMUUyODZGOThGNEFGMEY4OUFFNDU2NSBuMmFqdmNvbENYSUJreW5sWUtQdWtBPT0=";
     auto digestHex = netease::cloudMusicDllEncodeID(id);
-    auto reuslt = netease::base64Encode(std::string(id) + " " + digestHex);
-    EXPECT_EQ(reuslt, expact);
+    auto result = netease::base64Encode(std::string(id) + " " + digestHex);
+    EXPECT_EQ(result, expact);
 }
 
 TEST(NeteaseCloudMusic, rsaEncrypt)
@@ -94,14 +94,14 @@ TEST(NeteaseCloudMusic, rsaEncrypt)
         "ec2ac5be5fde5f2e4fbb253a2a0d1104a0093f0623984a0150cd249fa5d981470e6694d7c49ccb3f1052a01a9314ff5d06ff5aa4c1";
     std::string reversedKey = id;
     std::ranges::reverse(reversedKey);
-    auto reuslt = netease::rsaEncrypt(reversedKey, netease::Encrypt::PUBLIC_KEY);
-    EXPECT_EQ(reuslt, expact);
+    auto result = netease::rsaEncrypt(reversedKey, netease::Encrypt::PUBLIC_KEY);
+    EXPECT_EQ(result, expact);
 }
 
-TEST(NeteaseCloudMusic, registerAnonimous)
+TEST(NeteaseCloudMusic, registerAnonymous)
 {
     netease::NeteaseCloudMusicClient client;
-    client.registerAnonimous();
+    client.registerAnonymous();
 }
 
 TEST(NeteaseCloudMusic, getLoginKey)
@@ -114,22 +114,22 @@ TEST(NeteaseCloudMusic, getLoginKey)
 TEST(NeteaseCloudMusic, getSongDetails)
 {
     netease::NeteaseCloudMusicClient client;
-    client.registerAnonimous();
+    client.registerAnonymous();
     client.getSongDetails({347230});
     // client.getSongPlayUrl({347230});
 }
 
-TEST(NeteaseCloudMusic, getAblum)
+TEST(NeteaseCloudMusic, getAlbum)
 {
     netease::NeteaseCloudMusicClient client;
-    client.registerAnonimous();
-    client.getAblum("28521");
+    client.registerAnonymous();
+    client.getAlbum("28521");
 }
 
 TEST(NeteaseCloudMusic, getPlaylist)
 {
     netease::NeteaseCloudMusicClient client;
-    client.registerAnonimous();
+    client.registerAnonymous();
     client.getMVDetail("5436712");
     client.getMVPlayUrl("5436712");
 }

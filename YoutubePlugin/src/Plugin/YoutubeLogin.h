@@ -21,5 +21,5 @@ public:
     UserInfo getUserInfo(std::string dir) override;
     std::vector<adapter::BaseVideoView> history() override;
 
-    int type() const override;
+    int pluginId() const override;
 };

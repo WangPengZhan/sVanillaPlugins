@@ -36,11 +36,11 @@ public:
 
     LoginUnikey getLoginKey();
     LoginStatus getLoginStatus(const std::string& key);
-    void registerAnonimous();
+    void registerAnonymous();
 
     SongDetails getSongDetails(std::vector<uint64_t> ids);
     SongPlayUrl getSongPlayUrl(std::vector<uint64_t> ids, SoundLevel level = SoundLevel::Standard);
-    AblumDetails getAblum(std::string id);
+    AblumDetails getAlbum(std::string id);
     PlaylistDetails getPlaylist(std::string id);
     MVResponse getMVDetail(std::string id);
     MVPlayUrl getMVPlayUrl(std::string ids);

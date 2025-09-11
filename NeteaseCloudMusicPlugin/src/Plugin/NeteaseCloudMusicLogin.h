@@ -7,14 +7,14 @@ namespace netease
 class NeteaseCloudMusicClient;
 }
 
-class NeteaseColudMusicLogin : public AbstractLoginApi
+class NeteaseCloudMusicLogin : public AbstractLoginApi
 {
 public:
-    NeteaseColudMusicLogin();
-    ~NeteaseColudMusicLogin() = default;
+    NeteaseCloudMusicLogin();
+    ~NeteaseCloudMusicLogin() = default;
 
     // thread-safe
-    LoginSatus getLoginStatus() override;
+    LoginStatus getLoginStatus() override;
     bool getScanContext(std::string& content) override;
     void loginSuccess() override;
 
@@ -32,7 +32,7 @@ public:
     const LoginResource& allResources() const override;
     const std::vector<uint8_t>& resource(ResourceIndex index) const override;
 
-    int type() const override;
+    int pluginId() const override;
 
 private:
     netease::NeteaseCloudMusicClient& m_client;

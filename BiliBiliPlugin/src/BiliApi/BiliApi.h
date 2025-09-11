@@ -61,21 +61,11 @@ class UgcArc
 {
 public:
     long long aid;
-    // int videos;
-    // int type_id;
-    // int type_name;
-    // int copyright;
     std::string pic;
     std::string title;
     long long pubdate;
-    // int ctime;
     std::string desc;
-    // int state;
     int duration;
-    // VideoOwner author;
-    // VideoStat stat;
-    // std::string dynamic;
-    // Dimension dimension;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(UgcArc, aid, pic, title, pubdate, desc, duration)
 };
@@ -148,14 +138,9 @@ public:
 class UgcEpisode
 {
 public:
-    // long long season_id;
-    // long long section_id;
-    // long long id;
-    // long long mid;
     long long aid;
     long long cid;
     std::string title;
-    // int attribute;
     UgcArc arc;
     VideoPage page;
     std::string bvid;
@@ -166,13 +151,7 @@ public:
 class UgcSection
 {
 public:
-    // long long season_id;
-    // long long id;
     std::string title;
-    // int attribute;
-    // UgcArc arc;
-    // VideoPage page;
-    // std::string type;
     std::list<UgcEpisode> episodes;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(UgcSection, title, episodes)
@@ -183,15 +162,9 @@ class UgcSeason
 public:
     long long id;
     std::string title;
-    // std::string cover;
-    // long long mid;
     std::string intro;
-    // int signState;
-    // int attribute;
     std::list<UgcSection> sections;
-    // UgcStat stat;
     int ep_count;
-    // int season_type;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(UgcSeason, id, title, intro, sections, ep_count)
 };

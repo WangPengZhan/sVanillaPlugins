@@ -162,19 +162,19 @@ adapter::VideoView HLSPlugin::getVideoView(const std::string& url)
     baseView.Cover = util::localeToUtf8(path);
     baseView.Duration = formatDuration(playlist.durationAll());
     std::string Description;
-    baseView.pluginType = pluginMessage().pluginId;
+    baseView.pluginId = pluginMessage().pluginId;
     views.push_back(baseView);
     return views;
 }
 
 std::shared_ptr<download::FileDownloader> HLSPlugin::getDownloader(const VideoInfoFull& videoInfo)
 {
-    auto copyedVideoInfo = videoInfo;
-    copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
-    copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
+    auto copiedVideoInfo = videoInfo;
+    copiedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
+    copiedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     auto hlsClient = std::make_shared<hlsapi::HLSClient>();
-    std::string url = copyedVideoInfo.videoView->Identifier;
+    std::string url = copiedVideoInfo.videoView->Identifier;
     std::string m3u8Content = hlsClient->downloadM3u8(url);
     m3u8Content = hlsapi::trim(m3u8Content);
     hlsapi::HLSParser parser;
@@ -253,15 +253,15 @@ std::shared_ptr<download::FileDownloader> HLSPlugin::getDownloader(const VideoIn
         downloadkey(playlist);
     }
 
-    auto hlsDownlaoder = std::shared_ptr<download::HLSDownloader>(new download::HLSDownloader(hlsClient, mediaInfoMap), download::freeDownload);
-    hlsDownlaoder->setPath(copyedVideoInfo.downloadConfig->downloadDir);
-    std::string fileName = copyedVideoInfo.fileName();
+    auto hlsDownloader = std::shared_ptr<download::HLSDownloader>(new download::HLSDownloader(hlsClient, mediaInfoMap), download::freeDownload);
+    hlsDownloader->setPath(copiedVideoInfo.downloadConfig->downloadDir);
+    std::string fileName = copiedVideoInfo.fileName();
     if (fileName.empty())
     {
-        fileName = std::string(getUrlLast(copyedVideoInfo.videoView->Identifier)) + "_" + std::to_string(std::rand() % 10000);
+        fileName = std::string(getUrlLast(copiedVideoInfo.videoView->Identifier)) + "_" + std::to_string(std::rand() % 10000);
     }
-    hlsDownlaoder->setFilename(fileName);
-    return hlsDownlaoder;
+    hlsDownloader->setFilename(fileName);
+    return hlsDownloader;
 }
 
 LoginProxy HLSPlugin::loginer()

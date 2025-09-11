@@ -10,6 +10,7 @@
 #include "BiliBiliPlugin.h"
 #include "Util/LocaleHelper.h"
 #include "QrCodeGenerator.h"
+#include "BiliBiliPluginMessage.h"
 
 namespace
 {
@@ -18,8 +19,8 @@ adapter::BaseVideoView convertHistory(const biliapi::HistoryInfo& data)
 {
     auto item = adapter::BaseVideoView();
     item.Identifier = data.history.bvid;
-    item.AlternateId = std::to_string(data.history.cid);
-    item.VideoId = std::to_string(data.history.cid);
+    item.Option1 = std::to_string(data.history.cid);
+    item.Option2 = std::to_string(data.history.cid);
     item.Title = data.title;
     item.Cover = data.cover.empty() ? (data.covers.empty() ? "" : data.covers.front()) : data.cover;
     item.Duration = formatDuration(data.duration);
@@ -45,7 +46,7 @@ std::vector<adapter::BaseVideoView> convertVideoView(const biliapi::History& dat
 
 BiliBiliLogin::LoginResource BiliBiliLogin::m_biliRes{qrc_background, qrc_loading, qrc_tip, qrc_waitConfirm, qrc_complete, qrc_init, qrc_refresh};
 
-BiliBiliLogin::LoginSatus BiliBiliLogin::getLoginStatus()
+BiliBiliLogin::LoginStatus BiliBiliLogin::getLoginStatus()
 {
     const auto loginStatus = biliapi::BilibiliClient::globalClient().getLoginStatus(m_qrcodeKey);
 
@@ -61,7 +62,7 @@ BiliBiliLogin::LoginSatus BiliBiliLogin::getLoginStatus()
         }
         else if (loginStatus.data.code == 86090)
         {
-            return ScanedNoAck;
+            return ScannedNoAck;
         }
         else if (loginStatus.data.code == 0)
         {
@@ -185,7 +186,7 @@ const std::vector<uint8_t>& BiliBiliLogin::resource(ResourceIndex index) const
     return m_emptyString;
 }
 
-int BiliBiliLogin::type() const
+int BiliBiliLogin::pluginId() const
 {
-    return 1;
+    return biliplugin::pluginID;
 }

@@ -161,7 +161,7 @@ NeteaseCloudMusicClient::NeteaseCloudMusicClient()
     generateData();
     m_option.cryptoType = CryptoType::WeApi;
     createCookies(m_option);
-    registerAnonimous();
+    registerAnonymous();
 }
 
 NeteaseCloudMusicClient& NeteaseCloudMusicClient::globalClient()
@@ -322,7 +322,7 @@ SongPlayUrl NeteaseCloudMusicClient::getSongPlayUrl(std::vector<uint64_t> ids, S
     return ret;
 }
 
-AblumDetails NeteaseCloudMusicClient::getAblum(std::string id)
+AblumDetails NeteaseCloudMusicClient::getAlbum(std::string id)
 {
     Option option;
     {
@@ -351,7 +351,7 @@ AblumDetails NeteaseCloudMusicClient::getAblum(std::string id)
     catch (const std::exception& e)
     {
         std::cout << "error: " << e.what() << std::endl;
-        NETEASE_LOG_WARN("getAblum error: {}", e.what());
+        NETEASE_LOG_WARN("getAlbum error: {}", e.what());
     }
 
     return ret;
@@ -388,7 +388,7 @@ PlaylistDetails NeteaseCloudMusicClient::getPlaylist(std::string id)
     catch (const std::exception& e)
     {
         std::cout << "error: " << e.what() << std::endl;
-        NETEASE_LOG_WARN("getAblum error: {}", e.what());
+        NETEASE_LOG_WARN("getAlbum error: {}", e.what());
     }
 
     return ret;
@@ -423,7 +423,7 @@ MVResponse NeteaseCloudMusicClient::getMVDetail(std::string id)
     catch (const std::exception& e)
     {
         std::cout << "error: " << e.what() << std::endl;
-        NETEASE_LOG_WARN("getAblum error: {}", e.what());
+        NETEASE_LOG_WARN("getAlbum error: {}", e.what());
     }
 
     return ret;
@@ -584,7 +584,7 @@ std::string NeteaseCloudMusicClient::getPostFields(CryptoType cryptoType, const 
     return preparePostData(encryptData);
 }
 
-void NeteaseCloudMusicClient::registerAnonimous()
+void NeteaseCloudMusicClient::registerAnonymous()
 {
     Option option;
     {

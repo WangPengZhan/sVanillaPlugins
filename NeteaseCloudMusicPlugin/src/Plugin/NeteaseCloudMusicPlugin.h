@@ -30,6 +30,6 @@ public:
 private:
     static std::string m_dir;
     static PluginMessage m_pluginMessage;
-    NeteaseColudMusicLogin m_login;
+    NeteaseCloudMusicLogin m_login;
     netease::NeteaseCloudMusicClient& m_client;
 };

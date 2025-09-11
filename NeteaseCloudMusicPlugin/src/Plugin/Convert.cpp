@@ -30,8 +30,8 @@ adapter::VideoView convertVideoView(const netease::SongDetails& data)
     for (const auto& song : data.songs)
     {
         adapter::BaseVideoView view;
-        view.Identifier = std::to_string(int(ContentType::SONG));
-        view.VideoId = std::to_string(song.id);
+        view.Identifier = std::to_string(song.id);
+        view.IdType = std::to_string(int(ContentType::SONG));
         view.Title = song.name;
         view.Publisher = authorFormat(song.ar);
         view.Cover = song.al.picUrl;
@@ -40,7 +40,7 @@ adapter::VideoView convertVideoView(const netease::SongDetails& data)
         view.PublishDate = convertTimestamp(song.publishTime / 1000);
         view.PlayListTitle = "";
         view.fileExtension = ".mp3";
-        view.pluginType = netease::pluginID;
+        view.pluginId = neteaseplugin::pluginID;
         views.push_back(view);
     }
 
@@ -52,15 +52,15 @@ adapter::VideoView convertVideoView(const netease::MVResponse& data)
     adapter::VideoView views;
 
     adapter::BaseVideoView view;
-    view.Identifier = std::to_string(int(ContentType::MV));
-    view.VideoId = std::to_string(data.data.id);
+    view.Identifier = std::to_string(data.data.id);
+    view.IdType = std::to_string(int(ContentType::MV));
     view.Title = data.data.name;
     view.Publisher = authorFormat(data.data.artists);
     view.Cover = data.data.cover;
     view.Duration = formatDuration(data.data.duration / 1000);
     view.PublishDate = data.data.publishTime;
     view.PlayListTitle = "";
-    view.pluginType = netease::pluginID;
+    view.pluginId = neteaseplugin::pluginID;
     views.push_back(view);
 
     return views;

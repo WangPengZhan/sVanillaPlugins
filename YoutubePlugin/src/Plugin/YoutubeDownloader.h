@@ -13,7 +13,7 @@ class YoutubeDownloader : public FileDownloader
 public:
     YoutubeDownloader();
     YoutubeDownloader(std::list<std::string> videoUris, std::list<std::string> audioUri = {}, std::string path = "", std::string filename = "");
-    explicit YoutubeDownloader(ResourseInfo info);
+    explicit YoutubeDownloader(ResourceInfo info);
     ~YoutubeDownloader() = default;
 
     void start() override;
@@ -39,7 +39,7 @@ private:
     void setAriaFileName();
 
 private:
-    ResourseInfo m_resourseInfo;
+    ResourceInfo m_resourceInfo;
     std::string m_path;
     std::string m_filename;
     std::string m_uniqueId;

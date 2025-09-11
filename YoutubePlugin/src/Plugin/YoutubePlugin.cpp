@@ -11,7 +11,7 @@
 #include <Util/UrlProccess.h>
 
 PluginMessage YoutubePlugin::m_pluginMessage = {
-    youtubelugin::pluginID, youtubelugin::name, youtubelugin::version, youtubelugin::description, youtubelugin::domain,
+    youtubeplugin::pluginID, youtubeplugin::name, youtubeplugin::version, youtubeplugin::description, youtubeplugin::domain,
 };
 std::string YoutubePlugin::m_dir;
 
@@ -36,9 +36,9 @@ adapter::VideoView YoutubePlugin::getVideoView(const std::string& url)
 
     std::string id = getID(url);
     auto& client = youtubeapi::YoutubeClient::globalClient();
-    auto mainRespone = client.getVideoInfo(id);
+    auto mainResponse = client.getVideoInfo(id);
     client.getBaseJs(client.getIFrameVersion());
-    views = convertVideoView(mainRespone);
+    views = convertVideoView(mainResponse);
 
     return views;
 }
@@ -56,7 +56,7 @@ std::shared_ptr<download::FileDownloader> YoutubePlugin::getDownloader(const Vid
         return {};
     }
 
-    download::ResourseInfo info;
+    download::ResourceInfo info;
     std::string videoUrl = result.front().url + "&range=0-" + result.front().contentLength;
     if (result.size() != 1)
     {

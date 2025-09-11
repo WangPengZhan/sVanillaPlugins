@@ -24,6 +24,7 @@ static constexpr int daySeconds = hours * minutes * seconds;  // 24*60*60
 constexpr char cookie_dedeUserId[] = "DedeUserID";
 constexpr char cookie_biliJct[] = "bili_jct";
 constexpr char cookie_sessdata[] = "SESSDATA";
+constexpr char domain[] = "bilibili.com";
 
 std::string to_string(BusinessType businessType)
 {
@@ -200,7 +201,7 @@ LoginStatusScanning BilibiliClient::getLoginStatus(const std::string& qrcodeKey)
         BILIBILI_LOG_INFO("Login success!");
         std::lock_guard lk(m_mutexRequest);
         m_cookies.addCurlCookies(header.at(network::set_cookies));
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie("bilibili.com"));
+        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(domain));
     }
 
     LoginStatusScanning ret;
@@ -240,7 +241,7 @@ LogoutExitV2 BilibiliClient::getLogoutExitV2()
 {
     std::string response;
 
-    auto keys = m_cookies.cookie("bilibili.com").keys();
+    auto keys = m_cookies.cookie(domain).keys();
     int haveId = 3;
 
     for (const auto& key : keys)
@@ -254,17 +255,17 @@ LogoutExitV2 BilibiliClient::getLogoutExitV2()
     if (haveId == 0)
     {
         std::string cookie = "Cookie: ";
-        cookie += std::string(cookie_dedeUserId) + "=" + m_cookies.cookie("bilibili.com").value(cookie_dedeUserId);
+        cookie += std::string(cookie_dedeUserId) + "=" + m_cookies.cookie(domain).value(cookie_dedeUserId);
         cookie += "; ";
-        cookie += std::string(cookie_biliJct) + "=" + m_cookies.cookie("bilibili.com").value(cookie_biliJct);
+        cookie += std::string(cookie_biliJct) + "=" + m_cookies.cookie(domain).value(cookie_biliJct);
         cookie += "; ";
-        cookie += std::string(cookie_sessdata) + "=" + m_cookies.cookie("bilibili.com").value(cookie_sessdata);
+        cookie += std::string(cookie_sessdata) + "=" + m_cookies.cookie(domain).value(cookie_sessdata);
 
         network::CurlHeader header;
         header.add("Content-Type: application/x-www-form-urlencoded");
         header.add(cookie);
 
-        std::string param = "biliCSRF=" + m_cookies.cookie("bilibili.com").value(cookie_biliJct);
+        std::string param = "biliCSRF=" + m_cookies.cookie(domain).value(cookie_biliJct);
 
         post(PassportURL::Logout, response, param, header, false);
     }
@@ -319,12 +320,12 @@ void BilibiliClient::setCookies(std::string cookies)
 {
     std::lock_guard lk(m_mutexRequest);
     m_cookies = network::CurlCookies(cookies);
-    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie("bilibili.com"));
+    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(domain));
 }
 
 bool BilibiliClient::isLogined() const
 {
-    return !m_cookies.cookie("bilibili.com").value("SESSDATA").empty();
+    return !m_cookies.cookie(domain).value("SESSDATA").empty();
 }
 
 void BilibiliClient::resetWbi()

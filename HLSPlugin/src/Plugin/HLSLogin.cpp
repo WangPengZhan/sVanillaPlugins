@@ -5,10 +5,11 @@
 #include "HLSResource.h"
 #include "HLSApi/HLSClient.h"
 #include "Util/TimerUtil.h"
+#include "HLSPluginMessage.h"
 
 HLSLogin::LoginResource HLSLogin::m_biliRes{qrc_background, qrc_loading, qrc_tip, qrc_waitConfirm, qrc_complete, qrc_init, qrc_refresh};
 
-HLSLogin::LoginSatus HLSLogin::getLoginStatus()
+HLSLogin::LoginStatus HLSLogin::getLoginStatus()
 {
     return Error;
 }
@@ -77,7 +78,7 @@ const std::vector<uint8_t>& HLSLogin::resource(ResourceIndex index) const
     return m_emptyString;
 }
 
-int HLSLogin::type() const
+int HLSLogin::pluginId() const
 {
-    return 3;
+    return hlsplugin::pluginID;
 }

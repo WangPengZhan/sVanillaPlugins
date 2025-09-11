@@ -29,20 +29,20 @@ YoutubeDownloader::YoutubeDownloader(std::list<std::string> videoUris, std::list
     m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
 }
 
-YoutubeDownloader::YoutubeDownloader(ResourseInfo info)
-    : m_resourseInfo(std::move(info))
+YoutubeDownloader::YoutubeDownloader(ResourceInfo info)
+    : m_resourceInfo(std::move(info))
     , m_haveTwoPart(false)
-    , m_path(m_resourseInfo.option.dir)
-    , m_filename(m_resourseInfo.option.out)
-    , m_videoDownloader(m_resourseInfo.videoUris, m_resourseInfo.option)
-    , m_audioDownloader(m_resourseInfo.audioUris, m_resourseInfo.option)
+    , m_path(m_resourceInfo.option.dir)
+    , m_filename(m_resourceInfo.option.out)
+    , m_videoDownloader(m_resourceInfo.videoUris, m_resourceInfo.option)
+    , m_audioDownloader(m_resourceInfo.audioUris, m_resourceInfo.option)
     , m_finished(false)
 {
-    m_haveTwoPart = !m_resourseInfo.videoUris.empty() && !m_resourseInfo.audioUris.empty();
+    m_haveTwoPart = !m_resourceInfo.videoUris.empty() && !m_resourceInfo.audioUris.empty();
     setAriaFileName();
     m_videoDownloader.setStatus(Ready);
     m_audioDownloader.setStatus(Ready);
-    m_uris = m_resourseInfo.videoUris;
+    m_uris = m_resourceInfo.videoUris;
 }
 
 void YoutubeDownloader::start()
@@ -63,7 +63,7 @@ void YoutubeDownloader::stop()
     {
         m_audioDownloader.stop();
     }
-    m_status = Waitting;
+    m_status = Waiting;
 }
 
 void YoutubeDownloader::pause()

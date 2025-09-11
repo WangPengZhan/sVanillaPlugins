@@ -60,7 +60,7 @@ void HLSDownloader::stop()
             downloader->stopDownload();
         }
     }
-    m_status = Waitting;
+    m_status = Waiting;
 }
 
 void HLSDownloader::pause()

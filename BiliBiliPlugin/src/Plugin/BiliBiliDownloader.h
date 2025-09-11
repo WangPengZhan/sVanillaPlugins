@@ -13,7 +13,7 @@ class BiliDownloader : public FileDownloader
 public:
     BiliDownloader();
     BiliDownloader(std::list<std::string> videoUris, std::list<std::string> audioUri = {}, std::string path = "", std::string filename = "");
-    explicit BiliDownloader(ResourseInfo info);
+    explicit BiliDownloader(ResourceInfo info);
     ~BiliDownloader() = default;
 
     void start() override;
@@ -39,7 +39,7 @@ private:
     void setAriaFileName();
 
 private:
-    ResourseInfo m_resourseInfo;
+    ResourceInfo m_resourceInfo;
     std::string m_path;
     std::string m_filename;
     std::string m_uniqueId;

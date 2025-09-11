@@ -6,6 +6,7 @@
 #include "YoutubeApi/YoutubeClient.h"
 #include "YoutubeApi/YoutubeConstants.h"
 #include "Util/TimerUtil.h"
+#include "YoutubePluginMessage.h"
 
 bool YoutubeLogin::supportLogin() const
 {
@@ -66,7 +67,7 @@ std::vector<adapter::BaseVideoView> YoutubeLogin::history()
     return {};
 }
 
-int YoutubeLogin::type() const
+int YoutubeLogin::pluginId() const
 {
-    return 2;
+    return youtubeplugin::pluginID;
 }

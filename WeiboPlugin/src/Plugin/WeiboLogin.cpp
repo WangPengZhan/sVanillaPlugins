@@ -7,6 +7,7 @@
 #include "Util/TimerUtil.h"
 #include "Util/LocaleHelper.h"
 #include "WeiboPlugin.h"
+#include "WeiboPluginMessage.h"
 
 WeiboLogin::LoginResource WeiboLogin::m_weiboRes{qrc_background, qrc_loading, qrc_tip, qrc_waitConfirm, qrc_complete, qrc_init, qrc_refresh};
 
@@ -16,7 +17,7 @@ WeiboLogin::WeiboLogin()
 {
 }
 
-WeiboLogin::LoginSatus WeiboLogin::getLoginStatus()
+WeiboLogin::LoginStatus WeiboLogin::getLoginStatus()
 {
     const auto loginStatus = m_client.getLoginStatus(m_qrid);
 
@@ -30,7 +31,7 @@ WeiboLogin::LoginSatus WeiboLogin::getLoginStatus()
     }
     else if (loginStatus.retcode == 50114002)
     {
-        return ScanedNoAck;
+        return ScannedNoAck;
     }
     else if (loginStatus.retcode == 20000000)
     {
@@ -132,7 +133,7 @@ const std::vector<uint8_t>& WeiboLogin::resource(ResourceIndex index) const
     return m_emptyString;
 }
 
-int WeiboLogin::type() const
+int WeiboLogin::pluginId() const
 {
-    return 4;
+    return weiboplugin::pluginID;
 }

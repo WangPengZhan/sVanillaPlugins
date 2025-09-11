@@ -10,18 +10,19 @@
 #include "QrCodeGenerator.h"
 #include "Util/LocaleHelper.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicConstants.h"
+#include "NeteaseCloudMusicPluginMessage.h"
 
-NeteaseColudMusicLogin::LoginResource NeteaseColudMusicLogin::m_neteaseRes{qrc_background, qrc_loading, qrc_tip,    qrc_waitConfirm,
+NeteaseCloudMusicLogin::LoginResource NeteaseCloudMusicLogin::m_neteaseRes{qrc_background, qrc_loading, qrc_tip,    qrc_waitConfirm,
                                                                            qrc_complete,   qrc_init,    qrc_refresh};
 
-NeteaseColudMusicLogin::NeteaseColudMusicLogin()
+NeteaseCloudMusicLogin::NeteaseCloudMusicLogin()
     : AbstractLoginApi()
     , m_client(netease::NeteaseCloudMusicClient::globalClient())
 
 {
 }
 
-AbstractLoginApi::LoginSatus NeteaseColudMusicLogin::getLoginStatus()
+AbstractLoginApi::LoginStatus NeteaseCloudMusicLogin::getLoginStatus()
 {
     auto loginStatus = m_client.getLoginStatus(m_qrcodeKey);
     if (loginStatus.code == 800)
@@ -34,7 +35,7 @@ AbstractLoginApi::LoginSatus NeteaseColudMusicLogin::getLoginStatus()
     }
     else if (loginStatus.code == 802)
     {
-        return ScanedNoAck;
+        return ScannedNoAck;
     }
     else if (loginStatus.code == 803)
     {
@@ -46,7 +47,7 @@ AbstractLoginApi::LoginSatus NeteaseColudMusicLogin::getLoginStatus()
     }
 }
 
-bool NeteaseColudMusicLogin::getScanContext(std::string& content)
+bool NeteaseCloudMusicLogin::getScanContext(std::string& content)
 {
     const auto loginKey = m_client.getLoginKey();
     if (loginKey.unikey.empty() || loginKey.code != 200)
@@ -71,52 +72,52 @@ bool NeteaseColudMusicLogin::getScanContext(std::string& content)
     return true;
 }
 
-void NeteaseColudMusicLogin::loginSuccess()
+void NeteaseCloudMusicLogin::loginSuccess()
 {
 }
 
-bool NeteaseColudMusicLogin::supportLogin() const
+bool NeteaseCloudMusicLogin::supportLogin() const
 {
     return true;
 }
 
-std::string NeteaseColudMusicLogin::cookies() const
+std::string NeteaseCloudMusicLogin::cookies() const
 {
     return {};
 }
 
-void NeteaseColudMusicLogin::setCookies(std::string cookies)
+void NeteaseCloudMusicLogin::setCookies(std::string cookies)
 {
 }
-bool NeteaseColudMusicLogin::refreshCookies(std::string cookies)
-{
-    return false;
-}
-
-bool NeteaseColudMusicLogin::isLogin() const
+bool NeteaseCloudMusicLogin::refreshCookies(std::string cookies)
 {
     return false;
 }
 
-bool NeteaseColudMusicLogin::logout()
+bool NeteaseCloudMusicLogin::isLogin() const
 {
     return false;
 }
 
-UserInfo NeteaseColudMusicLogin::getUserInfo(std::string dir)
+bool NeteaseCloudMusicLogin::logout()
+{
+    return false;
+}
+
+UserInfo NeteaseCloudMusicLogin::getUserInfo(std::string dir)
 {
     return {};
 }
-std::vector<adapter::BaseVideoView> NeteaseColudMusicLogin::history()
+std::vector<adapter::BaseVideoView> NeteaseCloudMusicLogin::history()
 {
     return {};
 }
-const AbstractLoginApi::LoginResource& NeteaseColudMusicLogin::allResources() const
+const AbstractLoginApi::LoginResource& NeteaseCloudMusicLogin::allResources() const
 {
     return m_neteaseRes;
 }
 
-const std::vector<uint8_t>& NeteaseColudMusicLogin::resource(ResourceIndex index) const
+const std::vector<uint8_t>& NeteaseCloudMusicLogin::resource(ResourceIndex index) const
 {
     if (index >= 0 && index < m_neteaseRes.size())
     {
@@ -125,7 +126,7 @@ const std::vector<uint8_t>& NeteaseColudMusicLogin::resource(ResourceIndex index
 
     return m_emptyString;
 }
-int NeteaseColudMusicLogin::type() const
+int NeteaseCloudMusicLogin::pluginId() const
 {
-    return 0;
+    return neteaseplugin::pluginID;
 }

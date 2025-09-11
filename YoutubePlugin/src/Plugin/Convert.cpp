@@ -28,8 +28,6 @@ adapter::VideoView convertVideoView(const youtubeapi::MainResponse& data)
 
     const auto& thumbnails = data.videoDetails.thumbnail.thumbnails;
     item.Identifier = data.videoDetails.videoId;
-    item.AlternateId = data.videoDetails.videoId;
-    item.VideoId = data.videoDetails.videoId;
     item.Title = data.videoDetails.title;
     item.Publisher = data.videoDetails.author;
     item.Cover = thumbnails.empty() ? "" : thumbnails.back().url;
@@ -44,7 +42,7 @@ adapter::VideoView convertVideoView(const youtubeapi::MainResponse& data)
 
     item.Description = data.videoDetails.shortDescription;
     item.PublishDate = convertTimeFormat(data.microformat.playerMicroformatRenderer.publishDate);
-    item.pluginType = youtubelugin::pluginID;
+    item.pluginId = youtubeplugin::pluginID;
     videoListView.push_back(item);
 
     return videoListView;
