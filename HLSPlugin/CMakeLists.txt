@@ -43,7 +43,7 @@ if(OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
-file(GLOB_RECURSE SOURCES "src/*.cpp" "rc/*.h")
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE release CACHE STRING "Build Type" FORCE)

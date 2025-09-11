@@ -16,15 +16,15 @@
 constexpr char temp[] = "temp";
 constexpr char cover[] = "cover";
 
-bool cutImage(const hlsapi::M3U8Playlist& plyalist, std::string& imagePath)
+bool cutImage(const hlsapi::M3U8Playlist& playlist, std::string& imagePath)
 {
-    if (plyalist.segments.empty())
+    if (playlist.segments.empty())
     {
         HLS_LOG_ERROR("segments is empty, image path: {}", imagePath);
         return false;
     }
 
-    const auto& segment = plyalist.segments[plyalist.segments.size() / 2];
+    const auto& segment = playlist.segments[playlist.segments.size() / 2];
     auto& client = hlsapi::HLSClient::globalClient();
 
     std::string tsFileName = HLSPlugin::getDir() + temp + "/" + std::to_string(time(nullptr)) + "_" + std::to_string(std::rand() % 1000) + ".ts";
@@ -32,7 +32,7 @@ bool cutImage(const hlsapi::M3U8Playlist& plyalist, std::string& imagePath)
     {
         std::filesystem::create_directories(std::filesystem::path(tsFileName).parent_path());
     }
-    client.downloadTsToFiles(segment.getUri(), util::localeToUtf8(tsFileName), plyalist.keyInfo);
+    client.downloadTsToFiles(segment.getUri(), util::localeToUtf8(tsFileName), playlist.keyInfo);
 
     std::vector<std::string> ffmpegArgs;
 
@@ -118,7 +118,7 @@ adapter::VideoView HLSPlugin::getVideoView(const std::string& url)
 
     auto& mediaInfos = parser.master().mediaInfos;
 
-    hlsapi::M3U8Playlist plyalist;
+    hlsapi::M3U8Playlist playlist;
     if (parser.playlist().segments.empty())
     {
         auto& streamInfo = parser.master().streams;
@@ -131,36 +131,36 @@ adapter::VideoView HLSPlugin::getVideoView(const std::string& url)
                 hlsapi::HLSParser mediaInfoParser;
                 mediaInfoParser.setOriginUri(stream.getUri());
                 mediaInfoParser.parse(mediaInfoM3u8);
-                plyalist = mediaInfoParser.playlist();
+                playlist = mediaInfoParser.playlist();
                 break;
             }
         }
     }
     else
     {
-        plyalist = parser.playlist();
+        playlist = parser.playlist();
     }
-    downloadkey(plyalist);
+    downloadkey(playlist);
 
     std::string path = m_dir + cover + "/" + "HLS_" + std::to_string(time(nullptr)) + "_" + std::to_string(std::rand() % 1000000) + ".jpg";
     if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
     {
         std::filesystem::create_directories(std::filesystem::path(path).parent_path());
     }
-    cutImage(plyalist, path);
+    cutImage(playlist, path);
 
     adapter::BaseVideoView baseView;
     baseView.Identifier = url;
-    if (!plyalist.segments.empty() && !plyalist.segments[0].title.empty())
+    if (!playlist.segments.empty() && !playlist.segments[0].title.empty())
     {
-        baseView.Title = plyalist.segments[0].title;
+        baseView.Title = playlist.segments[0].title;
     }
     else
     {
         baseView.Title = getUrlLast(url);
     }
     baseView.Cover = util::localeToUtf8(path);
-    baseView.Duration = formatDuration(plyalist.durationAll());
+    baseView.Duration = formatDuration(playlist.durationAll());
     std::string Description;
     baseView.pluginType = pluginMessage().pluginId;
     views.push_back(baseView);
