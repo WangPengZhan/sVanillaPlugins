@@ -76,10 +76,10 @@ std::string_view getUrlLast(std::string_view url)
 void downloadkey(hlsapi::M3U8Playlist& playlist)
 {
     std::string url = playlist.keyInfo.getUri();
-    if (!url.empty() && playlist.keyInfo.method != hlsapi::KeyInfo::None && playlist.keyInfo.keyFormat.empty())
+    if (!url.empty() && playlist.keyInfo.method != hlsapi::KeyInfo::None)
     {
         network::NetWork client;
-        client.get(url, playlist.keyInfo.keyFormat);
+        client.get(url, playlist.keyInfo.key);
     }
 }
 

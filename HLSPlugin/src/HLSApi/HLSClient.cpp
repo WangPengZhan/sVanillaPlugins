@@ -21,7 +21,7 @@
 namespace hlsapi
 {
 
-void DecryptFileForTs(const std::string& filename, const KeyInfo& keyInfo)
+void decryptFileForTs(const std::string& filename, const KeyInfo& keyInfo)
 {
     if (keyInfo.method == KeyInfo::None)
     {
@@ -55,8 +55,7 @@ void DecryptFileForTs(const std::string& filename, const KeyInfo& keyInfo)
         int len1 = 0, len2 = 0;
         plainData.resize(cipherData.size() + AES_BLOCK_SIZE);
 
-        if (EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, (const unsigned char*)keyInfo.keyFormat.c_str(), (const unsigned char*)keyInfo.iv.c_str()) !=
-                1 ||
+        if (EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, (const unsigned char*)keyInfo.key.c_str(), (const unsigned char*)keyInfo.iv.c_str()) != 1 ||
             EVP_DecryptUpdate(ctx, plainData.data(), &len1, cipherData.data(), (int)cipherData.size()) != 1 ||
             EVP_DecryptFinal_ex(ctx, plainData.data() + len1, &len2) != 1)
         {
@@ -135,7 +134,7 @@ bool HLSClient::downloadTsToFiles(const std::string& uri, const std::string& fil
     get(uri, file);
     fclose(file);
 
-    DecryptFileForTs(filename, keyInfo);
+    decryptFileForTs(filename, keyInfo);
 
     return true;
 }

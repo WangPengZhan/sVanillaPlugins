@@ -110,6 +110,7 @@ struct KeyInfo : PendingInfo
     std::string iv;
     std::string keyFormat;
     std::string keyFormatVersions;
+    std::string key;
 
     bool parseContent(std::string_view content);
 };

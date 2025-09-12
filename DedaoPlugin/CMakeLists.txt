@@ -4,7 +4,7 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/b
       CACHE STRING "")
 set(VCPKG_APPLOCAL_DEPS ON)
 
-project(HLSPlugin VERSION 1.0.0 LANGUAGES CXX)
+project(DedaoPlugin VERSION 1.0.0 LANGUAGES CXX)
 
 # if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -62,24 +62,28 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/../HLSPlugin/src
         ${CMAKE_SOURCE_DIR}/ThirdParty/spdlog
         ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon/PluginCommon
         ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon
 )
 
-set(SHARED_LIBS
-    CURL::libcurl
-    spdlog
-    ${OPENSSL_LIBRARIES}
-    FFmpeg
+set(QT_COMPONENTS
+    Core
+    Gui
+    Widgets
 )
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        ${SHARED_LIBS}
+        CURL::libcurl
+        spdlog
+        ${OPENSSL_LIBRARIES}
+        FFmpeg
 )
 
 set(STATIC_LIBS
+    HLSDownloader
     AriaClient
     NetWork
     Util
@@ -88,17 +92,10 @@ set(STATIC_LIBS
     nlohmann_json::nlohmann_json
 )
 
-if(UNIX AND NOT APPLE)
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-            -Wl,--whole-archive ${STATIC_LIBS} -Wl,--no-whole-archive
-    )
-else()
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-            ${STATIC_LIBS}
-    )
-endif()
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        ${STATIC_LIBS}
+)
 
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
@@ -110,32 +107,4 @@ install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
-
-file(GLOB_RECURSE HLS_SOURCES "src/HLSApi/*.cpp" "src/Plugin/*.cpp")
-add_library(HLSDownloader STATIC ${HLS_SOURCES})
-
-target_include_directories(HLSDownloader
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/ThirdParty/spdlog
-        ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon/PluginCommon
-        ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon
-)
-
-target_link_libraries(HLSDownloader
-    PRIVATE
-        ${SHARED_LIBS}
-)
-
-if(UNIX AND NOT APPLE)
-    target_link_libraries(HLSDownloader
-        PRIVATE
-            -Wl,--whole-archive ${STATIC_LIBS} -Wl,--no-whole-archive
-    )
-else()
-    target_link_libraries(HLSDownloader
-        PRIVATE
-            ${STATIC_LIBS}
-    )
-endif()
 

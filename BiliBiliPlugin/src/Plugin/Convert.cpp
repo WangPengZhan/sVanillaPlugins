@@ -1,6 +1,6 @@
 #include "Convert.h"
 #include "Util/TimerUtil.h"
-#include "BilibiliPluginMessage.h"
+#include "BiliBiliPluginMessage.h"
 
 // Identifier => bvid
 // Option1 = aid

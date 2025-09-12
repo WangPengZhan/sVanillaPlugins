@@ -5,7 +5,7 @@
 #include "BiliBiliResource.h"
 #include "BiliBiliDownloader.h"
 #include "Convert.h"
-#include "BilibiliPluginMessage.h"
+#include "BiliBiliPluginMessage.h"
 #include "BiliApi/BilibiliLog.h"
 
 #include <Util/UrlProccess.h>
