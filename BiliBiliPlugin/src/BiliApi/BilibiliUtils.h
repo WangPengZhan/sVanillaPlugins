@@ -20,5 +20,6 @@ std::string MD5Hash(const std::string& str);
 bool isExpired(const std::time_t& expires);
 void setCookieDataDir(const std::string& dir);
 std::string cookieDataFilePath();
+std::string hmac_sha256(const std::string& key, const std::string& message);
 
 }  // namespace biliapi

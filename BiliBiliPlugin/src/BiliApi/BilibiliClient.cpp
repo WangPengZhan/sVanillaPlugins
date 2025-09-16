@@ -109,6 +109,8 @@ std::string HistoryQueryParam::toString() const
     return res;
 }
 
+std::string BilibiliClient::m_cookieTicket;
+
 BilibiliClient::BilibiliClient()
 {
     initDefaultHeaders();
@@ -121,10 +123,16 @@ BilibiliClient& BilibiliClient::globalClient()
     return bilibiliClient;
 }
 
-VideoViewOrigin BilibiliClient::getVideoView(const std::string& bvid)
+VideoViewOrigin BilibiliClient::getVideoView(const std::string& bvid, IDType type)
 {
+    if (type != IDType::Aid && type != IDType::Bid)
+    {
+        return {};
+    }
+
+    std::string idType = type == IDType::Aid ? "aid" : "bvid";
     ParamType param;
-    param.emplace("bvid", bvid);
+    param.emplace(idType, bvid);
 
     std::string response;
     get(VideoURL::View, response, param);
@@ -135,7 +143,35 @@ VideoViewOrigin BilibiliClient::getVideoView(const std::string& bvid)
     }
     catch (const std::exception& e)
     {
-        BILIBILI_LOG_ERROR("getVideoView error! bvid: {}, error: {}", bvid, e.what());
+        BILIBILI_LOG_ERROR("getVideoView error! {}: {}, error: {}", idType, bvid, e.what());
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+BangumiInfo BilibiliClient::getSeasonVideoView(const std::string& id, IDType type)
+{
+    if (type != IDType::BangumiSS && type != IDType::BangumiEP)
+    {
+        return {};
+    }
+
+    std::string idType = type == IDType::BangumiSS ? "season_id" : "ep_id";
+    ParamType param;
+    param.emplace(idType, id);
+
+    std::string response;
+    get(VideoURL::PgcSeason, response, param);
+    std::ofstream ss("test.json");
+    ss << response;
+    BangumiInfo ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("getSeasonVideoView error! {}: {}, error: {}", idType, id, e.what());
         BILIBILI_LOG_ERROR("response is {}", response);
     }
     return ret;
@@ -164,9 +200,405 @@ PlayUrlOrigin BilibiliClient::getPlayUrl(long long cid, long long qn, const std:
     catch (const std::exception& e)
     {
         std::string str = e.what();
-        BILIBILI_LOG_ERROR("getPlayUrl error! cid: {},  qn: {},  bvid: {}, fnva: {}, error: {}", cid, qn, bvid, fnval, str);
+        BILIBILI_LOG_ERROR("getPlayUrl error! cid: {},  qn: {},  bvid: {}, fnval: {}, error: {}", cid, qn, bvid, fnval, str);
         BILIBILI_LOG_ERROR("response is {}", response);
     }
+    return ret;
+}
+
+MediaInfoResponse BilibiliClient::getMdVideoView(const std::string& id)
+{
+    ParamType param;
+    param.emplace("media_id", id);
+
+    std::string response;
+    get(VideoURL::MdSeason, response, param);
+    std::ofstream ss("test.json");
+    ss << response;
+    MediaInfoResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("getMdVideoView error! id: {}, error: {}", id, e.what());
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+UgcPlayUrlResponse BilibiliClient::getPlayUrl(long long id, IDType type, long long qn, long long fnval)
+{
+    if (type != IDType::Cid && type != IDType::BangumiEP)
+    {
+        return {};
+    }
+
+    std::string idType = type == IDType::BangumiEP ? "ep_id" : "cid";
+    ParamType param;
+    param.emplace(idType, std::to_string(id));
+    param.emplace("qn", std::to_string(qn));
+    param.emplace("fnver", "0");
+    param.emplace("fnval", std::to_string(fnval));
+    param.emplace("fourk", "1");
+
+    encodeWithWbi(param);
+
+    std::string response;
+    get(VideoURL::PgcPlayUrl, response, param);
+    std::ofstream ss("test.json");
+    ss << response;
+
+    UgcPlayUrlResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        std::string str = e.what();
+        BILIBILI_LOG_ERROR("getPlayUrl error! {}: {},  qn: {}, fnval: {}, error: {}", idType, id, qn, fnval, str);
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+CheeseInfoResponse BilibiliClient::getCheeseVideoView(const std::string& id, IDType type)
+{
+    if (type != IDType::CheeseSS && type != IDType::CheeseEP)
+    {
+        return {};
+    }
+
+    std::string idType = type == IDType::CheeseSS ? "season_id" : "ep_id";
+    ParamType param;
+    param.emplace(idType, id);
+
+    std::string response;
+    get(VideoURL::CheeseSeason, response, param);
+    std::ofstream ss("test.json");
+    ss << response;
+    CheeseInfoResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("getCheeseVideoView error! {}: {}, error: {}", idType, id, e.what());
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+CheesePlayUrlResponse BilibiliClient::getPlayUrl(long long avid, long long ep_id, long long cid, long long qn, long long fnval)
+{
+    ParamType param;
+    param.emplace("avid", std::to_string(avid));
+    param.emplace("ep_id", std::to_string(ep_id));
+    param.emplace("cid", std::to_string(cid));
+    param.emplace("qn", std::to_string(qn));
+    param.emplace("fnver", "0");
+    param.emplace("fnval", std::to_string(fnval));
+    param.emplace("fourk", "1");
+
+    encodeWithWbi(param);
+
+    std::string response;
+    get(VideoURL::CheesePlayUrlApi, response, param);
+    std::ofstream ss("test.json");
+    ss << response;
+
+    CheesePlayUrlResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        std::string str = e.what();
+        BILIBILI_LOG_ERROR("getPlayUrl error! avid: {},  ep_id: {}, cid: {}, qn: {}, fnval: {}, error: {}", avid, ep_id, cid, qn, fnval, str);
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+FavDetailInfo BilibiliClient::getFavDetail(const std::string& media_id)
+{
+    ParamType param;
+    param.emplace("media_id", media_id);
+    param.emplace("platform", "web");
+
+    std::string response;
+    get(VideoURL::FavInfoDetail, response, param);
+    std::ofstream ss("test.json");
+    ss << response;
+    FavDetailInfo ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("getCreatedFavList error! media_id: {}, error: {}", media_id, e.what());
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+FavVideoInfoResponse BilibiliClient::getFavVideoInfo(const std::vector<FavItemInfo> ids, int folder_mid, int folder_id)
+{
+    std::string resources;
+    for (const auto& id : ids)
+    {
+        auto resource = std::to_string(id.id) + ":" + std::to_string(id.type) + ",";
+        resources += resource;
+    }
+
+    if (!resources.empty())
+    {
+        resources.pop_back();
+    }
+
+    ParamType param;
+    param.emplace("resources", resources);
+    // param.emplace("folder_mid", std::to_string(folder_mid));
+    // param.emplace("folder_id", std::to_string(folder_id));
+    param.emplace("platform", "web");
+
+    std::string response;
+    get(VideoURL::FavVideoInfo, response, param);
+    std::ofstream ss("test.json");
+    ss << response;
+    FavVideoInfoResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("getCreatedFavList error! folder_mid: {}, folder_id:{} error: {}", folder_mid, folder_id, e.what());
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+FavListInfo BilibiliClient::getCreatedFavList(int ps, int pn, int up_mid)
+{
+    ParamType param;
+    param.emplace("ps", std::to_string(ps));
+    param.emplace("pn", std::to_string(pn));
+    param.emplace("up_mid", std::to_string(up_mid));
+    param.emplace("platform", "web");
+
+    std::string response;
+    get(VideoURL::CreatedFavList, response, param);
+    std::ofstream ss("test.json");
+    ss << response;
+    FavListInfo ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("getCreatedFavList error! up_mid: {}, error: {}", up_mid, e.what());
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+FavListInfo BilibiliClient::getCollectFavList(int ps, int pn, int up_mid)
+{
+    ParamType param;
+    param.emplace("ps", std::to_string(ps));
+    param.emplace("pn", std::to_string(pn));
+    param.emplace("up_mid", std::to_string(up_mid));
+    param.emplace("platform", "web");
+
+    std::string response;
+    get(VideoURL::CollectedFavList, response, param);
+    std::ofstream ss("test.json");
+    ss << response;
+    FavListInfo ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("getCreatedFavList error! up_mid: {}, error: {}", up_mid, e.what());
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+FavDataResponse BilibiliClient::getFavInfo(const std::string& media_id)
+{
+    ParamType param;
+    param.emplace("media_id", media_id);
+
+    network::CurlHeader headers;
+    headers.add("accept: */*");
+    headers.add("Accept-Encoding: gzip, deflate, br, zstd");
+    headers.add("Accept-Language: zh-CN,zh;q=0.9");
+    std::string userAgent = std::string("user-agent: ") + network::chrome;
+    headers.add(userAgent);
+    headers.add(Headers::DefaultReferer);
+    headers.add("origin: https://www.bilibili.com");
+
+    std::string response;
+    get(VideoURL::FavInfoUrl, response, param, headers, false);
+    std::ofstream ss("test.json");
+    ss << response;
+    FavDataResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("getVideoView error! bvid: {}, error: {}", media_id, e.what());
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+VideoWorksResponse BilibiliClient::getUserVideoWroks(const std::string& mid)
+{
+    ParamType param;
+    param.emplace("mid", mid);
+    param.emplace("order", "pubdate");
+    param.emplace("ps", "50");
+    param.emplace("tid", "0");
+    param.emplace("pn", "1");
+    param.emplace("index", "1");
+    param.emplace("keyword", "");
+    param.emplace("order_avoided", "true");
+    param.emplace("platform", "web");
+    param.emplace("web_location", "333.1387");
+    param.emplace("dm_img_list", "[]");
+    encodeWithWbi(param);
+
+    network::CurlHeader headers;
+    std::string userAgent = std::string("user-agent: ") + network::chrome;
+    headers.add(userAgent);
+    headers.add(network::accept_language);
+    headers.add(network::accept_encoding);
+    headers.add("referer: https://space.bilibili.com/" + mid + "/upload/video");
+    headers.add("origin: https://space.bilibili.com");
+
+    if (m_cookieTicket.empty())
+    {
+        auto ticket = getTicket();
+        if (ticket.code == 0)
+        {
+            m_cookieTicket =  "bili_ticket=" + ticket.data.ticket + "; bili_ticket_expires=" + std::to_string(ticket.data.ttl + ticket.data.created_at);
+        }
+
+        auto buvid = getBuvidInfo();
+        if (buvid.code == 0)
+        {
+            m_cookieTicket += "; _uuid=" + buvid.data.buvid;
+        }
+
+        auto buvid34 = getBuvid34Info();
+        m_cookieTicket += "; buvid3=D275CD6B-4AEC-F798-633F-A0B314BC5DF512871infoc; buvid4=17ED0562-6596-9CD6-CCBE-8C5EFDBF96A612871-025091900-1Iru6y0WAatN3ipdVbkGyA==";
+    }
+    headers.add("cookie: " + m_cookieTicket);
+
+    std::string response;
+    get(VideoURL::UserVideoUrl, response, param, headers, false);
+    VideoWorksResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("getVideoView error! mid: {}, error: {}", mid, e.what());
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+    return ret;
+}
+
+BiliTicketResponse BilibiliClient::getTicket()
+{
+    long ts = std::time(nullptr);
+
+    std::string key = "XgwSnGZ1p";
+    std::string message = "ts" + std::to_string(ts);
+    std::string hexsign = hmac_sha256(key, message);
+
+    ParamType params;
+    params["key_id"] = "ec02";
+    params["hexsign"] = hexsign;
+    params["context[ts]"] = std::to_string(ts);
+    params["csrf"] = "";
+    std::string paramstr = paramsString(params);
+
+    network::CurlHeader headers;
+    std::string userAgent = std::string("user-agent: ") + network::chrome;
+    headers.add(userAgent);
+
+    std::string response;
+    post(ticketUrl + "?" + paramstr, response, headers, false);
+
+    BiliTicketResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+
+    return ret;
+}
+
+BuvidInfoResponse BilibiliClient::getBuvidInfo()
+{
+    std::string response;
+    get(buvidUrl, response);
+
+    BuvidInfoResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+
+    return ret;
+}
+
+Buvid34InfoResponse BilibiliClient::getBuvid34Info()
+{
+    network::CurlHeader headers;
+    std::string userAgent = std::string("user-agent: ") + network::chrome;
+    headers.add(userAgent);
+    headers.add("accept: application/json, text/plain, */*");
+    headers.add(network::accept_language);
+    headers.add(network::accept_encoding);
+    headers.add(network::connect_type);
+
+    std::string response;
+    get(buvid34Url, response, headers, false);
+
+    Buvid34InfoResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        BILIBILI_LOG_ERROR("response is {}", response);
+    }
+
     return ret;
 }
 
@@ -407,6 +839,8 @@ void BilibiliClient::initDefaultHeaders()
     m_commonHeaders.add(userAgent);
     m_commonHeaders.add(network::accept_language);
     m_commonHeaders.add(network::accept_encoding);
+    m_commonHeaders.add(Headers::DefaultReferer);
+    m_commonHeaders.add("origin: https://www.bilibili.com");
 }
 
 void BilibiliClient::initDefaultOptions()

@@ -4,9 +4,17 @@
 
 #include "BiliBiliLogin.h"
 
+namespace biliapi
+{
+class BilibiliClient;
+}
+
 class BiliBiliPlugin : public plugin::IPlugin
 {
 public:
+    BiliBiliPlugin();
+    ~BiliBiliPlugin() = default;
+
     const PluginMessage& pluginMessage() const override;
 
     const std::vector<uint8_t>& websiteIcon() override;
@@ -24,5 +32,6 @@ public:
 private:
     static std::string m_dir;
     static PluginMessage m_pluginMessage;
+    biliapi::BilibiliClient& m_client;
     BiliBiliLogin m_login;
 };
