@@ -3,6 +3,8 @@
 
 namespace youtubeapi
 {
+constexpr char domain[] = ".youtube.com";
+
 inline const std::string youtubeMainUrl = "https://www.youtube.com";
 inline const std::string youtubePlayerUrl = youtubeMainUrl + "/youtubei/v1/player";
 inline const std::string youtubeIFrame = youtubeMainUrl + "/iframe_api";

@@ -76,7 +76,7 @@ void NeteaseCloudMusicLogin::loginSuccess()
 {
 }
 
-bool NeteaseCloudMusicLogin::supportLogin() const
+bool NeteaseCloudMusicLogin::supportsLogin() const
 {
     return true;
 }
@@ -94,7 +94,7 @@ bool NeteaseCloudMusicLogin::refreshCookies(std::string cookies)
     return false;
 }
 
-bool NeteaseCloudMusicLogin::isLogin() const
+bool NeteaseCloudMusicLogin::isLoggedIn() const
 {
     return false;
 }
@@ -102,6 +102,11 @@ bool NeteaseCloudMusicLogin::isLogin() const
 bool NeteaseCloudMusicLogin::logout()
 {
     return false;
+}
+
+std::string NeteaseCloudMusicLogin::domain() const
+{
+    return netease::domain;
 }
 
 UserInfo NeteaseCloudMusicLogin::getUserInfo(std::string dir)

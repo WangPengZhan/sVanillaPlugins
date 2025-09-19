@@ -46,7 +46,7 @@ void DedaoClient::setCookies(std::string cookies)
 {
     std::lock_guard lk(m_mutexRequest);
     m_cookies = network::CurlCookies(cookies);
-    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(domain));
+    m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
 }
 
 std::string DedaoClient::csrfToken()
@@ -73,7 +73,7 @@ std::string DedaoClient::csrfToken()
     {
         std::lock_guard lk(m_mutexRequest);
         m_cookies.addCurlCookie(header.at(network::set_cookies));
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(domain));
+        m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
         cookie = m_cookies.cookie(domain);
         if (cookie.contains("csrfToken"))
         {
@@ -154,7 +154,7 @@ LoginCheck DedaoClient::loginCheck(const std::string& token, const std::string& 
         {
             std::lock_guard lk(m_mutexRequest);
             m_cookies.addCurlCookie(header.at(network::set_cookies));
-            m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(domain));
+            m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
         }
     }
 

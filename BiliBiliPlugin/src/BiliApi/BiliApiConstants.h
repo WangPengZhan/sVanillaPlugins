@@ -3,6 +3,8 @@
 
 namespace biliapi
 {
+constexpr char domain[] = "bilibili.com";
+
 inline const std::string apiBase = "https://api.bilibili.com/";
 inline const std::string passBase = "https://passport.bilibili.com/";
 
@@ -37,7 +39,7 @@ inline const std::string CollectedFavList = apiBase + "x/v3/fav/folder/collected
 inline const std::string FavInfoDetail = apiBase + "x/v3/fav/resource/ids";
 inline const std::string FavVideoInfo = apiBase + "x/v3/fav/resource/infos";
 
-inline const std::string UserVideoUrl = apiBase + "x/space/arc/search";
+inline const std::string UserVideoUrl = apiBase + "x/space/wbi/arc/search";
 }  // namespace VideoURL
 
 namespace Headers

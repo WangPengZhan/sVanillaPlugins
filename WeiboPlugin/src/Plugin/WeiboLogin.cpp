@@ -4,6 +4,7 @@
 
 #include "WeiboResource.h"
 #include "WeiboApi/WeiboClient.h"
+#include "WeiboApi/WeiboApiConstants.h"
 #include "Util/TimerUtil.h"
 #include "Util/LocaleHelper.h"
 #include "WeiboPlugin.h"
@@ -83,7 +84,7 @@ UserInfo WeiboLogin::getUserInfo(std::string dir)
     return userInfo;
 }
 
-bool WeiboLogin::supportLogin() const
+bool WeiboLogin::supportsLogin() const
 {
     return true;
 }
@@ -103,7 +104,7 @@ bool WeiboLogin::refreshCookies(std::string cookies)
     return false;
 }
 
-bool WeiboLogin::isLogin() const
+bool WeiboLogin::isLoggedIn() const
 {
     return weiboapi::WeiboClient::globalClient().isLogined();
 }
@@ -111,6 +112,11 @@ bool WeiboLogin::isLogin() const
 bool WeiboLogin::logout()
 {
     return false;
+}
+
+std::string WeiboLogin::domain() const
+{
+    return weiboapi::domain;
 }
 
 std::vector<adapter::BaseVideoView> WeiboLogin::history()

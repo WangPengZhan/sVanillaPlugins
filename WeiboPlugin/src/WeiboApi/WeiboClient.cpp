@@ -130,7 +130,7 @@ ComponentPlayPlayinfoResponse WeiboClient::getPlayInfoByMid(const std::string& m
     std::string accept = "Accept: application/json, text/plain, */*";
     std::string content_type = "Content-Type: application/x-www-form-urlencoded";
     std::string origin = std::string("origin: ") + weiboapi::weiboHomeUrl;
-    std::string x_xsrf_token = std::string("x-xsrf-token: ") + m_cookies.cookie(".weibo.com").value("XSRF-TOKEN");
+    std::string x_xsrf_token = std::string("x-xsrf-token: ") + m_cookies.cookie(domain).value("XSRF-TOKEN");
     std::string referer = std::string("referer: ") + weiboapi::weiboMidRefererUrl + "1034:" + mid + "?from=old_pc_videoshow";
     header.add(userAgent);
     header.add(acceptEncoding);
@@ -342,7 +342,7 @@ bool WeiboClient::crossDomainRequest(std::vector<std::string> urls)
                 cookie += "=.weibo.com";
             }
             m_cookies.addCurlCookie(cookie);
-            m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".weibo.com"));
+            m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
         }
     }
 
@@ -351,12 +351,12 @@ bool WeiboClient::crossDomainRequest(std::vector<std::string> urls)
 
 bool WeiboClient::isLogined() const
 {
-    return m_cookies.cookie(".weibo.com").contains("XSRF-TOKEN");
+    return m_cookies.cookie(domain).contains("XSRF-TOKEN");
 }
 
 std::string WeiboClient::cookie() const
 {
-    return network::CurlCookieOpt(m_cookies.cookie(".weibo.com")).shortContent();
+    return network::CurlCookieOpt(m_cookies.cookie(domain)).shortContent();
 }
 
 std::string WeiboClient::cookies() const
@@ -368,7 +368,7 @@ void WeiboClient::setCookies(std::string cookies)
 {
     std::lock_guard lk(m_mutexRequest);
     m_cookies = network::CurlCookies(cookies);
-    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".weibo.com"));
+    m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
 }
 
 void WeiboClient::getDetailInfo(const std::string& mid)

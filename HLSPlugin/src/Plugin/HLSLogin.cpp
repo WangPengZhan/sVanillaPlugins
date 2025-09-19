@@ -14,7 +14,7 @@ HLSLogin::LoginStatus HLSLogin::getLoginStatus()
     return Error;
 }
 
-bool HLSLogin::supportLogin() const
+bool HLSLogin::supportsLogin() const
 {
     return false;
 }
@@ -48,7 +48,7 @@ bool HLSLogin::refreshCookies(std::string cookies)
     return false;
 }
 
-bool HLSLogin::isLogin() const
+bool HLSLogin::isLoggedIn() const
 {
     return false;
 }
@@ -56,6 +56,11 @@ bool HLSLogin::isLogin() const
 bool HLSLogin::logout()
 {
     return false;
+}
+
+std::string HLSLogin::domain() const
+{
+    return {};
 }
 
 std::vector<adapter::BaseVideoView> HLSLogin::history()

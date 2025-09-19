@@ -6,6 +6,7 @@
 
 #include "BiliBiliResource.h"
 #include "BiliApi/BilibiliClient.h"
+#include "BiliApi/BiliApiConstants.h"
 #include "Util/TimerUtil.h"
 #include "BiliBiliPlugin.h"
 #include "Util/LocaleHelper.h"
@@ -131,7 +132,7 @@ UserInfo BiliBiliLogin::getUserInfo(std::string dir)
     return userInfo;
 }
 
-bool BiliBiliLogin::supportLogin() const
+bool BiliBiliLogin::supportsLogin() const
 {
     return true;
 }
@@ -151,7 +152,7 @@ bool BiliBiliLogin::refreshCookies(std::string cookies)
     return false;
 }
 
-bool BiliBiliLogin::isLogin() const
+bool BiliBiliLogin::isLoggedIn() const
 {
     return biliapi::BilibiliClient::globalClient().isLogined();
 }
@@ -160,6 +161,11 @@ bool BiliBiliLogin::logout()
 {
     const auto logoutInfo = biliapi::BilibiliClient::globalClient().getLogoutExitV2();
     return logoutInfo.code == 0;
+}
+
+std::string BiliBiliLogin::domain() const
+{
+    return biliapi::domain;
 }
 
 std::vector<adapter::BaseVideoView> BiliBiliLogin::history()

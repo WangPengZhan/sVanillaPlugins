@@ -5,6 +5,7 @@
 
 #include "DedaoResource.h"
 #include "DedaoApi/DedaoClient.h"
+#include "DedaoApi/DedaoApiConstants.h"
 #include "Util/TimerUtil.h"
 #include "Util/LocaleHelper.h"
 #include "DedaoPlugin.h"
@@ -151,7 +152,7 @@ UserInfo DedaoLogin::getUserInfo(std::string dir)
     return userInfo;
 }
 
-bool DedaoLogin::supportLogin() const
+bool DedaoLogin::supportsLogin() const
 {
     return true;
 }
@@ -171,7 +172,7 @@ bool DedaoLogin::refreshCookies(std::string cookies)
     return false;
 }
 
-bool DedaoLogin::isLogin() const
+bool DedaoLogin::isLoggedIn() const
 {
     return m_client.isLogined();
 }
@@ -179,6 +180,11 @@ bool DedaoLogin::isLogin() const
 bool DedaoLogin::logout()
 {
     return false;
+}
+
+std::string DedaoLogin::domain() const
+{
+    return dedaoapi::domain;
 }
 
 std::vector<adapter::BaseVideoView> DedaoLogin::history()

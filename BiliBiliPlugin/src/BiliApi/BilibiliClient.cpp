@@ -24,7 +24,6 @@ static constexpr int daySeconds = hours * minutes * seconds;  // 24*60*60
 constexpr char cookie_dedeUserId[] = "DedeUserID";
 constexpr char cookie_biliJct[] = "bili_jct";
 constexpr char cookie_sessdata[] = "SESSDATA";
-constexpr char domain[] = "bilibili.com";
 
 std::string to_string(BusinessType businessType)
 {
@@ -162,8 +161,7 @@ BangumiInfo BilibiliClient::getSeasonVideoView(const std::string& id, IDType typ
 
     std::string response;
     get(VideoURL::PgcSeason, response, param);
-    std::ofstream ss("test.json");
-    ss << response;
+    
     BangumiInfo ret;
     try
     {
@@ -213,8 +211,7 @@ MediaInfoResponse BilibiliClient::getMdVideoView(const std::string& id)
 
     std::string response;
     get(VideoURL::MdSeason, response, param);
-    std::ofstream ss("test.json");
-    ss << response;
+
     MediaInfoResponse ret;
     try
     {
@@ -247,8 +244,6 @@ UgcPlayUrlResponse BilibiliClient::getPlayUrl(long long id, IDType type, long lo
 
     std::string response;
     get(VideoURL::PgcPlayUrl, response, param);
-    std::ofstream ss("test.json");
-    ss << response;
 
     UgcPlayUrlResponse ret;
     try
@@ -277,8 +272,7 @@ CheeseInfoResponse BilibiliClient::getCheeseVideoView(const std::string& id, IDT
 
     std::string response;
     get(VideoURL::CheeseSeason, response, param);
-    std::ofstream ss("test.json");
-    ss << response;
+
     CheeseInfoResponse ret;
     try
     {
@@ -307,8 +301,6 @@ CheesePlayUrlResponse BilibiliClient::getPlayUrl(long long avid, long long ep_id
 
     std::string response;
     get(VideoURL::CheesePlayUrlApi, response, param);
-    std::ofstream ss("test.json");
-    ss << response;
 
     CheesePlayUrlResponse ret;
     try
@@ -332,8 +324,7 @@ FavDetailInfo BilibiliClient::getFavDetail(const std::string& media_id)
 
     std::string response;
     get(VideoURL::FavInfoDetail, response, param);
-    std::ofstream ss("test.json");
-    ss << response;
+
     FavDetailInfo ret;
     try
     {
@@ -369,8 +360,7 @@ FavVideoInfoResponse BilibiliClient::getFavVideoInfo(const std::vector<FavItemIn
 
     std::string response;
     get(VideoURL::FavVideoInfo, response, param);
-    std::ofstream ss("test.json");
-    ss << response;
+
     FavVideoInfoResponse ret;
     try
     {
@@ -394,8 +384,7 @@ FavListInfo BilibiliClient::getCreatedFavList(int ps, int pn, int up_mid)
 
     std::string response;
     get(VideoURL::CreatedFavList, response, param);
-    std::ofstream ss("test.json");
-    ss << response;
+
     FavListInfo ret;
     try
     {
@@ -419,8 +408,7 @@ FavListInfo BilibiliClient::getCollectFavList(int ps, int pn, int up_mid)
 
     std::string response;
     get(VideoURL::CollectedFavList, response, param);
-    std::ofstream ss("test.json");
-    ss << response;
+
     FavListInfo ret;
     try
     {
@@ -450,8 +438,7 @@ FavDataResponse BilibiliClient::getFavInfo(const std::string& media_id)
 
     std::string response;
     get(VideoURL::FavInfoUrl, response, param, headers, false);
-    std::ofstream ss("test.json");
-    ss << response;
+
     FavDataResponse ret;
     try
     {
@@ -473,12 +460,15 @@ VideoWorksResponse BilibiliClient::getUserVideoWroks(const std::string& mid)
     param.emplace("ps", "50");
     param.emplace("tid", "0");
     param.emplace("pn", "1");
-    param.emplace("index", "1");
+    param.emplace("index", "0");
     param.emplace("keyword", "");
     param.emplace("order_avoided", "true");
     param.emplace("platform", "web");
     param.emplace("web_location", "333.1387");
     param.emplace("dm_img_list", "[]");
+    param.emplace("dm_img_str", "V2ViR0wgMS4wIChPcGVuR0wgRVMgMi4wIENocm9taXVtKQ");
+    param.emplace("dm_cover_img_str", "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgUlRYIDQwNjAgTGFwdG9wIEdQVSAoMHgwMDAwMjhFMCkgRGlyZWN0M0QxMSB2c181XzAgcHNfNV8wLCBEM0QxMSlHb29nbGUgSW5jLiAoTlZJRElBKQ");
+    param.emplace("dm_img_inter", "{\"ds\":[],\"wh\":[5231,6067,75],\"of\":[475,950,475]}");
     encodeWithWbi(param);
 
     network::CurlHeader headers;
@@ -488,25 +478,6 @@ VideoWorksResponse BilibiliClient::getUserVideoWroks(const std::string& mid)
     headers.add(network::accept_encoding);
     headers.add("referer: https://space.bilibili.com/" + mid + "/upload/video");
     headers.add("origin: https://space.bilibili.com");
-
-    if (m_cookieTicket.empty())
-    {
-        auto ticket = getTicket();
-        if (ticket.code == 0)
-        {
-            m_cookieTicket =  "bili_ticket=" + ticket.data.ticket + "; bili_ticket_expires=" + std::to_string(ticket.data.ttl + ticket.data.created_at);
-        }
-
-        auto buvid = getBuvidInfo();
-        if (buvid.code == 0)
-        {
-            m_cookieTicket += "; _uuid=" + buvid.data.buvid;
-        }
-
-        auto buvid34 = getBuvid34Info();
-        m_cookieTicket += "; buvid3=D275CD6B-4AEC-F798-633F-A0B314BC5DF512871infoc; buvid4=17ED0562-6596-9CD6-CCBE-8C5EFDBF96A612871-025091900-1Iru6y0WAatN3ipdVbkGyA==";
-    }
-    headers.add("cookie: " + m_cookieTicket);
 
     std::string response;
     get(VideoURL::UserVideoUrl, response, param, headers, false);
@@ -633,7 +604,7 @@ LoginStatusScanning BilibiliClient::getLoginStatus(const std::string& qrcodeKey)
         BILIBILI_LOG_INFO("Login success!");
         std::lock_guard lk(m_mutexRequest);
         m_cookies.addCurlCookies(header.at(network::set_cookies));
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(domain));
+        m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
     }
 
     LoginStatusScanning ret;
@@ -718,7 +689,7 @@ LogoutExitV2 BilibiliClient::getLogoutExitV2()
         BILIBILI_LOG_ERROR("getLogoutExitV2");
         std::lock_guard lk(m_mutexRequest);
         m_cookies = network::CurlCookies();
-        m_commonOptions.erase(network::CookieFileds::opt);
+        m_commonOptions.erase(network::CookieFields::opt);
     }
 
     return logout;
@@ -752,7 +723,7 @@ void BilibiliClient::setCookies(std::string cookies)
 {
     std::lock_guard lk(m_mutexRequest);
     m_cookies = network::CurlCookies(cookies);
-    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(domain));
+    m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
 }
 
 bool BilibiliClient::isLogined() const

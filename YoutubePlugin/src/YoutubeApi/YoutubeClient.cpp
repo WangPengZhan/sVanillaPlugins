@@ -20,10 +20,6 @@ YoutubeClient::YoutubeClient()
     : network::NetWork()
     , m_cookies("SOCS=CAISEwgDEgk2NzM5OTg2ODUaAmVuIAEaBgiA6p23Bg; domain=.youtube.com")
 {
-    std::ifstream file("cookie.txt");
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    m_cookies = buffer.str();
     initDefaultHeaders();
     initDefaultOptions();
 }
@@ -36,7 +32,7 @@ YoutubeClient& YoutubeClient::globalClient()
 
 bool YoutubeClient::isLogined() const
 {
-    return !m_cookies.cookie(".youtube.com").value(youtubeMustKey).empty();
+    return !m_cookies.cookie(domain).value(youtubeMustKey).empty();
 }
 
 void YoutubeClient::setCookie(const std::string& cookie)
@@ -48,7 +44,7 @@ void YoutubeClient::setCookie(const std::string& cookie)
     if (!std::string(m_cookies).empty())
     {
         std::lock_guard lock(m_mutexRequest);
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".youtube.com"));
+        m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
     }
 }
 
@@ -56,7 +52,7 @@ void YoutubeClient::setCookies(const std::string& cookies)
 {
     std::lock_guard lk(m_mutexRequest);
     m_cookies = network::CurlCookies(cookies);
-    m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".youtube.com"));
+    m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
 }
 
 std::string YoutubeClient::cookies() const
@@ -264,7 +260,7 @@ void YoutubeClient::initDefaultOptions()
     m_commonOptions.insert({verbose->getOption(), verbose});
     if (!std::string(m_cookies).empty())
     {
-        m_commonOptions[network::CookieFileds::opt] = std::make_shared<network::CookieFileds>(m_cookies.cookie(".youtube.com"));
+        m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
     }
 }
 

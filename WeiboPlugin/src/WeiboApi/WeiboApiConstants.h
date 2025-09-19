@@ -3,6 +3,7 @@
 
 namespace weiboapi
 {
+constexpr char domain[] = ".weibo.com";
 
 inline const std::string weiboHomeUrl = "https://weibo.com/";
 inline const std::string weiboQrcodeUrl = "https://login.sina.com.cn/sso/qrcode/image";

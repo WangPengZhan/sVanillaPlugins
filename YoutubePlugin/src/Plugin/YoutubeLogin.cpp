@@ -8,7 +8,7 @@
 #include "Util/TimerUtil.h"
 #include "YoutubePluginMessage.h"
 
-bool YoutubeLogin::supportLogin() const
+bool YoutubeLogin::supportsLogin() const
 {
     return true;
 }
@@ -52,7 +52,7 @@ UserInfo YoutubeLogin::getUserInfo(std::string dir)
     return userInfo;
 }
 
-bool YoutubeLogin::isLogin() const
+bool YoutubeLogin::isLoggedIn() const
 {
     return youtubeapi::YoutubeClient::globalClient().isLogined();
 }
@@ -60,6 +60,11 @@ bool YoutubeLogin::isLogin() const
 bool YoutubeLogin::logout()
 {
     return youtubeapi::YoutubeClient::globalClient().isLogined();
+}
+
+std::string YoutubeLogin::domain() const
+{
+    return youtubeapi::domain;
 }
 
 std::vector<adapter::BaseVideoView> YoutubeLogin::history()
