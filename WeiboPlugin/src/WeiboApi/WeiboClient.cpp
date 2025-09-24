@@ -163,6 +163,9 @@ WeiboAjaxData WeiboClient::getPlayInfoByWid(const std::string& wid)
     std::string userAgent = std::string("User-Agent: ") + network::chrome;
     std::string accept_encoding = "Accept-Encoding: gzip, deflate, br, zstd";
     std::string accept = "Accept: application/json, text/plain, */*";
+    header.add(userAgent);
+    header.add(accept_encoding);
+    header.add(accept);
 
     get(url, response, header, false, CurlOptions(), true);
 
@@ -222,6 +225,17 @@ bool WeiboClient::downloadImage(const std::string& url, const std::filesystem::p
     fclose(file);
 
     return true;
+}
+
+UserInfoResponse WeiboClient::getUserInfo(const std::string& uid)
+{
+    std::string response;
+    std::string url = weiboapi::weiboUserInfoUrl + uid;
+    get(url, response);
+
+    UserInfoResponse ret;
+    ret = getDataFromRespones(response);
+    return ret;
 }
 
 QRCResponse WeiboClient::getLoginUrl()

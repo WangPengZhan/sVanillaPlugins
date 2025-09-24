@@ -113,6 +113,7 @@ UserInfo NeteaseCloudMusicLogin::getUserInfo(std::string dir)
 {
     return {};
 }
+
 std::vector<adapter::BaseVideoView> NeteaseCloudMusicLogin::history()
 {
     return {};

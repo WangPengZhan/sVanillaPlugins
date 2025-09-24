@@ -147,8 +147,19 @@ UserInfo DedaoLogin::getUserInfo(std::string dir)
     UserInfo userInfo;
     auto dedaoUser = m_client.userInfo();
     userInfo.uname = dedaoUser.c.nickname;
-    userInfo.facePath = dedaoUser.c.avatar;
     userInfo.vipType = dedaoUser.c.vip_user.info;
+    userInfo.home = dedaoapi::dedaoHomeUrl;
+    userInfo.id = dedaoUser.c.uid_hazy;
+
+    if (!dedaoUser.c.avatar.empty())
+    {
+        std::string path = dir + "/" + dedaoUser.c.uid_hazy + ".jpg";
+        FILE* file = fopen(path.c_str(), "wb");
+        m_client.get(dedaoUser.c.avatar, file);
+        fclose(file);
+        userInfo.facePath = path;
+    }
+
     return userInfo;
 }
 

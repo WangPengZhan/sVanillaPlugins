@@ -58,35 +58,41 @@ struct CardlistInfo
 
 struct User
 {
-    long long id;
+    long long id{};
     std::string screen_name;
     std::string profile_image_url;
     std::string profile_url;
-    bool close_blue_v;
+    bool close_blue_v{};
     std::string description;
-    bool follow_me;
-    bool following;
-    int follow_count;
+    bool follow_me{};
+    bool following{};
+    int follow_count{};
     std::string cover_image_phone;
+    std::string avatar_large;
     std::string avatar_hd;
-    int statuses_count;
-    bool verified;
-    int verified_type;
+    int statuses_count{};
+    bool verified{};
+    int verified_type{};
     std::string gender;
-    int mbtype;
-    int svip;
-    int urank;
-    int mbrank;
+    std::string location;
+    int mbtype{};
+    int svip{};
+    int urank{};
+    int mbrank{};
     std::string followers_count_str;
     int verified_type_ext;
     std::string verified_reason;
-    bool like;
-    bool like_me;
-    bool special_follow;
+    int user_type{};
+    std::string is_star;
+    bool like{};
+    bool like_me{};
+    bool is_muteuser{};
+    bool special_follow{};
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(User, id, screen_name, profile_image_url, profile_url, close_blue_v, description, follow_me, following,
-                                                follow_count, cover_image_phone, avatar_hd, statuses_count, verified, verified_type, gender, mbtype, svip,
-                                                urank, mbrank, followers_count_str, verified_type_ext, verified_reason, like, like_me, special_follow)
+                                                follow_count, cover_image_phone, avatar_large, avatar_hd, statuses_count, verified, verified_type, gender,
+                                                location, mbtype, svip, urank, mbrank, followers_count_str, verified_type_ext, verified_reason, user_type,
+                                                is_star, like, like_me, is_muteuser, special_follow)
 };
 
 struct Geo
@@ -791,6 +797,31 @@ struct ComponentPlayPlayinfoResponse
     } data;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ComponentPlayPlayinfoResponse, code, msg, data)
+};
+
+struct TabInfo
+{
+    std::string name;
+    std::string tabName;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(TabInfo, name, tabName)
+};
+
+struct UserInfo
+{
+    User user;
+    std::vector<TabInfo> tabList;
+    std::string blockText;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(UserInfo, user, tabList, blockText)
+};
+
+struct UserInfoResponse
+{
+    int ok;
+    UserInfo data;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(UserInfoResponse, ok, data)
 };
 
 }  // namespace weiboapi

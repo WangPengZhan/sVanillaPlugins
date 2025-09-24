@@ -43,6 +43,22 @@ std::vector<adapter::BaseVideoView> convertVideoView(const biliapi::History& dat
 
     return videoListView;
 }
+
+std::string vipTypeToString(int type)
+{
+    switch (type)
+    {
+    case 0:
+        return "无";
+    case 1:
+        return "月度大会员";
+    case 2:
+        return "年度大会员";
+    default:
+        return "未知类型";
+    }
+}
+
 }  // namespace
 
 BiliBiliLogin::LoginResource BiliBiliLogin::m_biliRes{qrc_background, qrc_loading, qrc_tip, qrc_waitConfirm, qrc_complete, qrc_init, qrc_refresh};
@@ -118,12 +134,14 @@ UserInfo BiliBiliLogin::getUserInfo(std::string dir)
         return userInfo;
     }
     userInfo.uname = nav.data.uname;
+    userInfo.id = std::to_string(nav.data.mid);
+    userInfo.vipType = vipTypeToString(nav.data.vipType);
+    userInfo.home = biliplugin::domain;
 
     if (!nav.data.face.empty())
     {
         std::string path = dir + "/" + std::to_string(nav.data.mid) + ".jpg";
         FILE* file = fopen(path.c_str(), "wb");
-        network::NetWork netWork;
         biliapi::BilibiliClient::globalClient().get(nav.data.face, file);
         fclose(file);
         userInfo.facePath = path;

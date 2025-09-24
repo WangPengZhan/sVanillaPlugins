@@ -24,6 +24,8 @@ public:
     std::string getStreamInfo(const std::string& wid);
     bool downloadImage(const std::string& url, const std::filesystem::path& path);
 
+    UserInfoResponse getUserInfo(const std::string& uid);
+
     QRCResponse getLoginUrl();
     bool getQrcImage(const std::string& url, const std::filesystem::path& path);
     LoginScaningStatus getLoginStatus(const std::string& qrid);

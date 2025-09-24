@@ -81,6 +81,17 @@ UserInfo WeiboLogin::getUserInfo(std::string dir)
 {
     UserInfo userInfo;
 
+    auto weiboUserInfo = m_client.getUserInfo(dir);
+    userInfo.id = std::to_string(weiboUserInfo.data.user.id);
+    userInfo.uname = weiboUserInfo.data.user.screen_name;
+    if (!weiboUserInfo.data.user.avatar_hd.empty())
+    {
+        userInfo.facePath = dir + "/" + userInfo.id + ".jpg";
+        m_client.downloadImage(weiboUserInfo.data.user.avatar_hd, userInfo.facePath);
+    }
+    userInfo.vipType = weiboUserInfo.data.user.verified_reason;
+    userInfo.home = weiboapi::weiboHomeUrl;
+
     return userInfo;
 }
 
