@@ -72,14 +72,14 @@ IDType stringToType(const std::string& type)
     {
         return IDType::Article;
     }
-    
+
     return IDType::Unkown;
 }
 
 std::string IDInfo::to_string() const
 {
     std::stringstream ss;
-    ss << "id: " << id << ", " << "id type: " << typeToString(type) <<", " << "parent id: " << parentId;
+    ss << "id: " << id << ", " << "id type: " << typeToString(type) << ", " << "parent id: " << parentId;
     return ss.str();
 }
 

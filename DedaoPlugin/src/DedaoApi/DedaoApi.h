@@ -715,8 +715,8 @@ struct Article
                                                 class_id, class_id_str, chapter_id, chapter_id_str, title, logo, url, summary, mold, push_content, publish_time,
                                                 push_time, push_status, share_title, share_content, share_switch, dd_article_id, dd_article_id_str,
                                                 dd_article_token, status, create_time, update_time, cur_learn_count, is_free_try, is_user_free_try, order_num,
-                                                is_like, share_url, trial_share_url, is_read, log_id, log_type, recommend_title, audio, is_buy,
-                                                dd_media_id, dd_media_id_str, video_status, media_base_info, dd_live_id, not_join_plan, is_red_packet_try,
+                                                is_like, share_url, trial_share_url, is_read, log_id, log_type, recommend_title, audio, is_buy, dd_media_id,
+                                                dd_media_id_str, video_status, media_base_info, dd_live_id, not_join_plan, is_red_packet_try,
                                                 red_packet_expire_time, is_show_play_later_button, is_add_play_later)
 };
 

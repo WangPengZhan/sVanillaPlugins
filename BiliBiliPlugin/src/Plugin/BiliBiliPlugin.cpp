@@ -109,7 +109,7 @@ adapter::VideoView BiliBiliPlugin::getVideoView(const std::string& url)
                         view.Option2 = detailView.Option2;
                     }
                     bvMap[detailView.Identifier] = detailView.Option2;
-                }   
+                }
             }
             else
             {

@@ -15,7 +15,7 @@ enum class IDType
 std::string typeToString(IDType type);
 IDType stringToType(const std::string& type);
 
-struct IDInfo 
+struct IDInfo
 {
     std::string id;
     IDType type{IDType::Unkown};

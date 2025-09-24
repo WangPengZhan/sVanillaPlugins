@@ -161,7 +161,7 @@ BangumiInfo BilibiliClient::getSeasonVideoView(const std::string& id, IDType typ
 
     std::string response;
     get(VideoURL::PgcSeason, response, param);
-    
+
     BangumiInfo ret;
     try
     {
@@ -467,7 +467,8 @@ VideoWorksResponse BilibiliClient::getUserVideoWroks(const std::string& mid)
     param.emplace("web_location", "333.1387");
     param.emplace("dm_img_list", "[]");
     param.emplace("dm_img_str", "V2ViR0wgMS4wIChPcGVuR0wgRVMgMi4wIENocm9taXVtKQ");
-    param.emplace("dm_cover_img_str", "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgUlRYIDQwNjAgTGFwdG9wIEdQVSAoMHgwMDAwMjhFMCkgRGlyZWN0M0QxMSB2c181XzAgcHNfNV8wLCBEM0QxMSlHb29nbGUgSW5jLiAoTlZJRElBKQ");
+    param.emplace("dm_cover_img_str", "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgUlRYIDQwNjAgTGFwdG9wIEdQVSAoMHgwMDAwMjhFMCkgRGlyZWN0M0QxMSB2c181XzAgcHNfNV8wLCBE"
+                                      "M0QxMSlHb29nbGUgSW5jLiAoTlZJRElBKQ");
     param.emplace("dm_img_inter", "{\"ds\":[],\"wh\":[5231,6067,75],\"of\":[475,950,475]}");
     encodeWithWbi(param);
 
