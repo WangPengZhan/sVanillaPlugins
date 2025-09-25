@@ -9,7 +9,8 @@ inline const std::string youtubeMainUrl = "https://www.youtube.com";
 inline const std::string youtubePlayerUrl = youtubeMainUrl + "/youtubei/v1/player";
 inline const std::string youtubeIFrame = youtubeMainUrl + "/iframe_api";
 inline const constexpr char youtubeBaseJs[] = "https://www.youtube.com/s/player/{}/player_ias.vflset/en_US/base.js";
-inline const std::string swJsDataUrl = "https://www.youtube.com/sw.js_data";
+inline const std::string swJsDataUrl = youtubeMainUrl + "/sw.js_data";
+inline const std::string youtubeBrowseUrl = youtubeMainUrl + "/youtubei/v1/browse";
 
 constexpr char youtubePostContent[] = R"delimiter(       
     {
@@ -25,6 +26,20 @@ constexpr char youtubePostContent[] = R"delimiter(
                 "osName": "IOS",
                 "osVersion": "18.1.0.22B83",
                 "visitorData": null,
+                "hl": "en",
+                "gl": "US",
+                "utcOffsetMinutes": 0
+            }
+        }
+    })delimiter";
+
+constexpr char youtubeBrowsePostContent[] = R"delimiter(       
+    {
+        "browseId": null,
+        "context": {
+            "client": {
+                "clientName": "WEB",
+                "clientVersion": "2.20250923.08.00",
                 "hl": "en",
                 "gl": "US",
                 "utcOffsetMinutes": 0

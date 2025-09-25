@@ -3,6 +3,24 @@
 #include "Convert.h"
 #include "Util/TimerUtil.h"
 #include "YoutubePluginMessage.h"
+#include "YoutubeApi/YoutubeUrl.h"
+
+std::string authorFormat(const std::vector<youtubeapi::ShortBylineTextItem> teachers)
+{
+    std::string result;
+    for (const auto& teacher : teachers)
+    {
+        result += teacher.text;
+        result += ";";
+    }
+
+    if (!result.empty())
+    {
+        result.pop_back();
+    }
+
+    return result;
+}
 
 std::string convertTimeFormat(const std::string& input)
 {
@@ -46,4 +64,37 @@ adapter::VideoView convertVideoView(const youtubeapi::MainResponse& data)
     videoListView.push_back(item);
 
     return videoListView;
+}
+
+adapter::VideoView convertVideoView(const youtubeapi::PlayLisTabContents& data)
+{
+    adapter::VideoView videoListView;
+    for (const auto& tab : data.twoColumnBrowseResultsRenderer.tabs)
+    {
+        for (const auto& sectionListRenderer : tab.tabRenderer.content.sectionListRenderer.contents)
+        {
+            for (const auto& itemSectionRenderer : sectionListRenderer.itemSectionRenderer.contents)
+            {
+                for (const auto& playlistVideoListRenderer : itemSectionRenderer.playlistVideoListRenderer.contents)
+                {
+                    videoListView.push_back(convertVideoInfo(playlistVideoListRenderer.playlistVideoRenderer));
+                }
+            }
+        }
+    }
+    return videoListView;
+}
+
+adapter::BaseVideoView convertVideoInfo(const youtubeapi::PlaylistVideoRenderer& data)
+{
+    adapter::BaseVideoView item;
+    const auto& thumbnails = data.thumbnail.thumbnails;
+    item.Identifier = data.videoId;
+    item.IdType = youtubeapi::typeToString(youtubeapi::IDType::VideoId);
+    item.Title = data.title.runs.empty() ? "" : data.title.runs.front().text;
+    item.Publisher = authorFormat(data.shortBylineText.runs);
+    item.Cover = thumbnails.empty() ? "" : thumbnails.back().url;
+    item.Duration = data.lengthText.simpleText;
+    item.pluginId = youtubeplugin::pluginID;
+    return item;
 }

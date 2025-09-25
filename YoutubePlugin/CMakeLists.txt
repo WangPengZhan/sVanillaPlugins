@@ -35,10 +35,9 @@ cmake_policy(SET CMP0087 NEW)
 find_package(nlohmann_json CONFIG REQUIRED)
 set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
 find_package(CURL REQUIRED)
-# 寻找OpenSSL库
 find_package(OpenSSL REQUIRED)
+find_package(LibXml2 REQUIRED)
 
-# 如果OpenSSL被找到，包含OpenSSL的头文件目录
 if(OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
@@ -72,6 +71,7 @@ target_link_libraries(${PROJECT_NAME}
         spdlog
         ${OPENSSL_LIBRARIES}
         FFmpeg
+        LibXml2::LibXml2
 )
 
 set(STATIC_LIBS

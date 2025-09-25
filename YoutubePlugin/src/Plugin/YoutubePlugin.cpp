@@ -27,19 +27,49 @@ const std::vector<uint8_t>& YoutubePlugin::websiteIcon()
 
 bool YoutubePlugin::canParseUrl(const std::string& url)
 {
-    return isValidUrl(url);
+    return youtubeapi::isValidUrl(url);
 }
 
 adapter::VideoView YoutubePlugin::getVideoView(const std::string& url)
 {
     adapter::VideoView views;
-
-    std::string id = getID(url);
+    youtubeapi::IDInfo id = youtubeapi::getID(url);
     auto& client = youtubeapi::YoutubeClient::globalClient();
-    auto mainResponse = client.getVideoInfo(id);
-    client.getBaseJs(client.getIFrameVersion());
-    views = convertVideoView(mainResponse);
-
+    if (id.type == youtubeapi::IDType::VideoId && id.parentType != youtubeapi::IDType::PlaylistId)
+    {
+        youtubeapi::MainResponse mainResponse = client.getVideoInfo(id.id);
+        client.getBaseJs(client.getIFrameVersion());
+        views = convertVideoView(mainResponse);
+    }
+    else if (id.type == youtubeapi::IDType::PlaylistId || id.parentType == youtubeapi::IDType::PlaylistId)
+    {
+        std::string playlistId = id.type == youtubeapi::IDType::PlaylistId ? id.id : id.parentId;
+        youtubeapi::PlayListInfo playlistInfo = client.playlistInfo(playlistId);
+        views = convertVideoView(playlistInfo.contents);
+    }
+    else if (id.type == youtubeapi::IDType::ChannelId)
+    {
+        std::string playlistUrl = "https://www.youtube.com/playlist?list=UU" + id.id.substr(2);
+        views = getVideoView(playlistUrl);
+    }
+    else if (id.type == youtubeapi::IDType::AtChannelId)
+    {
+        std::string requestUrl = "https://www.youtube.com/@" + id.id;
+        std::string ChannelUrl = client.getChannelUrl(requestUrl);
+        views = getVideoView(ChannelUrl);
+    }
+    else if (id.type == youtubeapi::IDType::UserNameId)
+    {
+        std::string requestUrl = "https://www.youtube.com/user/" + id.id;
+        std::string ChannelUrl = client.getChannelUrl(requestUrl);
+        views = getVideoView(ChannelUrl);
+    }
+    else if (id.type == youtubeapi::IDType::CustomNameId)
+    {
+        std::string requestUrl = "https://www.youtube.com/c/" + id.id;
+        std::string ChannelUrl = client.getChannelUrl(requestUrl);
+        views = getVideoView(ChannelUrl);
+    }
     return views;
 }
 

@@ -4,6 +4,10 @@
 #include <string>
 #include <fstream>
 
+#include <libxml/HTMLparser.h>
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+
 #include "YoutubeClient.h"
 #include "YoutubeConstants.h"
 #include "Util/JsonProcess.h"
@@ -12,6 +16,60 @@
 #include "NetWork/HeaderBodyResponseWrapper.h"
 #include "NetWork/CurlCpp/CurlCookie.h"
 #include "NetWork/CurlCpp/CurlOption.h"
+
+struct LocationUrl
+{
+    std::string locationUrl;
+    std::string body;
+};
+namespace network
+{
+
+template <typename T>
+class CurlResponseWrapper;
+
+template <>
+class CurlResponseWrapper<LocationUrl>
+{
+public:
+    CurlResponseWrapper(LocationUrl& response)
+        : m_response(response)
+    {
+    }
+
+    void setToCurl(CURL* handle)
+    {
+        if (handle)
+        {
+            curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, writeFunc<std::string>);
+            curl_easy_setopt(handle, CURLOPT_WRITEDATA, &m_response.body);
+        }
+    }
+
+    void setToCurl(CurlEasy& easy)
+    {
+        setToCurl(easy.handle());
+    }
+
+    void readAfter(CURL* handle)
+    {
+        char* redirectUrl = nullptr;
+        curl_easy_getinfo(handle, CURLINFO_REDIRECT_URL, &redirectUrl);
+        if (redirectUrl)
+        {
+            m_response.locationUrl = redirectUrl;
+        }
+    }
+
+    void readAfter(CurlEasy& easy)
+    {
+        readAfter(easy.handle());
+    }
+
+private:
+    LocationUrl& m_response;
+};
+}  // namespace network
 
 namespace youtubeapi
 {
@@ -236,6 +294,100 @@ std::string YoutubeClient::visitorData()
 
     m_visitorData = getVisitorData();
     return m_visitorData;
+}
+
+PlayListInfo YoutubeClient::playlistInfo(const std::string& listId)
+{
+    YOUTUBE_LOG_WARN("playlistInfo videoId: {}", listId);
+    network::CurlHeader header;
+    header.add("Content-Type: application/json");
+    nlohmann::json content = nlohmann::json::parse(youtubeBrowsePostContent);
+    content["browseId"] = "VL" + listId;
+    std::string param = content.dump();
+    std::string response;
+    post(youtubeBrowseUrl, response, param, header, true);
+
+    PlayListInfo ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << "error: " << e.what() << std::endl;
+        YOUTUBE_LOG_WARN("getVideoInfo error: {}", e.what());
+    }
+    return ret;
+}
+
+std::string YoutubeClient::getChannelUrl(const std::string& url)
+{
+    std::string channelUrl;
+    LocationUrl response;
+    get(url, response);
+
+    if (!response.locationUrl.empty())
+    {
+        get(response.locationUrl, response);
+    }
+
+    struct XmlDocDeleter
+    {
+        void operator()(xmlDocPtr doc) const
+        {
+            xmlFreeDoc(doc);
+        }
+    };
+    using XmlDocPtr = std::unique_ptr<xmlDoc, XmlDocDeleter>;
+    struct XPathContextDeleter
+    {
+        void operator()(xmlXPathContextPtr ctx) const
+        {
+            xmlXPathFreeContext(ctx);
+        }
+    };
+    using XPathContextPtr = std::unique_ptr<xmlXPathContext, XPathContextDeleter>;
+    struct XPathObjectDeleter
+    {
+        void operator()(xmlXPathObjectPtr obj) const
+        {
+            xmlXPathFreeObject(obj);
+        }
+    };
+    using XPathObjectPtr = std::unique_ptr<xmlXPathObject, XPathObjectDeleter>;
+    struct XmlCharDeleter
+    {
+        void operator()(xmlChar* obj) const
+        {
+            xmlFree(obj);
+        }
+    };
+    using XmlCharPtr = std::unique_ptr<xmlChar, XmlCharDeleter>;
+    XmlDocPtr doc(htmlReadMemory(response.body.c_str(), response.body.size(), nullptr, nullptr, HTML_PARSE_NOERROR | HTML_PARSE_NOWARNING));
+    if (!doc)
+    {
+        return channelUrl;
+    }
+    XPathContextPtr ctx(xmlXPathNewContext(doc.get()));
+    if (!ctx)
+    {
+        return channelUrl;
+    }
+    std::string expr = "//meta[@property='og:url']/@content";
+    XPathObjectPtr result(xmlXPathEvalExpression((const xmlChar*)expr.c_str(), ctx.get()));
+    if (!result)
+    {
+        return channelUrl;
+    }
+    if (result->nodesetval && result->nodesetval->nodeNr > 0)
+    {
+        XmlCharPtr content(xmlNodeListGetString(doc.get(), result->nodesetval->nodeTab[0]->xmlChildrenNode, 1));
+        if (content)
+        {
+            channelUrl = std::string((const char*)content.get());
+        }
+    }
+    return channelUrl;
 }
 
 void YoutubeClient::initDefaultHeaders()

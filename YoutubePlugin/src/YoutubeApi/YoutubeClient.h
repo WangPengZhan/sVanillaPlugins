@@ -31,6 +31,9 @@ public:
     std::string getBaseJs(std::string version);
     std::vector<AdaptiveFormat> getStreamInfo(const std::string& videoId);
 
+    std::string getChannelUrl(const std::string& url);
+    PlayListInfo playlistInfo(const std::string& listId);
+
     bool logout();
 
     std::string visitorData();
