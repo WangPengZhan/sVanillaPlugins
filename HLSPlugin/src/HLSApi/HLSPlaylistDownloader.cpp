@@ -172,8 +172,8 @@ void HLSPlaylistDownloader::startDownload()
     if (m_downloadThreads.empty())
     {
         std::vector<std::thread> threads;
-        threads.reserve(5);
-        for (int i = 0; i < 5; ++i)
+        threads.reserve(m_threadCount);
+        for (int i = 0; i < m_threadCount; ++i)
         {
             threads.emplace_back(std::thread(&HLSPlaylistDownloader::downloadTsFile, this));
         }
@@ -206,6 +206,19 @@ void HLSPlaylistDownloader::exitDownload()
         {
             thread.join();
         }
+    }
+}
+
+int HLSPlaylistDownloader::threadCount() const
+{
+    return m_threadCount;
+}
+
+void HLSPlaylistDownloader::setThreadCount(int count)
+{
+    if (count > 0)
+    {
+        m_threadCount = count;
     }
 }
 

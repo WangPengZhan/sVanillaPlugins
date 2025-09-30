@@ -13,8 +13,8 @@ TEST(HLSPlugin_Test, test)
 TEST(HLSPlugin_Test, INFO)
 {
     initDir("D:/");
-    auto hanlde = pluginInit();
-    auto plugin = reinterpret_cast<plugin::IPlugin*>(hanlde);
+    auto handle = pluginInit();
+    auto plugin = reinterpret_cast<plugin::IPlugin*>(handle);
     auto info = plugin->pluginMessage();
     EXPECT_EQ(info.name, "template");
     EXPECT_EQ(info.pluginId, 0);
@@ -30,6 +30,7 @@ TEST(HLSPlugin_Test, INFO)
     videoInfo.downloadConfig = std::make_shared<DownloadConfig>();
     videoInfo.downloadConfig->downloadDir = "D:/test/";
     videoInfo.downloadConfig->nameRule = "test.mp4";
+    videoInfo.videoView->Option1 = "1";
     auto downloader = plugin->getDownloader(videoInfo);
 
     EXPECT_TRUE(downloader != nullptr);

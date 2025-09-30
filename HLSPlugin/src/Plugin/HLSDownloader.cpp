@@ -19,9 +19,11 @@ HLSDownloader::HLSDownloader()
     }
 }
 
-HLSDownloader::HLSDownloader(std::shared_ptr<hlsapi::HLSClient> client, std::unordered_map<hlsapi::MediaInfo::MediaType, hlsapi::M3U8Playlist> downloadedFiles)
+HLSDownloader::HLSDownloader(std::shared_ptr<hlsapi::HLSClient> client, std::unordered_map<hlsapi::MediaInfo::MediaType, hlsapi::M3U8Playlist> downloadedFiles,
+                             int downloadThreadNum)
     : m_finished(false)
     , m_client(std::move(client))
+    , m_downloadThreadNum(downloadThreadNum)
 {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     m_tempDir = HLSPlugin::getDir() + "HLS_" + std::to_string(std::rand() % 10000) + "_" + std::to_string(std::time(nullptr)) + "/";
@@ -33,6 +35,7 @@ HLSDownloader::HLSDownloader(std::shared_ptr<hlsapi::HLSClient> client, std::uno
     for (auto& [type, playlist] : downloadedFiles)
     {
         m_downloadedFiles[type] = std::make_shared<hlsapi::HLSPlaylistDownloader>(*m_client);
+        m_downloadedFiles[type]->setThreadCount(downloadThreadNum);
         m_downloadedFiles[type]->setDir(m_tempDir + hlsapi::MediaInfo::mediaTypeToString(type) + "/");
         m_downloadedFiles[type]->downloadTsToFiles({playlist});
     }
@@ -217,8 +220,8 @@ void HLSDownloader::addDownloadFile(hlsapi::MediaInfo::MediaType type, hlsapi::M
     {
         if (m_downloadedFiles.empty())
         {
-            m_downloadedFiles[type] =
-                std::make_shared<hlsapi::HLSPlaylistDownloader>(hlsapi::HLSClient::globalClient(), m_tempDir + hlsapi::MediaInfo::mediaTypeToString(type));
+            m_downloadedFiles[type] = std::make_shared<hlsapi::HLSPlaylistDownloader>(hlsapi::HLSClient::globalClient(),
+                                                                                      m_tempDir + hlsapi::MediaInfo::mediaTypeToString(type) + "/");
         }
         else
         {
@@ -227,6 +230,7 @@ void HLSDownloader::addDownloadFile(hlsapi::MediaInfo::MediaType type, hlsapi::M
         }
     }
 
+    m_downloadedFiles[type]->setThreadCount(m_downloadThreadNum);
     m_downloadedFiles[type]->downloadTsToFiles({playlist});
 }
 

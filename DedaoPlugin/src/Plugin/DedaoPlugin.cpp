@@ -90,6 +90,7 @@ std::shared_ptr<download::FileDownloader> DedaoPlugin::getDownloader(const Video
     auto copyedVideoInfo = videoInfo;
     copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
     copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
+    copyedVideoInfo.videoView->Option1 = std::to_string(1);
 
     auto type = stringToType(copyedVideoInfo.videoView->IdType);
     if (type == IDType::Live)

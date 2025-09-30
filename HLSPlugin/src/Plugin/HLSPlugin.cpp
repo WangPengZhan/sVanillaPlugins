@@ -173,6 +173,23 @@ std::shared_ptr<download::FileDownloader> HLSPlugin::getDownloader(const VideoIn
     copiedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
     copiedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
+    int downloadTheadNum = 5;
+    if (!copiedVideoInfo.videoView->Option1.empty())
+    {
+        try
+        {
+            int threadNum = std::stoi(copiedVideoInfo.videoView->Option1);
+            if (threadNum > 0 && threadNum <= 20)
+            {
+                downloadTheadNum = threadNum;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            HLS_LOG_ERROR("parse thread num error: {}", e.what());
+        }
+    }
+
     auto hlsClient = std::make_shared<hlsapi::HLSClient>();
     std::string url = copiedVideoInfo.videoView->Identifier;
     std::string m3u8Content = hlsClient->downloadM3u8(url);
@@ -253,7 +270,8 @@ std::shared_ptr<download::FileDownloader> HLSPlugin::getDownloader(const VideoIn
         downloadkey(playlist);
     }
 
-    auto hlsDownloader = std::shared_ptr<download::HLSDownloader>(new download::HLSDownloader(hlsClient, mediaInfoMap), download::freeDownload);
+    auto hlsDownloader =
+        std::shared_ptr<download::HLSDownloader>(new download::HLSDownloader(hlsClient, mediaInfoMap, downloadTheadNum), download::freeDownload);
     hlsDownloader->setPath(copiedVideoInfo.downloadConfig->downloadDir);
     std::string fileName = copiedVideoInfo.fileName();
     if (fileName.empty())

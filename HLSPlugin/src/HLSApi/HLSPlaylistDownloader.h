@@ -49,6 +49,9 @@ public:
     void stopDownload();
     void exitDownload();
 
+    int threadCount() const;
+    void setThreadCount(int count);
+
 protected:
     void downloadTsFile();
 
@@ -61,6 +64,7 @@ private:
     std::atomic_bool m_resume{true};
     std::atomic_int m_totalCount{0};
     std::atomic_int m_finishedCount{0};
+    int m_threadCount{5};
     std::list<DownloadInfo> m_downloadInfos;
     std::vector<std::thread> m_downloadThreads;
 };
