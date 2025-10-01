@@ -144,7 +144,7 @@ UserInfo BiliBiliLogin::getUserInfo(std::string dir)
         FILE* file = fopen(path.c_str(), "wb");
         biliapi::BilibiliClient::globalClient().get(nav.data.face, file);
         fclose(file);
-        userInfo.facePath = path;
+        userInfo.facePath = util::localeToUtf8(path);
     }
 
     return userInfo;

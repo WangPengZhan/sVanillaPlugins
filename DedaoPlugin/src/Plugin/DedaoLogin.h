@@ -42,5 +42,6 @@ private:
     std::mutex m_mutexData;
     std::string m_token;
     std::string m_qrString;
+    std::string m_v2Token;
     static LoginResource m_dedaoRes;
 };

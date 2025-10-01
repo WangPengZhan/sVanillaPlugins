@@ -246,7 +246,7 @@ LoginStatus NeteaseCloudMusicClient::getLoginStatus(const std::string& key)
 
 SongDetails NeteaseCloudMusicClient::getSongDetails(std::vector<uint64_t> ids)
 {
-    const std::string url = home + "/weapi/" + Login::SongDetail.substr(5);
+    const std::string url = home + "/weapi/" + Content::SongDetail.substr(5);
     nlohmann::ordered_json data;
     nlohmann::ordered_json jsonIds = nlohmann::ordered_json::array();
     for (const auto& id : ids)
@@ -292,7 +292,7 @@ SongPlayUrl NeteaseCloudMusicClient::getSongPlayUrl(std::vector<uint64_t> ids, S
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Login::SongUrl.substr(5);
+    const std::string url = home + "/weapi/" + Content::SongUrl.substr(5);
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json jsonIds = ids;
     nlohmann::ordered_json data;
@@ -330,7 +330,7 @@ AblumDetails NeteaseCloudMusicClient::getAlbum(std::string id)
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Login::Album.substr(5) + "/" + id;
+    const std::string url = home + "/weapi/" + Content::Album.substr(5) + "/" + id;
 
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
@@ -365,7 +365,7 @@ PlaylistDetails NeteaseCloudMusicClient::getPlaylist(std::string id)
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Login::PlaylistDetail.substr(5);
+    const std::string url = home + "/weapi/" + Content::PlaylistDetail.substr(5);
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data["id"] = id;
@@ -402,7 +402,7 @@ MVResponse NeteaseCloudMusicClient::getMVDetail(std::string id)
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Login::MVDetail.substr(5);
+    const std::string url = home + "/weapi/" + Content::MVDetail.substr(5);
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data["id"] = id;
@@ -437,7 +437,7 @@ MVPlayUrl NeteaseCloudMusicClient::getMVPlayUrl(std::string id)
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Login::MVUrl.substr(5);
+    const std::string url = home + "/weapi/" + Content::MVUrl.substr(5);
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data["id"] = id;
@@ -604,7 +604,7 @@ void NeteaseCloudMusicClient::registerAnonymous()
     {
         NETEASE_LOG_INFO("Register Anonimous success!");
         std::lock_guard lk(m_mutexRequest);
-        m_option.cookie = network::CurlCookies(header.at(network::set_cookies));
+        m_option.cookie.addCurlCookie(network::CurlCookie(header.at(network::set_cookies)));
         m_option.bIsLogin = false;
     }
 }

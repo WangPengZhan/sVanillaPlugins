@@ -15,6 +15,7 @@ inline const std::string weiboAjaxUrl = "https://weibo.com/ajax/statuses/show?id
 inline const std::string weiboUserMblogUrl = "https://m.weibo.cn/api/container/getIndex?type=uid";
 inline const std::string weiboMidRefererUrl = "https://weibo.com/tv/show/";
 inline const std::string weiboUserInfoUrl = "https://weibo.com/ajax/profile/info?uid=";
+inline const std::string weiboLogoutUrl = "https://login.sina.com.cn/sso/logout.php";
 
 inline const std::string weiboUserAgent =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36";

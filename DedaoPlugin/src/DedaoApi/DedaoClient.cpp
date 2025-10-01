@@ -161,6 +161,30 @@ LoginCheck DedaoClient::loginCheck(const std::string& token, const std::string& 
     return ret;
 }
 
+V2TokenInfo DedaoClient::getV2Token()
+{
+    network::CurlHeader headers;
+    headers.add("xi-csrf-token:" + csrfToken());
+    headers.add("Content-Type: application/json");
+    headers.add(std::string("referer: " + dedaoHomeUrl));
+    headers.add("xi-csrf-token:" + csrfToken());
+    headers.add("xi-dt: web");
+
+    std::string response;
+    get(dedaoV2Token, response, headers, true);
+
+    V2TokenInfo ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+    }
+
+    return ret;
+}
+
 UserInfoResponse DedaoClient::userInfo()
 {
     network::CurlHeader headers;
@@ -323,6 +347,23 @@ ArticleInfo DedaoClient::articleInfo(const std::string& detail_id, int count, bo
     }
 
     return ret;
+}
+
+bool DedaoClient::logout(const std::string& token)
+{
+    nlohmann::json data;
+    data["token"] = token;
+    auto param = data.dump();
+
+    network::CurlHeader headers;
+    headers.add(std::string("referer: ") + dedaoHomeUrl);
+    headers.add("xi-csrf-token:" + csrfToken());
+    headers.add("xi-dt: web");
+
+    std::string response;
+    post(dedaoLogoutUrl, response, param, headers, true);
+
+    return true;
 }
 
 void DedaoClient::parseCookie(const std::string& url)

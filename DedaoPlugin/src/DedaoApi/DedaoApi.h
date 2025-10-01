@@ -790,4 +790,13 @@ struct ArticleList
 
 using ArticleInfo = DedaoResponse<ArticleList>;
 
+struct V2Token
+{
+    std::string token;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(V2Token, token)
+};
+
+using V2TokenInfo = DedaoResponse<V2Token>;
+
 }  // namespace dedaoapi

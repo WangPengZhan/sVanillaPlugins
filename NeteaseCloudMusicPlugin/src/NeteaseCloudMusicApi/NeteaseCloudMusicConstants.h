@@ -15,14 +15,19 @@ inline const std::string QRUnikey = "/api/login/qrcode/unikey";
 inline const std::string QRCreate = "https://music.163.com/login?codekey=";
 inline const std::string QRCheck = "/api/login/qrcode/client/login";
 inline const std::string QRRefresh = "/api/login/token/refresh";
+inline const std::string Logout = "/api/logout";
+
+}  // namespace Login
+
+namespace Content
+{
 inline const std::string SongDetail = "/api/v3/song/detail";
 inline const std::string SongUrl = "/api/song/enhance/player/url/v1";
 inline const std::string Album = "/api/v1/album";
 inline const std::string PlaylistDetail = "/api/v6/playlist/detail";
 inline const std::string MVDetail = "/api/v1/mv/detail";
 inline const std::string MVUrl = "/api/song/enhance/play/mv/url";
-
-}  // namespace Login
+}
 
 namespace Encrypt
 {

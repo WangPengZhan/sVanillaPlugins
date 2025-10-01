@@ -14,6 +14,53 @@
 #include "NetWork/CurlCpp/CurlCookie.h"
 #include "NetWork/CurlCpp/CurlCookieOpt.h"
 
+struct LocationUrl
+{
+    std::string locationUrl;
+};
+
+namespace network
+{
+template <typename T>
+class CurlResponseWrapper;
+
+template <>
+class CurlResponseWrapper<LocationUrl>
+{
+public:
+    CurlResponseWrapper(LocationUrl& response)
+        : m_response(response)
+    {
+    }
+
+    void setToCurl(CURL* handle)
+    {
+    }
+    void setToCurl(CurlEasy& easy)
+    {
+        setToCurl(easy.handle());
+    }
+
+    void readAfter(CURL* handle)
+    {
+        char* redirectUrl = nullptr;
+        curl_easy_getinfo(handle, CURLINFO_REDIRECT_URL, &redirectUrl);
+        if (redirectUrl)
+        {
+            m_response.locationUrl = redirectUrl;
+        }
+    }
+
+    void readAfter(CurlEasy& easy)
+    {
+        readAfter(easy.handle());
+    }
+
+private:
+    LocationUrl& m_response;
+};
+}  // namespace network
+
 namespace weiboapi
 {
 static constexpr int seconds = 60;
@@ -227,14 +274,33 @@ bool WeiboClient::downloadImage(const std::string& url, const std::filesystem::p
     return true;
 }
 
+std::string WeiboClient::getCurrentUserId()
+{
+    std::string response;
+    get(weiboHomeUrl, response);
+
+    std::regex re(R"("uid"\s*:\s*(\d+))");
+    std::smatch match;
+    if (std::regex_search(response, match, re))
+    {
+        return match[1].str();
+    }
+
+    return {};
+}
+
 UserInfoResponse WeiboClient::getUserInfo(const std::string& uid)
 {
     std::string response;
     std::string url = weiboapi::weiboUserInfoUrl + uid;
-    get(url, response);
+    network::CurlHeader headers;
+    headers.add("content-type: application/json");
+    headers.add("referer: https://weibo.com/u/" + uid);
 
+    get(url, response, headers, true);
     UserInfoResponse ret;
     ret = getDataFromRespones(response);
+
     return ret;
 }
 
@@ -391,6 +457,38 @@ void WeiboClient::getDetailInfo(const std::string& mid)
 
 void WeiboClient::parseCookie(const std::string& url)
 {
+}
+
+bool WeiboClient::getLogout()
+{
+    LocationUrl locationUrl;
+    const ParamType params{
+        {"entry", "weibo"},
+        {"r",     ""     },
+    };
+    network::CurlHeader header;
+    header.add(std::string("referer: ") + weiboapi::weiboReferer);
+    header.add(std::string("host: login.sina.com.cn"));
+    
+    get(weiboapi::weiboLogoutUrl, locationUrl, params, header, true);
+    if (locationUrl.locationUrl.empty())
+    {
+        return false;
+    }
+
+    while (!locationUrl.locationUrl.empty())
+    {
+        std::string url = locationUrl.locationUrl;
+        locationUrl.locationUrl.clear();
+        get(url, locationUrl);
+    }
+
+    WEIBO_LOG_INFO("Logout success!");
+    std::lock_guard lk(m_mutexRequest);
+    m_cookies = network::CurlCookies();
+    m_commonOptions.erase(network::CookieFields::opt);
+
+    return true;
 }
 
 nlohmann::json WeiboClient::getDataFromPJsonRespones(const std::string& respones)

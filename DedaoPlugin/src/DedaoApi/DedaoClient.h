@@ -26,6 +26,7 @@ public:
     std::string loginToken();
     LoginQrcode loginQrcode(const std::string& token);
     LoginCheck loginCheck(const std::string& token, const std::string& qrCodeString);
+    V2TokenInfo getV2Token();
 
     UserInfoResponse userInfo();
 
@@ -37,6 +38,8 @@ public:
 
     CourseInfo courseInfo(const std::string& detail_id);
     ArticleInfo articleInfo(const std::string& detail_id, int count, bool reverse, int max_order_num, bool unlearn_switch, const std::string& chapter_id);
+
+    bool logout(const std::string& token);
 
     static void parseCookie(const std::string& url);
     static nlohmann::json getDataFromRespones(const std::string& respones);

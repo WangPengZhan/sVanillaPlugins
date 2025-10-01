@@ -140,6 +140,11 @@ bool DedaoLogin::getScanContext(std::string& content)
 
 void DedaoLogin::loginSuccess()
 {
+    auto v2Token = m_client.getV2Token();
+    {
+        std::lock_guard lc(m_mutexData);
+        m_v2Token = v2Token.c.token;
+    }
 }
 
 UserInfo DedaoLogin::getUserInfo(std::string dir)
@@ -153,11 +158,11 @@ UserInfo DedaoLogin::getUserInfo(std::string dir)
 
     if (!dedaoUser.c.avatar.empty())
     {
-        std::string path = dir + "/" + dedaoUser.c.uid_hazy + ".jpg";
+        std::string path = dir + "/" + dedaoUser.c.uid_hazy + ".png";
         FILE* file = fopen(path.c_str(), "wb");
-        m_client.get(dedaoUser.c.avatar, file);
+        m_client.get(dedaoUser.c.avatar, file, network::CurlHeader(), false);
         fclose(file);
-        userInfo.facePath = path;
+        userInfo.facePath = util::localeToUtf8(path);
     }
 
     return userInfo;
@@ -190,7 +195,13 @@ bool DedaoLogin::isLoggedIn() const
 
 bool DedaoLogin::logout()
 {
-    return false;
+    std::string  v2Token;
+    {
+        std::lock_guard lc(m_mutexData);
+        v2Token = m_v2Token;
+    }
+    
+    return m_client.logout(v2Token);
 }
 
 std::string DedaoLogin::domain() const

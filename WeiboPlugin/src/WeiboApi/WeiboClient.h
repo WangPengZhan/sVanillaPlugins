@@ -24,6 +24,7 @@ public:
     std::string getStreamInfo(const std::string& wid);
     bool downloadImage(const std::string& url, const std::filesystem::path& path);
 
+    std::string getCurrentUserId();
     UserInfoResponse getUserInfo(const std::string& uid);
 
     QRCResponse getLoginUrl();
@@ -38,6 +39,8 @@ public:
     void setCookies(std::string cookies);
 
     void getDetailInfo(const std::string& mid);
+
+    bool getLogout();
 
     static void parseCookie(const std::string& url);
     static nlohmann::json getDataFromPJsonRespones(const std::string& respones);
