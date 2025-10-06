@@ -13,53 +13,7 @@
 #include "NetWork/HeaderBodyResponseWrapper.h"
 #include "NetWork/CurlCpp/CurlCookie.h"
 #include "NetWork/CurlCpp/CurlCookieOpt.h"
-
-struct LocationUrl
-{
-    std::string locationUrl;
-};
-
-namespace network
-{
-template <typename T>
-class CurlResponseWrapper;
-
-template <>
-class CurlResponseWrapper<LocationUrl>
-{
-public:
-    CurlResponseWrapper(LocationUrl& response)
-        : m_response(response)
-    {
-    }
-
-    void setToCurl(CURL* handle)
-    {
-    }
-    void setToCurl(CurlEasy& easy)
-    {
-        setToCurl(easy.handle());
-    }
-
-    void readAfter(CURL* handle)
-    {
-        char* redirectUrl = nullptr;
-        curl_easy_getinfo(handle, CURLINFO_REDIRECT_URL, &redirectUrl);
-        if (redirectUrl)
-        {
-            m_response.locationUrl = redirectUrl;
-        }
-    }
-
-    void readAfter(CurlEasy& easy)
-    {
-        readAfter(easy.handle());
-    }
-
-private:
-    LocationUrl& m_response;
-};
-}  // namespace network
+#include "NetWork/LocationUrlResponseWrapper.h"
 
 namespace weiboapi
 {
@@ -461,7 +415,7 @@ void WeiboClient::parseCookie(const std::string& url)
 
 bool WeiboClient::getLogout()
 {
-    LocationUrl locationUrl;
+    network::LocationUrl locationUrl;
     const ParamType params{
         {"entry", "weibo"},
         {"r",     ""     },
