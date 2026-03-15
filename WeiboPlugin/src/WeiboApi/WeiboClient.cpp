@@ -423,7 +423,7 @@ bool WeiboClient::getLogout()
     network::CurlHeader header;
     header.add(std::string("referer: ") + weiboapi::weiboReferer);
     header.add(std::string("host: login.sina.com.cn"));
-    
+
     get(weiboapi::weiboLogoutUrl, locationUrl, params, header, true);
     if (locationUrl.locationUrl.empty())
     {

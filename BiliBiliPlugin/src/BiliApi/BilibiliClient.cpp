@@ -604,7 +604,7 @@ LoginStatusScanning BilibiliClient::getLoginStatus(const std::string& qrcodeKey)
     {
         BILIBILI_LOG_INFO("Login success!");
         std::lock_guard lk(m_mutexRequest);
-        m_cookies.addCurlCookies(header.at(network::set_cookies));
+        m_cookies.addCurlCookie(header.at(network::set_cookies));
         m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
     }
 

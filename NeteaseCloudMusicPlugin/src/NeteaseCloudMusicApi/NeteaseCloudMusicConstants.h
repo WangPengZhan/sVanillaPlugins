@@ -6,6 +6,7 @@ namespace netease
 
 inline const std::string apiBase = "https://interface.music.163.com";
 inline const std::string home = "https://music.163.com";
+inline const std::string linuxForward = "/api/linux/forward";
 constexpr char domain[] = ".music.163.com";
 
 namespace Login
@@ -16,6 +17,7 @@ inline const std::string QRCreate = "https://music.163.com/login?codekey=";
 inline const std::string QRCheck = "/api/login/qrcode/client/login";
 inline const std::string QRRefresh = "/api/login/token/refresh";
 inline const std::string Logout = "/api/logout";
+inline const std::string AccoutInfo = "/api/nuser/account/get";
 
 }  // namespace Login
 
@@ -27,7 +29,7 @@ inline const std::string Album = "/api/v1/album";
 inline const std::string PlaylistDetail = "/api/v6/playlist/detail";
 inline const std::string MVDetail = "/api/v1/mv/detail";
 inline const std::string MVUrl = "/api/song/enhance/play/mv/url";
-}
+}  // namespace Content
 
 namespace Encrypt
 {

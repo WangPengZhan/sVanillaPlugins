@@ -538,4 +538,72 @@ struct MVPlayUrl
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(MVPlayUrl, code, data)
 };
 
+struct AccountInfo
+{
+    long long id;
+    std::string userName;
+    int type;
+    int status;
+    int whitelistAuthority;
+    long long createTime;
+    int tokenVersion;
+    int ban;
+    int baoyueVersion;
+    int donateVersion;
+    int vipType;
+    bool anonimousUser;
+    bool paidFee;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(AccountInfo, id, userName, type, status, whitelistAuthority, createTime, tokenVersion, ban, baoyueVersion,
+                                                donateVersion, vipType, anonimousUser, paidFee)
+};
+
+struct Profile
+{
+    long long userId;
+    int userType;
+    std::string nickname;
+    long long avatarImgId;
+    std::string avatarUrl;
+    long long backgroundImgId;
+    std::string backgroundUrl;
+    long long createTime;
+    std::string userName;
+    int accountType;
+    std::string shortUserName;
+    long long birthday;
+    int authority;
+    int gender;
+    int accountStatus;
+    int province;
+    int city;
+    int authStatus;
+    bool defaultAvatar;
+    int djStatus;
+    int locationStatus;
+    int vipType;
+    bool followed;
+    bool mutual;
+    bool authenticated;
+    long long lastLoginTime;
+    std::string lastLoginIP;
+    long long viptypeVersion;
+    int authenticationTypes;
+    bool anchor;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Profile, userId, userType, nickname, avatarImgId, avatarUrl, backgroundImgId, backgroundUrl, createTime,
+                                                userName, accountType, shortUserName, birthday, authority, gender, accountStatus, province, city, authStatus,
+                                                defaultAvatar, djStatus, locationStatus, vipType, followed, mutual, authenticated, lastLoginTime, lastLoginIP,
+                                                viptypeVersion, authenticationTypes, anchor)
+};
+
+struct AccountResponse
+{
+    int code;
+    AccountInfo account;
+    Profile profile;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(AccountResponse, code, account, profile)
+};
+
 }  // namespace netease

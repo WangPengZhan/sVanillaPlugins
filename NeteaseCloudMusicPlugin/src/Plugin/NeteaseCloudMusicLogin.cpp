@@ -83,20 +83,22 @@ bool NeteaseCloudMusicLogin::supportsLogin() const
 
 std::string NeteaseCloudMusicLogin::cookies() const
 {
-    return {};
+    return m_client.cookies();
 }
 
 void NeteaseCloudMusicLogin::setCookies(std::string cookies)
 {
+    m_client.setCookies(cookies);
 }
 bool NeteaseCloudMusicLogin::refreshCookies(std::string cookies)
 {
+    m_client.setCookies(cookies);
     return false;
 }
 
 bool NeteaseCloudMusicLogin::isLoggedIn() const
 {
-    return false;
+    return m_client.isLogined();
 }
 
 bool NeteaseCloudMusicLogin::logout()
@@ -111,7 +113,22 @@ std::string NeteaseCloudMusicLogin::domain() const
 
 UserInfo NeteaseCloudMusicLogin::getUserInfo(std::string dir)
 {
-    return {};
+    netease::AccountResponse accountInfo = m_client.getAccoutInfo();
+    UserInfo userInfo;
+    userInfo.id = std::to_string(accountInfo.account.id);
+    userInfo.uname = accountInfo.profile.nickname;
+    if (!accountInfo.profile.avatarUrl.empty())
+    {
+        userInfo.facePath = dir + "/" + userInfo.id + ".jpg";
+        FILE* file = fopen(userInfo.facePath.c_str(), "wb");
+        m_client.get(accountInfo.profile.avatarUrl, file, network::CurlHeader(), false);
+        fclose(file);
+        userInfo.facePath = util::localeToUtf8(userInfo.facePath);
+    }
+    userInfo.vipType = std::to_string(accountInfo.account.vipType);
+    userInfo.home = netease::home;
+
+    return userInfo;
 }
 
 std::vector<adapter::BaseVideoView> NeteaseCloudMusicLogin::history()

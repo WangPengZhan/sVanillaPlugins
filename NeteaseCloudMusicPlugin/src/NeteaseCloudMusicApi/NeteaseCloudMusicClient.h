@@ -36,6 +36,8 @@ public:
 
     LoginUnikey getLoginKey();
     LoginStatus getLoginStatus(const std::string& key);
+    AccountResponse getAccoutInfo();
+
     void registerAnonymous();
 
     SongDetails getSongDetails(std::vector<uint64_t> ids);
@@ -56,7 +58,8 @@ private:
 
     std::string getAnonimousEncodeID();
     void generateData(bool force = false);
-    std::string getPostFields(CryptoType cryptoType, const nlohmann::ordered_json& data);
+    std::string getPostFields(CryptoType cryptoType, const nlohmann::ordered_json& data, const std::string& url = "");
+    std::string getUrl(CryptoType cryptoType, const std::string& router);
 
 private:
     mutable std::shared_mutex m_mutexRequest;

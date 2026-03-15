@@ -38,6 +38,8 @@ constexpr char s_MUSIC_A[] = "MUSIC_A";
 constexpr char s_csrf_token[] = "csrf_token";
 constexpr char s_csrf[] = "__csrf";
 constexpr char s_username[] = "username";
+constexpr char s_versioncode[] = "versioncode";
+constexpr char s_buildver[] = "buildver";
 
 struct OsInfo
 {
@@ -150,6 +152,53 @@ nlohmann::json getDataFromRespones(const std::string& respones)
     return json;
 }
 
+std::string generateRequestId()
+{
+    auto now = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 9999);
+    int random = dis(gen);
+
+    std::stringstream ss;
+    ss << timestamp << "_" << std::setw(4) << std::setfill('0') << random;
+
+    return ss.str();
+}
+
+network::CurlHeader createEApiHeaders(const network::CurlCookie& cookie)
+{
+    network::CurlHeader headers;
+    headers.add(s_osver + std::string(": ") + (cookie.contains(s_osver) ? cookie.value(s_osver) : s_OsInfoMap.at(netease::OsType::Pc).osver));
+    headers.add(s_os + std::string(": ") + (cookie.contains(s_os) ? cookie.value(s_os) : s_OsInfoMap.at(netease::OsType::Pc).os));
+    headers.add(s_channel + std::string(": ") + (cookie.contains(s_channel) ? cookie.value(s_channel) : s_OsInfoMap.at(netease::OsType::Pc).channel));
+    headers.add(s_appver + std::string(": ") + (cookie.contains(s_appver) ? cookie.value(s_appver) : s_OsInfoMap.at(netease::OsType::Pc).appver));
+    headers.add("resolution: 1920x1080");
+    headers.add("requestId: " + generateRequestId());
+    headers.add(s_versioncode + std::string(": ") + (cookie.contains(s_versioncode) ? cookie.value(s_versioncode) : "140"));
+    headers.add(s_csrf + std::string(": "));
+    headers.add(s_deviceId + std::string(": ") + (cookie.contains(s_deviceId) ? cookie.value(s_deviceId) : getRandomDeviceID()));
+    headers.add("mobilename: ");
+
+    auto now = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    std::string buildver = std::to_string(timestamp).substr(0, 10);
+    headers.add(s_buildver + std::string(": ") + (cookie.contains(s_buildver) ? cookie.value(s_buildver) : buildver));
+
+    if (cookie.contains(s_MUSIC_U))
+    {
+        headers.add(s_MUSIC_U + std::string(": ") + cookie.value(s_MUSIC_U));
+    }
+    if (cookie.contains(s_MUSIC_A))
+    {
+        headers.add(s_MUSIC_A + std::string(": ") + cookie.value(s_MUSIC_A));
+    }
+
+    return headers;
+}
+
 }  // namespace
 
 namespace netease
@@ -160,6 +209,7 @@ NeteaseCloudMusicClient::NeteaseCloudMusicClient()
     readDeviceID();
     generateData();
     m_option.cryptoType = CryptoType::WeApi;
+    m_option.os = OsType::Pc;
     createCookies(m_option);
     registerAnonymous();
 }
@@ -172,18 +222,37 @@ NeteaseCloudMusicClient& NeteaseCloudMusicClient::globalClient()
 
 LoginUnikey NeteaseCloudMusicClient::getLoginKey()
 {
-    const std::string url = home + "/weapi/" + Login::QRUnikey.substr(5);
     Option option;
     {
         std::shared_lock lk(m_mutexRequest);
         option = m_option;
     }
+    option.cryptoType = CryptoType::EApi;
+
+    const std::string url = getUrl(option.cryptoType, Login::QRUnikey);
+
     network::CurlHeader headers = createHeaders(option);
-    headers.add("Cookie: " + std::string(option.cookie.cookie(domain)));
+    network::CurlHeader dataHeader = createEApiHeaders(option.cookie.cookie(domain));
+    std::vector<std::string> strHeaderlist = dataHeader;
+
+    nlohmann::ordered_json headerDatas;
+    std::string strCookie;
+    for (const auto& header : strHeaderlist)
+    {
+        int pos = header.find(": ");
+        if (header.find(": ") != std::string::npos)
+        {
+            headerDatas[header.substr(0, pos)] = header.substr(pos + 2);
+            strCookie += header.substr(0, pos) + "=" + header.substr(pos + 2) + "; ";
+        }
+    }
+    headers.add("Cookie: " + strCookie);
+
     nlohmann::ordered_json data = nlohmann::ordered_json::object();
+    data["header"] = headerDatas.dump();
     data["type"] = 3;
-    data[s_csrf_token] = "";
-    std::string postFields = getPostFields(option.cryptoType, data);
+    data["e_r"] = false;
+    std::string postFields = getPostFields(option.cryptoType, data, Login::QRUnikey);
 
     std::string response;
     post(url, response, postFields, headers, false);
@@ -204,12 +273,14 @@ LoginUnikey NeteaseCloudMusicClient::getLoginKey()
 
 LoginStatus NeteaseCloudMusicClient::getLoginStatus(const std::string& key)
 {
-    const std::string url = home + "/weapi/" + Login::QRCheck.substr(5);
     Option option;
     {
         std::shared_lock lk(m_mutexRequest);
         option = m_option;
     }
+
+    const std::string url = getUrl(option.cryptoType, Login::QRCheck);
+
     network::CurlHeader headers = createHeaders(option);
     headers.add("Cookie: " + std::string(option.cookie.cookie(domain)));
     nlohmann::ordered_json data = nlohmann::ordered_json::object();
@@ -237,8 +308,44 @@ LoginStatus NeteaseCloudMusicClient::getLoginStatus(const std::string& key)
     {
         NETEASE_LOG_INFO("Login success!");
         std::lock_guard lk(m_mutexRequest);
-        m_option.cookie = network::CurlCookies(header.at(network::set_cookies));
+        network::CurlCookies cookies;
+        cookies.addCurlCookie(header.at(network::set_cookies));
+        m_option.cookie = cookies;
         m_option.bIsLogin = true;
+    }
+
+    return ret;
+}
+
+AccountResponse NeteaseCloudMusicClient::getAccoutInfo()
+{
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+
+    const std::string url = getUrl(option.cryptoType, Login::AccoutInfo);
+
+    network::CurlHeader headers = createHeaders(option);
+    headers.add("Cookie: " + std::string(option.cookie.cookie(domain)));
+
+    nlohmann::ordered_json data = nlohmann::ordered_json::object();
+    data[s_csrf_token] = "";
+    std::string postFields = getPostFields(option.cryptoType, data);
+
+    std::string response;
+    post(url, response, postFields, headers, false);
+
+    AccountResponse ret;
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << "error: " << e.what() << std::endl;
+        NETEASE_LOG_WARN("getAccoutInfo error: {}", e.what());
     }
 
     return ret;
@@ -246,7 +353,14 @@ LoginStatus NeteaseCloudMusicClient::getLoginStatus(const std::string& key)
 
 SongDetails NeteaseCloudMusicClient::getSongDetails(std::vector<uint64_t> ids)
 {
-    const std::string url = home + "/weapi/" + Content::SongDetail.substr(5);
+    Option option;
+    {
+        std::shared_lock lk(m_mutexRequest);
+        option = m_option;
+    }
+
+    const std::string url = getUrl(option.cryptoType, Content::SongDetail);
+
     nlohmann::ordered_json data;
     nlohmann::ordered_json jsonIds = nlohmann::ordered_json::array();
     for (const auto& id : ids)
@@ -258,11 +372,6 @@ SongDetails NeteaseCloudMusicClient::getSongDetails(std::vector<uint64_t> ids)
     data["c"] = jsonIds.dump();
     data[s_csrf_token] = "";
 
-    Option option;
-    {
-        std::shared_lock lk(m_mutexRequest);
-        option = m_option;
-    }
     network::CurlHeader headers = createHeaders(option);
     headers.add("Cookie: " + std::string(option.cookie.cookie(domain)));
     std::string postFields = getPostFields(option.cryptoType, data);
@@ -292,7 +401,8 @@ SongPlayUrl NeteaseCloudMusicClient::getSongPlayUrl(std::vector<uint64_t> ids, S
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Content::SongUrl.substr(5);
+    const std::string url = getUrl(option.cryptoType, Content::SongUrl);
+
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json jsonIds = ids;
     nlohmann::ordered_json data;
@@ -330,7 +440,7 @@ AblumDetails NeteaseCloudMusicClient::getAlbum(std::string id)
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Content::Album.substr(5) + "/" + id;
+    const std::string url = getUrl(option.cryptoType, Content::Album) + "/" + id;
 
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
@@ -365,7 +475,8 @@ PlaylistDetails NeteaseCloudMusicClient::getPlaylist(std::string id)
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Content::PlaylistDetail.substr(5);
+    const std::string url = getUrl(option.cryptoType, Content::PlaylistDetail);
+
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data["id"] = id;
@@ -402,7 +513,8 @@ MVResponse NeteaseCloudMusicClient::getMVDetail(std::string id)
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Content::MVDetail.substr(5);
+    const std::string url = getUrl(option.cryptoType, Content::MVDetail);
+
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data["id"] = id;
@@ -437,7 +549,8 @@ MVPlayUrl NeteaseCloudMusicClient::getMVPlayUrl(std::string id)
         option = m_option;
     }
 
-    const std::string url = home + "/weapi/" + Content::MVUrl.substr(5);
+    const std::string url = getUrl(option.cryptoType, Content::MVUrl);
+
     auto cookie = option.cookie.cookie(domain);
     nlohmann::ordered_json data;
     data["id"] = id;
@@ -495,9 +608,11 @@ network::CurlHeader NeteaseCloudMusicClient::createHeaders(const Option& option)
         break;
     }
     case CryptoType::EApi:
-        break;
     case CryptoType::Api:
+    {
+        headers.add("User-Agent: " + chooseUserAgent(CryptoType::Api, OsType::Ios));
         break;
+    }
     case CryptoType::Unknown:
         break;
     default:
@@ -561,7 +676,7 @@ void NeteaseCloudMusicClient::generateData(bool force)
     }
 }
 
-std::string NeteaseCloudMusicClient::getPostFields(CryptoType cryptoType, const nlohmann::ordered_json& data)
+std::string NeteaseCloudMusicClient::getPostFields(CryptoType cryptoType, const nlohmann::ordered_json& data, const std::string& url)
 {
     std::unordered_map<std::string, std::string> encryptData;
     switch (cryptoType)
@@ -570,6 +685,7 @@ std::string NeteaseCloudMusicClient::getPostFields(CryptoType cryptoType, const 
         encryptData = weapi(data);
         break;
     case netease::CryptoType::EApi:
+        encryptData = eapi(url, data);
         break;
     case netease::CryptoType::LinuxApi:
         break;
@@ -584,6 +700,33 @@ std::string NeteaseCloudMusicClient::getPostFields(CryptoType cryptoType, const 
     return preparePostData(encryptData);
 }
 
+std::string NeteaseCloudMusicClient::getUrl(CryptoType cryptoType, const std::string& router)
+{
+    std::string result;
+    switch (cryptoType)
+    {
+    case netease::CryptoType::WeApi:
+    {
+        result = home + "/weapi/" + router.substr(5);
+        break;
+    }
+    case netease::CryptoType::LinuxApi:
+    {
+        result = home + linuxForward;
+        break;
+    }
+    case netease::CryptoType::Api:
+    case netease::CryptoType::EApi:
+    {
+        result = home + "/eapi/" + router.substr(5);
+        break;
+    }
+    case netease::CryptoType::Unknown:
+    default:
+        break;
+    }
+    return result;
+}
 void NeteaseCloudMusicClient::registerAnonymous()
 {
     Option option;

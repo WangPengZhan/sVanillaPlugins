@@ -195,12 +195,12 @@ bool DedaoLogin::isLoggedIn() const
 
 bool DedaoLogin::logout()
 {
-    std::string  v2Token;
+    std::string v2Token;
     {
         std::lock_guard lc(m_mutexData);
         v2Token = m_v2Token;
     }
-    
+
     return m_client.logout(v2Token);
 }
 

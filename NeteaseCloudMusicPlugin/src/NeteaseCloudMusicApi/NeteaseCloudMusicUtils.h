@@ -48,7 +48,7 @@ std::string cookieObjToString(const std::unordered_map<std::string, std::string>
 std::unordered_map<std::string, std::string> PLUGIN_API weapi(const nlohmann::ordered_json& object);
 
 nlohmann::json eapiResDecrypt(const std::string& encryptedParams);
-std::unordered_map<std::string, std::string> eapi(const std::string& url, const nlohmann::json& object);
+std::unordered_map<std::string, std::string> eapi(const std::string& url, const nlohmann::ordered_json& object);
 
 std::string concatenateCurlHeader(const std::string& name, const std::string& value);
 

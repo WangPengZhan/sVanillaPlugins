@@ -307,53 +307,6 @@ std::string rsaEncrypt(const std::string& str, const std::string& key)
     return encryptedStr;
 }
 
-// std::string rsaEncrypt(const std::string& str, const std::string& key)
-//{
-//     // 创建BIO读取PEM格式的公钥
-//     BIO* bio = BIO_new_mem_buf(key.c_str(), -1);
-//     if (!bio)
-//     {
-//         return "";
-//     }
-//
-//     // 使用EVP_PKEY_new()和PEM_read_bio_PUBKEY()替代RSA相关函数
-//     RSA* rsa = PEM_read_bio_RSA_PUBKEY(bio, nullptr, nullptr, nullptr);
-//     BIO_free(bio);
-//     if (!rsa)
-//     {
-//         return "";
-//     }
-//
-//     int keyLen = RSA_size(rsa);
-//
-//     std::string padded = str;
-//     if (padded.size() < keyLen)
-//     {
-//         padded.insert(padded.begin(), keyLen - padded.size(), '\0');
-//     }
-//     else if (padded.size() > keyLen)
-//     {
-//         padded = padded.substr(0, keyLen);
-//     }
-//
-//     // 分配输出缓冲区
-//     std::vector<unsigned char> encrypted(keyLen, 0);
-//     int result = RSA_public_encrypt(keyLen,
-//                                     (const unsigned char*)padded.data(),
-//                                     encrypted.data(),
-//                                     rsa,
-//                                     RSA_NO_PADDING
-//     );
-//     RSA_free(rsa);
-//     if (result == -1)
-//     {
-//         return "";
-//     }
-//
-//     std::string encryptedStr = hexEncode(std::string(reinterpret_cast<char*>(encrypted.data()), result));
-//     return encryptedStr;
-// }
-
 std::string md5Only(const std::string& input)
 {
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
@@ -544,7 +497,7 @@ std::unordered_map<std::string, std::string> weapi(const nlohmann::ordered_json&
     };
 }
 
-std::unordered_map<std::string, std::string> eapi(const std::string& url, const nlohmann::json& object)
+std::unordered_map<std::string, std::string> eapi(const std::string& url, const nlohmann::ordered_json& object)
 {
     const std::string text = object.dump();
     const std::string message = "nobody" + url + "use" + text + "md5forencrypt";
