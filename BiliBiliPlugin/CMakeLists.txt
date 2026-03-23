@@ -35,10 +35,8 @@ cmake_policy(SET CMP0087 NEW)
 find_package(nlohmann_json CONFIG REQUIRED)
 set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
 find_package(CURL REQUIRED)
-# 寻找OpenSSL库
 find_package(OpenSSL REQUIRED)
 
-# 如果OpenSSL被找到，包含OpenSSL的头文件目录
 if(OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
@@ -101,11 +99,8 @@ add_custom_command(TARGET ${PROJECT_NAME}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:spdlog> $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
-
-
-# install
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
+install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_BINDIR})
 

@@ -58,14 +58,6 @@ endif()
 add_compile_definitions(PLUGIN_DLL_EXPORTS)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
-# file(READ "${CMAKE_CURRENT_SOURCE_DIR}/resource/deviceid.txt" DEVICE_DATA_TEXT)
-# configure_file(
-#         "${CMAKE_CURRENT_SOURCE_DIR}/src/NeteaseCloudMusicApi/DeviceIDData.h.in"
-#         "${CMAKE_CURRENT_BINARY_DIR}/DeviceIDData.h"
-#         @ONLY
-# )
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -109,12 +101,9 @@ add_custom_command(TARGET ${PROJECT_NAME}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:FFmpeg> $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
-
-
-# install
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
-install(FILES "$<TARGET_FILE:FFmpeg>" DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
+install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES "$<TARGET_FILE:FFmpeg>" DESTINATION ${CMAKE_INSTALL_BINDIR})
 

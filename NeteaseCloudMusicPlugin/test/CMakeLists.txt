@@ -63,7 +63,7 @@ if (VCPAKG_DEP_DIRS)
                 POST_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_directory ${VCPKG_LIB} $<TARGET_FILE_DIR:${PluginTest}>
             )
-            install(DIRECTORY ${VCPKG_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
+            install(DIRECTORY ${VCPKG_LIB} DESTINATION ${CMAKE_INSTALL_BINDIR})
         endif ()
     endforeach ()
 endif ()

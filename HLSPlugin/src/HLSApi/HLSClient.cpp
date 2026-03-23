@@ -184,7 +184,7 @@ void HLSClient::initDefaultHeaders()
 
 void HLSClient::initDefaultOptions()
 {
-    constexpr time_t timeoutSecond = 5000;
+    constexpr long timeoutSecond = 5000;
     auto timeout = std::make_shared<network::TimeOut>(timeoutSecond);
     m_commonOptions.insert({timeout->getOption(), timeout});
     auto acceptEncoding = std::make_shared<network::AcceptEncoding>("gzip");

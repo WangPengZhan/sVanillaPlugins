@@ -32,7 +32,6 @@ void initDir(const char* dir)
 
 PluginHandle pluginInit()
 {
-    // initLog();
     if (!pPlugin)
     {
         pPlugin = new BiliBiliPlugin;
