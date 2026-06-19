@@ -1,8 +1,8 @@
-# Codex Project Guide
+# Project Guide
 
 This repository contains C++20 shared-library plugins for the sVanilla plugin
-system. Codex changes must follow the shared spec-first workflow and finish
-with an explicit harness result.
+system. Changes in this repository must follow the shared spec-first workflow
+and finish with an explicit harness result.
 
 ## Operating Model
 
@@ -68,7 +68,7 @@ the command that should be run later.
 
 ## Definition Of Done
 
-A Codex task is done only when:
+A task is done only when:
 
 - The relevant SDD spec or task note is created or updated when behavior changed.
 - The implementation matches the acceptance criteria.
