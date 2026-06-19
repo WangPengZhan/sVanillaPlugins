@@ -52,6 +52,8 @@ Most plugin directories follow this convention:
 |   |-- <ServiceApi>/
 |   `-- Plugin/
 |-- test/
+|   |-- plugin/
+|   `-- unit/
 `-- CMakeLists.txt
 ```
 
@@ -123,7 +125,8 @@ Use `TemplatePlugin` as the starting point for a new plugin:
 2. Rename the CMake project and exported plugin classes.
 3. Implement service-specific API, login, download, and message handling code
    under `src/`.
-4. Add focused tests under `test/` and enable them with `ENABLE_TEST=ON`.
+4. Add focused artifact tests under `test/plugin/` and unit tests under
+   `test/unit/`, then enable them with `ENABLE_TEST=ON`.
 5. Keep source formatting consistent with the plugin-local `.clang-format`
    rules.
 

@@ -33,7 +33,8 @@ Before changing code, read the relevant shared context:
 ## Repository Shape
 
 - Plugin directories are top-level folders with their own `CMakeLists.txt`.
-- Most plugins use `src/<ServiceApi>/`, `src/Plugin/`, and `test/`.
+- Most plugins use `src/<ServiceApi>/`, `src/Plugin/`, and `test/plugin/`
+  plus `test/unit/`.
 - `TemplatePlugin` is the reference structure for new plugins.
 - Root `CMakeLists.txt` adds every top-level directory containing a
   `CMakeLists.txt`.

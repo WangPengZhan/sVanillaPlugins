@@ -11,7 +11,7 @@ Date: 2026-06-15
 | `DouYinPlugin` | DouYin user, video, note, slides, collection, live, and shared URL content. |
 | `HLSPlugin` | Generic HLS playlists whose fetched content starts with `#EXTM3U`. |
 | `NeteaseCloudMusicPlugin` | NetEase Cloud Music songs, albums, playlists, top lists, and MVs. |
-| `TemplatePlugin` | Reference plugin structure for new implementations. |
+| `TemplatePlugin` | Reference plugin structure for new implementations, including split `test/plugin/` and `test/unit/` tests. |
 | `WeiboPlugin` | Weibo mobile, desktop, TV, and video-show content. |
 | `XHSPlugin` | Xiaohongshu note/explore and user profile content requiring `xsec_token`. |
 | `YoutubePlugin` | YouTube videos, shorts, playlists, channels, handles, Music, and Kids URLs. |

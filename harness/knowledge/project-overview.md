@@ -21,7 +21,8 @@ Current build plugins:
 - `YoutubePlugin`
 
 Every listed plugin currently has a `test/` directory and a plugin-local
-`CMakeLists.txt`.
+`CMakeLists.txt`. Newer plugin templates split tests into `test/plugin/` and
+`test/unit/`.
 
 ## Build Shape
 
@@ -64,6 +65,8 @@ Most plugins follow this shape:
 |   |-- <ServiceApi>/
 |   `-- Plugin/
 `-- test/
+    |-- plugin/
+    `-- unit/
 ```
 
 `TemplatePlugin` is the reference structure for new plugins.

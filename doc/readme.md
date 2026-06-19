@@ -37,4 +37,5 @@ Current implementation plugins cover:
 - Xiaohongshu
 - YouTube
 
-`TemplatePlugin` is a starter implementation for new plugins.
+`TemplatePlugin` is a starter implementation for new plugins. Its test layout
+uses a `test/plugin/` artifact test and a `test/unit/` deterministic unit test.

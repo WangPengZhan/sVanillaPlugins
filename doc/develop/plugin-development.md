@@ -26,7 +26,10 @@ NewSitePlugin/
 |   `-- TemplatePluginCall.cpp
 `-- test/
     |-- CMakeLists.txt
-    `-- test.cpp
+    |-- plugin/
+    |   `-- test_plugin.cpp
+    `-- unit/
+        `-- unit_test.cpp
 ```
 
 ## Add the plugin to the root build
@@ -39,7 +42,8 @@ To add a plugin:
 1. Place the plugin directory at the repository root.
 2. Add a plugin-local `CMakeLists.txt`.
 3. Make sure the plugin target name matches the plugin project name.
-4. Build from the repository root.
+4. Add artifact tests under `test/plugin/` and unit tests under `test/unit/`.
+5. Build from the repository root.
 
 ## Implement metadata
 
@@ -130,3 +134,6 @@ Add tests for:
 
 Prefer parser tests that do not require network access. Treat real website tests
 as integration tests and keep them easy to disable or diagnose.
+
+When the plugin follows the current repository pattern, keep host/ABI tests in
+`test/plugin/` and internal deterministic tests in `test/unit/`.
