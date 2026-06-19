@@ -1,10 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      CACHE STRING "")
-set(VCPKG_APPLOCAL_DEPS ON)
-
 project(DouYinPlugin VERSION 1.0.0 LANGUAGES CXX)
+include(GNUInstallDirs)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include(CheckCXXCompilerFlag)
@@ -15,8 +12,8 @@ else()
     message("CXXCompiler can't support Wno-builtin-macro-redefined")
 endif (SUPPORT_CXX_WNO_BUILTIN_MACRO_REDEFINED)
 
-# MSVC并行编译 cmake -j xxx 对于MSVC没有作用
-add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/Gm->) #高版本已被废弃，但是低版本的Gm会影响并行
+# MSVC parallel compile options.
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/Gm->)
 cmake_host_system_information(RESULT CPU_NUMBER_OF_LOGICAL_CORES QUERY NUMBER_OF_LOGICAL_CORES)
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP${CPU_NUMBER_OF_LOGICAL_CORES}>)
 
@@ -50,9 +47,9 @@ set(PROJECT_NAME_STATIC ${PROJECT_NAME}_static)
 
 set(INCLUDE_DIRECTORIES_PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/ThirdParty/spdlog
-    ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon/PluginCommon
-    ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/spdlog
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sVanillaPluginCommon/PluginCommon
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sVanillaPluginCommon
 )
 
 set(DYNAMIC_LIBS
@@ -72,8 +69,8 @@ set(STATIC_LIBS
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
-target_compile_definitions(${PROJECT_NAME} 
-    PRIVATE 
+target_compile_definitions(${PROJECT_NAME}
+    PRIVATE
         PLUGIN_DLL_EXPORTS
 )
 
@@ -102,12 +99,13 @@ endif()
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:spdlog> $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:FFmpeg> $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
 if (ENABLE_TEST)
     add_library(${PROJECT_NAME_STATIC} STATIC ${SOURCES})
-    target_compile_definitions(${PROJECT_NAME_STATIC} 
-        PRIVATE 
+    target_compile_definitions(${PROJECT_NAME_STATIC}
+        PRIVATE
             PLUGIN_LOCAL
     )
 
@@ -137,8 +135,8 @@ if (ENABLE_TEST)
     add_subdirectory(test)
 endif()
 
-# install
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES "$<TARGET_FILE:FFmpeg>" DESTINATION ${CMAKE_INSTALL_BINDIR})

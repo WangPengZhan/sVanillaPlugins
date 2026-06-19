@@ -24,8 +24,9 @@ const std::regex liveLinkSelfRegex(R"(\S*?https://www\.douyin\.com/follow\?webRi
 const std::regex liveShareRegex(R"(https://webcast\.amemv\.com/douyin/webcast/reflow/\S+)");
 const std::regex channelLinkRegex(R"(\S*?https://www\.douyin\.com/channel/\d+?\?modal_id=(\d{19})\S*?)");
 
-std::vector<std::regex> validUrlPatterns = {accountLinkRegex, accountShareRegex, detailLinkRegex, detailShareRegex,  detailSearchRegex, detailDiscoverRegex,
-                                            mixLinkRegex,     mixShareRegex,     liveLinkRegex,   liveLinkSelfRegex, liveShareRegex,    channelLinkRegex};
+std::vector<std::regex> validUrlPatterns = {accountLinkRegex,    accountShareRegex, detailLinkRegex, detailShareRegex, detailSearchRegex,
+                                            detailDiscoverRegex, mixLinkRegex,      mixShareRegex,   seriesShareRegex, liveLinkRegex,
+                                            liveLinkSelfRegex,   liveShareRegex,    channelLinkRegex};
 
 std::string typeToString(IDType type)
 {

@@ -1,65 +1,80 @@
 set(TestTarget XHSPlugin)
+
 set(StaticTestTarget ${TestTarget}_static)
 set(PluginArtifactTest ${TestTarget}_plugin_test)
 set(PluginUnitTest ${TestTarget}_unit_test)
 
 find_package(GTest CONFIG REQUIRED)
-
 enable_testing()
 
-set(TEST_INCLUDE_DIRECTORIES
+set(TestIncludeDirectories
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
-    ${CMAKE_SOURCE_DIR}/ThirdParty/spdlog
-    ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon/PluginCommon
-    ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../ThirdParty/spdlog
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../ThirdParty/sVanillaPluginCommon/PluginCommon
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../ThirdParty/sVanillaPluginCommon
 )
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+function(configure_plugin_test_target test_target)
+    target_include_directories(${test_target} PRIVATE ${TestIncludeDirectories})
+    target_compile_options(${test_target} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
+    target_link_libraries(${test_target} PRIVATE GTest::gtest_main)
 
-function(configure_test_target test_target)
-    target_include_directories(${test_target}
-        PRIVATE
-            ${TEST_INCLUDE_DIRECTORIES}
-    )
-
-    target_link_libraries(${test_target}
-        PRIVATE
-            GTest::gtest_main
-    )
-
-    if (TARGET spdlog)
-        add_custom_command(TARGET ${test_target}
-            POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:spdlog> $<TARGET_FILE_DIR:${test_target}>
-        )
-    endif()
-
-    if (TARGET FFmpeg)
-        add_custom_command(TARGET ${test_target}
-            POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:FFmpeg> $<TARGET_FILE_DIR:${test_target}>
-        )
-    endif()
+    foreach(runtime_target spdlog FFmpeg)
+        if (TARGET ${runtime_target})
+            add_custom_command(TARGET ${test_target}
+                POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${runtime_target}> $<TARGET_FILE_DIR:${test_target}>
+            )
+        endif()
+    endforeach()
 endfunction()
 
-file(GLOB_RECURSE PLUGIN_TEST_SOURCES CONFIGURE_DEPENDS
+file(GLOB_RECURSE PluginTestSources CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/plugin/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/plugin/*.cpp"
 )
 
-if (PLUGIN_TEST_SOURCES)
-    add_executable(${PluginArtifactTest} ${PLUGIN_TEST_SOURCES})
+if (PluginTestSources)
+    add_executable(${PluginArtifactTest} ${PluginTestSources})
     set_target_properties(${PluginArtifactTest} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:${TestTarget}>
     )
     add_test(NAME ${PluginArtifactTest} COMMAND ${PluginArtifactTest})
-
-    configure_test_target(${PluginArtifactTest})
-
-    target_link_libraries(${PluginArtifactTest}
-        PRIVATE
-            ${TestTarget}
+    set_tests_properties(${PluginArtifactTest} PROPERTIES
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:${PluginArtifactTest}>
     )
+
+    set(DYNAMIC_LIBS
+        CURL::libcurl
+        spdlog
+        ${OPENSSL_LIBRARIES}
+        FFmpeg
+    )
+
+    set(STATIC_LIBS
+        AriaClient
+        NetWork
+        Util
+        PluginDownload
+        PluginCommon
+        nlohmann_json::nlohmann_json
+    )
+
+    target_link_libraries(${PluginArtifactTest} PRIVATE ${DYNAMIC_LIBS})
+    if(UNIX AND NOT APPLE)
+        target_link_libraries(${PluginArtifactTest}
+            PRIVATE
+                -Wl,--whole-archive ${STATIC_LIBS} -Wl,--no-whole-archive
+        )
+    else()
+        target_link_libraries(${PluginArtifactTest}
+            PRIVATE
+                ${STATIC_LIBS}
+        )
+    endif()
+
+    configure_plugin_test_target(${PluginArtifactTest})
+    target_link_libraries(${PluginArtifactTest} PRIVATE ${TestTarget})
 
     add_custom_command(TARGET ${PluginArtifactTest}
         POST_BUILD
@@ -67,26 +82,21 @@ if (PLUGIN_TEST_SOURCES)
     )
 endif()
 
-file(GLOB_RECURSE UNIT_TEST_SOURCES CONFIGURE_DEPENDS
+
+file(GLOB_RECURSE UnitTestSource CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/unit/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/unit/*.cpp"
 )
+if (UnitTestSource)
+    if (NOT TARGET ${StaticTestTarget})
+        message(FATAL_ERROR "${StaticTestTarget} must be defined by ${TestTarget}/CMakeLists.txt before adding tests")
+    endif()
 
-if (UNIT_TEST_SOURCES)
-    add_executable(${PluginUnitTest} ${UNIT_TEST_SOURCES})
+    add_executable(${PluginUnitTest} ${UnitTestSource})
     add_test(NAME ${PluginUnitTest} COMMAND ${PluginUnitTest})
-
-    configure_test_target(${PluginUnitTest})
-
-    target_compile_definitions(${PluginUnitTest}
-        PRIVATE
-            PLUGIN_LOCAL
-    )
-
-    target_link_libraries(${PluginUnitTest}
-        PRIVATE
-            ${StaticTestTarget}
-    )
+    configure_plugin_test_target(${PluginUnitTest})
+    target_compile_definitions(${PluginUnitTest} PRIVATE PLUGIN_LOCAL)
+    target_link_libraries(${PluginUnitTest} PRIVATE ${StaticTestTarget})
 endif()
 
 file(GLOB VCPAKG_DEP_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/ThirdParty/vcpkg/packages/*")
@@ -116,7 +126,6 @@ if (VCPAKG_DEP_DIRS)
                     )
                 endif()
             endforeach()
-            install(DIRECTORY ${VCPKG_LIB} DESTINATION ${CMAKE_INSTALL_BINDIR})
         endif ()
     endforeach ()
 endif ()

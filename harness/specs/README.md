@@ -18,4 +18,7 @@ summarize only the parts that should become shared long-term context.
 
 - `plugin-architecture.md`: shared plugin architecture and ABI contract.
 - `sdd-and-harness-contract.md`: SDD plus harness engineering contract.
+- `plugin-test-layout.md`: shared plugin artifact and unit test layout.
+- `bilibili-artifact-download-test.md`: BiliBili live artifact view and
+  downloader completion test expectations.
 - `xhs-test-strategy.md`: XHS shared-artifact and static-unit test strategy.

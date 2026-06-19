@@ -5,6 +5,7 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/b
 set(VCPKG_APPLOCAL_DEPS ON)
 
 project(sVanillaPlugins VERSION 1.0.0 LANGUAGES CXX)
+include(GNUInstallDirs)
 
 add_compile_definitions(UNICODE)
 add_library(${PROJECT_NAME} main.cpp)

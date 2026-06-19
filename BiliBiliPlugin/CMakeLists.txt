@@ -1,16 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      CACHE STRING "")
-set(VCPKG_APPLOCAL_DEPS ON)
-
 project(BiliBiliPlugin VERSION 1.0.0 LANGUAGES CXX)
+include(GNUInstallDirs)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# if(CMAKE_VERSION VERSION_LESS "3.7.0")
-    set(CMAKE_INCLUDE_CURRENT_DIR ON)
-# endif()
-
-# set(CMAKE_CXX_FLAGS "-U__FILE__ -D__FILE__='\"$(subst $(dir $<),,$<)\"'")
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wno-builtin-macro-redefined SUPPORT_CXX_WNO_BUILTIN_MACRO_REDEFINED)
 if (SUPPORT_CXX_WNO_BUILTIN_MACRO_REDEFINED)
@@ -19,8 +12,8 @@ else()
     message("CXXCompiler can't support Wno-builtin-macro-redefined")
 endif (SUPPORT_CXX_WNO_BUILTIN_MACRO_REDEFINED)
 
-# MSVC并行编译 cmake -j xxx 对于MSVC没有作用
-add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/Gm->) #高版本已被废弃，但是低版本的Gm会影响并行
+# MSVC parallel compile options.
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/Gm->)
 cmake_host_system_information(RESULT CPU_NUMBER_OF_LOGICAL_CORES QUERY NUMBER_OF_LOGICAL_CORES)
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP${CPU_NUMBER_OF_LOGICAL_CORES}>)
 
@@ -48,29 +41,22 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 option(ENABLE_TEST "Enable Test" OFF)
-if (ENABLE_TEST)
-    enable_testing()
-    add_subdirectory(test)
-endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-add_compile_definitions(PLUGIN_DLL_EXPORTS)
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+set(PROJECT_NAME_STATIC ${PROJECT_NAME}_static)
 
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/ThirdParty/spdlog
-        ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon/PluginCommon
-        ${CMAKE_SOURCE_DIR}/ThirdParty/sVanillaPluginCommon
+set(INCLUDE_DIRECTORIES_PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/spdlog
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sVanillaPluginCommon/PluginCommon
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sVanillaPluginCommon
 )
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        CURL::libcurl
-        spdlog
-        ${OPENSSL_LIBRARIES}
-        FFmpeg
+set(DYNAMIC_LIBS
+    CURL::libcurl
+    spdlog
+    ${OPENSSL_LIBRARIES}
+    FFmpeg
 )
 
 set(STATIC_LIBS
@@ -80,6 +66,22 @@ set(STATIC_LIBS
     PluginDownload
     PluginCommon
     nlohmann_json::nlohmann_json
+)
+
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_compile_definitions(${PROJECT_NAME}
+    PRIVATE
+        PLUGIN_DLL_EXPORTS
+)
+
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${INCLUDE_DIRECTORIES_PRIVATE}
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        ${DYNAMIC_LIBS}
 )
 
 if(UNIX AND NOT APPLE)
@@ -97,10 +99,45 @@ endif()
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:spdlog> $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:FFmpeg> $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
+
+if (ENABLE_TEST)
+    add_library(${PROJECT_NAME_STATIC} STATIC ${SOURCES})
+    target_compile_definitions(${PROJECT_NAME_STATIC}
+        PRIVATE
+            PLUGIN_LOCAL
+    )
+
+    target_include_directories(${PROJECT_NAME_STATIC}
+        PRIVATE
+            ${INCLUDE_DIRECTORIES_PRIVATE}
+    )
+
+    target_link_libraries(${PROJECT_NAME_STATIC}
+        PRIVATE
+            ${DYNAMIC_LIBS}
+    )
+
+    if(UNIX AND NOT APPLE)
+        target_link_libraries(${PROJECT_NAME_STATIC}
+            PRIVATE
+                -Wl,--whole-archive ${STATIC_LIBS} -Wl,--no-whole-archive
+        )
+    else()
+        target_link_libraries(${PROJECT_NAME_STATIC}
+            PRIVATE
+                ${STATIC_LIBS}
+        )
+    endif()
+
+    enable_testing()
+    add_subdirectory(test)
+endif()
 
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES "$<TARGET_FILE:FFmpeg>" DESTINATION ${CMAKE_INSTALL_BINDIR})
 
