@@ -34,10 +34,12 @@ Date: 2026-06-15
 ## Verification
 
 1. Run the narrowest useful harness first.
-2. Broaden to `Validate -EnableTest` when shared behavior, CMake, dependencies,
+2. Use `--build-dir out/harness` for AI-agent harness verification so existing
+   developer `build/` directories are not reused or modified.
+3. Broaden to `Validate -EnableTest` when shared behavior, CMake, dependencies,
    or template behavior changed.
-3. If a command cannot run, record the exact command and blocker.
-4. Re-check `git status --short` after harness commands.
+4. If a command cannot run, record the exact command and blocker.
+5. Re-check `git status --short` after harness commands.
 
 ## Handoff
 

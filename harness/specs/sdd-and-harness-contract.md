@@ -47,12 +47,16 @@ be summarized under `harness/specs/`.
 Use `scripts/harness.py` from the repository root for verification:
 
 ```bash
-python scripts/harness.py --action configure --enable-test
-python scripts/harness.py --action build --enable-test
-python scripts/harness.py --action test --enable-test
-python scripts/harness.py --action validate --enable-test
+python scripts/harness.py --action configure --enable-test --build-dir out/harness
+python scripts/harness.py --action build --enable-test --build-dir out/harness
+python scripts/harness.py --action test --enable-test --build-dir out/harness
+python scripts/harness.py --action validate --enable-test --build-dir out/harness
 python scripts/harness.py --action format
 ```
+
+AI-agent verification should use `out/harness` as the harness build directory.
+Do not use a developer's existing `build/` directory unless the user explicitly
+asks for that directory.
 
 Choose the narrowest useful command first. Broaden verification when shared
 behavior, build logic, dependencies, or template behavior changed.

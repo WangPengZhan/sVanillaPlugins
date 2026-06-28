@@ -7,12 +7,15 @@ Run commands from the repository root.
 ## Commands
 
 ```bash
-python scripts/harness.py --action configure --enable-test
-python scripts/harness.py --action build --enable-test
-python scripts/harness.py --action test --enable-test
-python scripts/harness.py --action validate --enable-test
+python scripts/harness.py --action configure --enable-test --build-dir out/harness
+python scripts/harness.py --action build --enable-test --build-dir out/harness
+python scripts/harness.py --action test --enable-test --build-dir out/harness
+python scripts/harness.py --action validate --enable-test --build-dir out/harness
 python scripts/harness.py --action format
 ```
+
+AI agents should use `out/harness` for configure/build/test/validate commands
+unless the user explicitly requests another build directory.
 
 ## Selection
 
