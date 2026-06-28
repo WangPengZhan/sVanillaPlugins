@@ -2,6 +2,7 @@
 
 #include <random>
 #include <regex>
+#include <sstream>
 
 #include <PluginCrypto/Crc32.h>
 #include <PluginCrypto/Crypto.h>
