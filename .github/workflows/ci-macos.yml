@@ -22,8 +22,6 @@ jobs:
         install_path: [installed]
         c_compiler: [clang]
         cpp_compiler: [clang++]
-        qt: [5.15.2]
-        qt_modules: [qtwebengine]
 
     steps:
       - uses: actions/checkout@v2
@@ -40,27 +38,6 @@ jobs:
       - name: Install Dependencies
         run: |
           brew install tree
-
-      - name: Install macdeployqtfix
-        run: |
-          git clone https://github.com/tamlok/macdeployqtfix.git macdeployqtfix --depth=1
-        working-directory: ${{runner.workspace}}
-
-      # - name: Cache Qt
-      #   id: cache-qt
-      #   uses: actions/cache@v1  # not v2!
-      #   with:
-      #     path: ../Qt
-      #     key: ${{ runner.os }}-QtCache-${{ matrix.qt }}
-
-      # - name: Install Qt
-      #   uses: jurplel/install-qt-action@v3
-      #   with:
-      #     version: ${{ matrix.qt }}
-      #     target: desktop
-      #     modules:  ${{ matrix.qt_modules }}
-      #     cached: 'true'
-      #     setup-python: 'false'
 
       - name: Configure CMake
         run: >

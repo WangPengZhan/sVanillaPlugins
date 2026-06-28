@@ -24,8 +24,6 @@ jobs:
         cpp_compiler: [cl]
         arch: [win64_msvc2019_64]
         platform: [x64]
-        qt: [6.5.2]
-        qt_modules: [qtwebengine qtwebchannel qtpositioning qtpdf qtimageformats qt5compat]
 
     steps:
       - uses: actions/checkout@v2
@@ -38,22 +36,6 @@ jobs:
           auth_header="$(git config --local --get http.https://github.com/.extraheader)"
           git submodule sync --recursive
           git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive
-
-      # - name: Cache Qt
-      #   id: cache-qt
-      #   uses: actions/cache@v1  # not v2!
-      #   with:
-      #     path: ../Qt
-      #     key: ${{runner.os}}-${{matrix.arch}}-QtCache-${{matrix.qt}}
-
-      # - name: Install Qt Official Build
-      #   uses: jurplel/install-qt-action@v3
-      #   with:
-      #     version: ${{matrix.qt}}
-      #     target: desktop
-      #     arch: ${{matrix.arch}}
-      #     modules: ${{matrix.qt_modules}}
-      #     cache: 'true'
 
       - name: Configure CMake
         run: >

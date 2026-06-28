@@ -1,6 +1,7 @@
 #include "DouYinUrl.h"
 
 #include <regex>
+#include <sstream>
 
 namespace douyinapi
 {
