@@ -22,9 +22,16 @@ preserving plugin-specific dependencies and helper targets.
 - Shared libraries used at runtime, including `spdlog` and `FFmpeg`, are copied
   beside plugin artifacts and installed consistently when linked.
 - Static test targets are named `<PluginName>_static` and are created before
-  adding the plugin-local `test` subdirectory.
+  adding the plugin-local `test` subdirectory. They link shared common
+  dependencies normally, without `--whole-archive`, because unit-test
+  executables do not need plugin export retention and must not force duplicate
+  third-party archive objects into the link.
 - Plugin-specific additions such as `HLSDownloader` and `LibXml2` remain local
   to the plugins that need them.
+- Static helper targets that are consumed by another plugin, such as
+  `HLSDownloader`, package only their own object files and do not propagate
+  `--whole-archive` dependency lists. The consuming plugin remains responsible
+  for linking the shared common libraries once.
 
 ## Harness Plan
 

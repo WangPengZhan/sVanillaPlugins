@@ -120,17 +120,10 @@ if (ENABLE_TEST)
             ${DYNAMIC_LIBS}
     )
 
-    if(UNIX AND NOT APPLE)
-        target_link_libraries(${PROJECT_NAME_STATIC}
-            PRIVATE
-                -Wl,--whole-archive ${STATIC_LIBS} -Wl,--no-whole-archive
-        )
-    else()
-        target_link_libraries(${PROJECT_NAME_STATIC}
-            PRIVATE
-                ${STATIC_LIBS}
-        )
-    endif()
+    target_link_libraries(${PROJECT_NAME_STATIC}
+        PRIVATE
+            ${STATIC_LIBS}
+    )
 
     enable_testing()
     add_subdirectory(test)
