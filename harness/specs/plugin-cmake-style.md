@@ -17,6 +17,12 @@ preserving plugin-specific dependencies and helper targets.
 
 - Each plugin keeps CMake 3.15, C++20, `UNICODE`, and MSVC parallel compile
   options.
+- `TemplatePlugin` is both the reference plugin template and the repository
+  entry point for introducing shared common libraries and logging support.
+- Other repository locations must not call `add_subdirectory` or equivalent
+  setup for `ThirdParty/sVanillaPluginCommon`, `spdlog`, or the shared logging
+  stack. They should consume the targets made available through the template
+  entry point.
 - Shared dependencies are expressed through `DYNAMIC_LIBS`,
   `STATIC_LIBS`, `INCLUDE_DIRECTORIES_PRIVATE`, and target-based commands.
 - Shared libraries used at runtime, including `spdlog` and `FFmpeg`, are copied

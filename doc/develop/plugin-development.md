@@ -1,7 +1,9 @@
 # Plugin Development Guide
 
-Use `TemplatePlugin` as the starting point for new plugins. Existing
-implementation plugins follow the same basic shape.
+Use `TemplatePlugin` as the starting point for new plugins. It is also the
+repository entry point for shared common libraries and logging support. Existing
+implementation plugins follow the same basic shape and should consume those
+shared targets instead of introducing their own common-library or logging setup.
 
 ## Recommended structure
 

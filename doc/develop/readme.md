@@ -19,5 +19,7 @@ extending `sVanillaPlugins`.
 - `getDownloader(videoInfo)` creates the downloader for one selected item.
 - Login is abstracted behind `LoginProxy`.
 
-Use `TemplatePlugin` for scaffolding and existing implementation plugins as
-references for real website behavior.
+Use `TemplatePlugin` for scaffolding and as the repository entry point for
+shared common libraries and logging. Existing implementation plugins are
+references for real website behavior, but they should not introduce separate
+common-library or logging setup.

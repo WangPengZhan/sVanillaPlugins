@@ -8,7 +8,9 @@ Date: 2026-06-15
   load through the common plugin ABI.
 - Each plugin must expose metadata, URL recognition, video view resolution,
   downloader creation, and login access through `plugin::IPlugin`.
-- `TemplatePlugin` must remain a usable reference for creating new plugins.
+- `TemplatePlugin` must remain a usable reference for creating new plugins and
+  the repository entry point that introduces shared common libraries and
+  logging support.
 - Existing supported URL behavior should remain stable unless a task explicitly
   changes it.
 
@@ -26,6 +28,9 @@ Date: 2026-06-15
 - The root build must continue using the repository-local vcpkg toolchain.
 - New plugins should be top-level directories with plugin-local
   `CMakeLists.txt` files.
+- Shared common-library and logging third-party setup must be introduced
+  through `TemplatePlugin`; other repository locations must not add their own
+  direct common-library or logging entry points.
 - Documentation and AI harness directories must remain build-neutral and must
   not contain top-level `CMakeLists.txt` files.
 - Generated output under `build/` and `out/` is not source.

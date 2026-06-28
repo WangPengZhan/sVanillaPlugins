@@ -51,7 +51,10 @@ Dependencies are declared in `vcpkg.json`:
 
 Common plugin interfaces and helper targets come from
 `ThirdParty/sVanillaPluginCommon`, including `PluginCommon`, `PluginDownload`,
-`NetWork`, `AriaClient`, `Util`, and `FFmpeg`.
+`NetWork`, `AriaClient`, `Util`, and `FFmpeg`. `TemplatePlugin` is the
+repository entry point for introducing these common targets and logging support;
+other repository locations should consume the resulting targets, not add a
+separate common-library or logging entry point.
 
 ## Source Layout
 
@@ -69,7 +72,8 @@ Most plugins follow this shape:
     `-- unit/
 ```
 
-`TemplatePlugin` is the reference structure for new plugins.
+`TemplatePlugin` is the reference structure for new plugins and the build entry
+point for shared common libraries and logging.
 
 ## Canonical Local Docs
 
