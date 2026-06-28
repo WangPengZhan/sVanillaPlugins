@@ -303,7 +303,7 @@ void XHSClient::setScriptingCookie()
         std::string websection = genWebsection(ret.data.data);
         network::CurlCookie cookie;
         cookie.setDomain(domain).setName("websectiga").setValue(websection);
-        
+
         {
             std::lock_guard lk(m_mutexRequest);
             m_cookies.addCurlCookie(cookie);

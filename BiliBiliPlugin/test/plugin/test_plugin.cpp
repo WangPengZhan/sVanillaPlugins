@@ -143,8 +143,8 @@ void runFlowCase(plugin::IPlugin& plugin, const json& testCase)
     {
         downloader->downloadStatus();
         const auto& info = downloader->info();
-        std::cout << "Bili download: status=" << download::statusToString(downloader->status()) << " complete=" << info.complete
-                  << " total=" << info.total << " speed=" << info.speed << " stage=" << info.stage << std::endl;
+        std::cout << "Bili download: status=" << download::statusToString(downloader->status()) << " complete=" << info.complete << " total=" << info.total
+                  << " speed=" << info.speed << " stage=" << info.stage << std::endl;
 
         if (downloader->status() == download::AbstractDownloader::Finished)
         {

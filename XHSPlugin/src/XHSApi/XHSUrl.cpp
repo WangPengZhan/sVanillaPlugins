@@ -1,6 +1,7 @@
 #include "XHSUrl.h"
 
 #include <regex>
+#include <sstream>
 
 namespace xhsapi
 {

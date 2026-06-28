@@ -141,8 +141,7 @@ TEST(BiliBiliUtilsUnitTest, BuildsMixinKeyAndHashes)
 {
     EXPECT_EQ(biliapi::GetMixinKey(kMixinInput), "UVsc1ixGpYkF6dTJBRfXHjQtDCoNmMPnLWhqy3O9Arab8ZEewz2v47g-5+lKuIS0");
     EXPECT_EQ(crypto::md5Hex("abc"), "900150983cd24fb0d6963f7d28e17f72");
-    EXPECT_EQ(biliapi::hmac_sha256("key", "The quick brown fox jumps over the lazy dog"),
-              "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8");
+    EXPECT_EQ(biliapi::hmac_sha256("key", "The quick brown fox jumps over the lazy dog"), "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8");
 }
 
 TEST(BiliBiliUtilsUnitTest, HandlesCookiePathsAndExpiry)

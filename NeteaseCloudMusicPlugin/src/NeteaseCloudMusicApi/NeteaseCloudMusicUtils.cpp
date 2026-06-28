@@ -157,8 +157,7 @@ std::unordered_map<std::string, std::string> weapi(const nlohmann::ordered_json&
     const std::string text = object.dump();
     const std::string secretKey = generateRandomString(16, Encrypt::BASE62);
 
-    std::string params =
-        crypto::aes128Encrypt(crypto::aes128Encrypt(text, "cbc", Encrypt::PRESET_KEY, Encrypt::IV), "cbc", secretKey, Encrypt::IV);
+    std::string params = crypto::aes128Encrypt(crypto::aes128Encrypt(text, "cbc", Encrypt::PRESET_KEY, Encrypt::IV), "cbc", secretKey, Encrypt::IV);
     std::string reversedKey = secretKey;
     std::ranges::reverse(reversedKey);
     std::string encSecKey = crypto::rsaNoPaddingPublicEncryptHexLower(reversedKey, Encrypt::PUBLIC_KEY);
