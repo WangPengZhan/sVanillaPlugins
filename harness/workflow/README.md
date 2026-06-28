@@ -16,14 +16,16 @@ For this repository, verification should use the cross-platform harness:
 
 ```bash
 python scripts/harness.py --action format
-python scripts/harness.py --action configure --enable-test
-python scripts/harness.py --action build --enable-test
-python scripts/harness.py --action test --enable-test
-python scripts/harness.py --action validate --enable-test
+python scripts/harness.py --action configure --enable-test --build-dir out/harness
+python scripts/harness.py --action build --enable-test --build-dir out/harness
+python scripts/harness.py --action test --enable-test --build-dir out/harness
+python scripts/harness.py --action validate --enable-test --build-dir out/harness
 ```
 
 Choose the smallest command that matches the change risk, then broaden when
 shared behavior, build logic, or runtime contracts are touched.
+AI-agent configure, build, test, and validate runs should use `out/harness`
+unless the user explicitly requests another build directory.
 
 ## Current Files
 

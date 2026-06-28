@@ -35,6 +35,7 @@ preserving plugin-specific dependencies and helper targets.
 
 ## Harness Plan
 
-Run `python scripts/harness.py --action configure --enable-test` first because
-the change is CMake-only, then broaden to build or validate if configure
-exposes no environment blocker.
+Run
+`python scripts/harness.py --action configure --enable-test --build-dir out/harness`
+first because the change is CMake-only, then broaden to build or validate if
+configure exposes no environment blocker.

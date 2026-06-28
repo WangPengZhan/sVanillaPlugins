@@ -18,3 +18,6 @@ conditions for the exception.
 
 - `engineering-standards.md`: current coding, build, dependency, testing, and
   repository hygiene standards.
+- `git.md`: commit splitting, commit message format, and pre-commit checks.
+- `self-test.md`: self-test scope, harness commands, result records, and
+  manual acceptance expectations.

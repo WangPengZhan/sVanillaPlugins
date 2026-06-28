@@ -49,6 +49,9 @@ Start here for the generated current-state content:
   rules.
 - `standards/engineering-standards.md`: coding, build, dependency, testing,
   and safety standards.
+- `standards/git.md`: commit splitting, message format, and pre-commit checks.
+- `standards/self-test.md`: self-test scope, harness commands, and result
+  records.
 - `workflow/sdd-harness-workflow.md`: AI work loop from intake to final report.
 - `workflow/verification-matrix.md`: harness command selection.
 - `ai-experience/current-lessons.md`: AI-specific lessons from this repository.

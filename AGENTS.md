@@ -28,6 +28,9 @@ Before changing code, read the relevant shared context:
   constraints and invariants.
 - `harness/standards/engineering-standards.md` for team conventions and
   implementation standards.
+- `harness/standards/git.md` for commit splitting and message conventions.
+- `harness/standards/self-test.md` for verification expectations and result
+  records.
 - `harness/workflow/sdd-harness-workflow.md` for the SDD + harness loop.
 
 ## Repository Shape
@@ -57,10 +60,10 @@ Before changing code, read the relevant shared context:
 Use the cross-platform harness from the repository root:
 
 ```bash
-python scripts/harness.py --action configure --enable-test
-python scripts/harness.py --action build --enable-test
-python scripts/harness.py --action test --enable-test
-python scripts/harness.py --action validate --enable-test
+python scripts/harness.py --action configure --enable-test --build-dir out/harness
+python scripts/harness.py --action build --enable-test --build-dir out/harness
+python scripts/harness.py --action test --enable-test --build-dir out/harness
+python scripts/harness.py --action validate --enable-test --build-dir out/harness
 python scripts/harness.py --action format
 ```
 
