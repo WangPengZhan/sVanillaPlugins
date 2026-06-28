@@ -65,6 +65,7 @@ set(STATIC_LIBS
     Util
     PluginDownload
     PluginCommon
+    PluginCrypto
     nlohmann_json::nlohmann_json
 )
 
@@ -140,4 +141,3 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES "$<TARGET_FILE:FFmpeg>" DESTINATION ${CMAKE_INSTALL_BINDIR})
-

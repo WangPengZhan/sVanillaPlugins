@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include "PluginCrypto/Crypto.h"
+#include "PluginCrypto/Encoding.h"
 #include "BiliApi/BilibiliClient.h"
 #include "BiliApi/BilibiliUrl.h"
 #include "BiliApi/BilibiliUtils.h"
@@ -130,15 +132,15 @@ TEST(BiliBiliUtilsUnitTest, ReplaceCharacterAndFilterCharacters)
 
 TEST(BiliBiliUtilsUnitTest, EncodesAndDecodesUrls)
 {
-    const auto encoded = biliapi::urlEncode("a b+c?");
+    const auto encoded = encoding::urlEncode("a b+c?");
     EXPECT_EQ(encoded, "a%20b%2Bc%3F");
-    EXPECT_EQ(biliapi::urlDecode(encoded), "a b+c?");
+    EXPECT_EQ(encoding::urlDecode(encoded), "a b+c?");
 }
 
 TEST(BiliBiliUtilsUnitTest, BuildsMixinKeyAndHashes)
 {
     EXPECT_EQ(biliapi::GetMixinKey(kMixinInput), "UVsc1ixGpYkF6dTJBRfXHjQtDCoNmMPnLWhqy3O9Arab8ZEewz2v47g-5+lKuIS0");
-    EXPECT_EQ(biliapi::MD5Hash("abc"), "900150983cd24fb0d6963f7d28e17f72");
+    EXPECT_EQ(crypto::md5Hex("abc"), "900150983cd24fb0d6963f7d28e17f72");
     EXPECT_EQ(biliapi::hmac_sha256("key", "The quick brown fox jumps over the lazy dog"),
               "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8");
 }

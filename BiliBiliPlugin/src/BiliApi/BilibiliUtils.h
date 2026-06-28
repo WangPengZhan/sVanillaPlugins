@@ -13,10 +13,7 @@ inline const std::vector mixinKeyEncTab = {46, 47, 18, 2,  53, 8,  23, 32, 15, 5
                                            60, 51, 30, 4,  22, 25, 54, 21, 56, 59, 6,  63, 57, 62, 11, 36, 20, 34, 44, 52};
 void replaceCharacter(std::string& source, const std::string& from, const std::string& to);
 std::string filterCharacters(const std::string& input);
-std::string urlEncode(const std::string& decoded);
-std::string urlDecode(const std::string& encoded);
 std::string GetMixinKey(const std::string& orig);
-std::string MD5Hash(const std::string& str);
 bool isExpired(const std::time_t& expires);
 void setCookieDataDir(const std::string& dir);
 std::string cookieDataFilePath();

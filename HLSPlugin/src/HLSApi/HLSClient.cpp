@@ -184,17 +184,11 @@ void HLSClient::initDefaultHeaders()
 
 void HLSClient::initDefaultOptions()
 {
-    constexpr long timeoutSecond = 5000;
+    constexpr long timeoutSecond = 5;
     auto timeout = std::make_shared<network::TimeOut>(timeoutSecond);
     m_commonOptions.insert({timeout->getOption(), timeout});
     auto acceptEncoding = std::make_shared<network::AcceptEncoding>("gzip");
     m_commonOptions.insert({acceptEncoding->getOption(), acceptEncoding});
-    auto sslVerifyHost = std::make_shared<network::SSLVerifyHost>(false);
-    m_commonOptions.insert({sslVerifyHost->getOption(), sslVerifyHost});
-    auto sslVerifyPeer = std::make_shared<network::SSLVerifyPeer>(false);
-    m_commonOptions.insert({sslVerifyPeer->getOption(), sslVerifyPeer});
-    auto verbose = std::make_shared<network::Verbose>(false);
-    m_commonOptions.insert({verbose->getOption(), verbose});
 }
 
 }  // namespace hlsapi

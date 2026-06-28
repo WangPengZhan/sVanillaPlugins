@@ -10,7 +10,7 @@
 #include "Util/LocaleHelper.h"
 #include "XHSPlugin.h"
 #include "XHSPluginMessage.h"
-#include "QrCodeGenerator.h"
+#include "Util/QrCodeGenerator.h"
 
 XHSLogin::LoginResource XHSLogin::m_xhsRes{qrc_background, qrc_loading, qrc_tip, qrc_waitConfirm, qrc_complete, qrc_init, qrc_refresh};
 

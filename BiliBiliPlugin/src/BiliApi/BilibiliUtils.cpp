@@ -1,4 +1,3 @@
-#include <openssl/md5.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <fstream>
@@ -7,7 +6,7 @@
 #include <numeric>
 #include <sstream>
 #include <algorithm>
-#include <curl/curl.h>
+#include <PluginCrypto/Encoding.h>
 
 #include "BiliApi.h"
 #include "BilibiliUtils.h"
@@ -49,23 +48,6 @@ std::string filterCharacters(const std::string& input)
     return result;
 }
 
-std::string urlEncode(const std::string& decoded)
-{
-    auto* const encodedValue = curl_easy_escape(nullptr, decoded.c_str(), static_cast<int>(decoded.length()));
-    std::string result(encodedValue);
-    curl_free(encodedValue);
-    return result;
-}
-
-std::string urlDecode(const std::string& encoded)
-{
-    int outputLength;
-    auto* const decodedValue = curl_easy_unescape(nullptr, encoded.c_str(), static_cast<int>(encoded.length()), &outputLength);
-    std::string result(decodedValue, outputLength);
-    curl_free(decodedValue);
-    return result;
-}
-
 std::string GetMixinKey(const std::string& orig)
 {
     std::string result;
@@ -74,29 +56,6 @@ std::string GetMixinKey(const std::string& orig)
         result += orig[i];
     }
     return result.substr(0, 32);
-}
-
-std::string MD5Hash(const std::string& str)
-{
-    unsigned char mdValue[EVP_MAX_MD_SIZE];
-    unsigned int mdLen;
-
-    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
-    const EVP_MD* md = EVP_md5();
-
-    EVP_DigestInit_ex(mdctx, md, nullptr);
-    EVP_DigestUpdate(mdctx, str.c_str(), str.length());
-    EVP_DigestFinal_ex(mdctx, mdValue, &mdLen);
-
-    EVP_MD_CTX_free(mdctx);
-
-    std::ostringstream oss;
-    for (unsigned int i = 0; i < mdLen; i++)
-    {
-        oss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(mdValue[i]);
-    }
-
-    return oss.str();
 }
 
 bool isExpired(const std::time_t& expires)

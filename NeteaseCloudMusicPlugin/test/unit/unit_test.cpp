@@ -4,6 +4,7 @@
 
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicUrl.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicUtils.h"
+#include "PluginCrypto/Encoding.h"
 
 namespace
 {
@@ -58,6 +59,6 @@ TEST(NeteaseCloudMusicUnitTest, KeepsLocalCryptoHelpersDeterministic)
     constexpr char id[] = "5EB26EA49AE37590BF1618A40D227A1E286F98F4AF0F89AE4565";
 
     EXPECT_EQ(netease::cloudMusicDllEncodeID(id), "n2ajvcolCXIBkynlYKPukA==");
-    EXPECT_EQ(netease::base64Encode(std::string(id) + " n2ajvcolCXIBkynlYKPukA=="),
+    EXPECT_EQ(encoding::base64Encode(std::string(id) + " n2ajvcolCXIBkynlYKPukA=="),
               "NUVCMjZFQTQ5QUUzNzU5MEJGMTYxOEE0MEQyMjdBMUUyODZGOThGNEFGMEY4OUFFNDU2NSBuMmFqdmNvbENYSUJreW5sWUtQdWtBPT0=");
 }

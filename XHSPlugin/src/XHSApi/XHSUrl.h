@@ -1,7 +1,5 @@
 #include <regex>
 
-#include <PluginConfig.h>
-
 #include "XHSApi.h"
 
 namespace xhsapi
@@ -29,7 +27,7 @@ struct IDInfo
     std::string to_string() const;
 };
 
-bool PLUGIN_API isValidUrl(const std::string& url);
-IDInfo PLUGIN_API getID(const std::string& url);
+bool isValidUrl(const std::string& url);
+IDInfo getID(const std::string& url);
 
 }  // namespace xhsapi

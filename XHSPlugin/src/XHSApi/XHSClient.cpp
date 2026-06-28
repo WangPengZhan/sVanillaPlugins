@@ -8,6 +8,7 @@
 #include "XHSClient.h"
 #include "XHSApiConstants.h"
 #include "Util/JsonProcess.h"
+#include "PluginCrypto/Encoding.h"
 #include "NetWork/HeaderBodyResponseWrapper.h"
 #include "NetWork/CurlCpp/CurlCookie.h"
 #include "NetWork/CurlCpp/CurlOption.h"
@@ -201,15 +202,11 @@ void XHSClient::setCookies(std::string cookies)
 
 void XHSClient::initDefaultOptions()
 {
-    constexpr long timeoutSecond = 5000;
+    constexpr long timeoutSecond = 5;
     auto timeout = std::make_shared<network::TimeOut>(timeoutSecond);
     m_commonOptions.insert({timeout->getOption(), timeout});
     auto acceptEncoding = std::make_shared<network::AcceptEncoding>("gzip");
     m_commonOptions.insert({acceptEncoding->getOption(), acceptEncoding});
-    auto sslVerifyHost = std::make_shared<network::SSLVerifyHost>(false);
-    m_commonOptions.insert({sslVerifyHost->getOption(), sslVerifyHost});
-    auto sslVerifyPeer = std::make_shared<network::SSLVerifyPeer>(false);
-    m_commonOptions.insert({sslVerifyPeer->getOption(), sslVerifyPeer});
 }
 
 void XHSClient::registerAnonymous()
@@ -339,7 +336,7 @@ std::string XHSClient::encodeData(const ParamType& params)
     std::stringstream ss;
     for (const auto& [key, value] : params)
     {
-        ss << urlEncode(key) + "=" << urlEncode(value) << "&";
+        ss << encoding::urlEncode(key) + "=" << encoding::urlEncode(value) << "&";
     }
     std::string paramsStr = ss.str();
     paramsStr.pop_back();

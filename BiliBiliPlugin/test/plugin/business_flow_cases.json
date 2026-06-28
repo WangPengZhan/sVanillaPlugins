@@ -1,0 +1,27 @@
+[
+  {
+    "url": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "downloadConfig": {
+      "downloadDir": "bili-plugin-test/download/",
+      "videoQuality": "Best",
+      "nameRule": "$title$"
+    },
+    "expectedViews": [
+      {
+        "identifier": "BV1xx411c7mD",
+        "idType": "Bid",
+        "pluginId": 1,
+        "fileType": "Video",
+        "fileExtension": ".mp4"
+      }
+    ],
+    "expectedDownloader": {
+      "created": true
+    },
+    "expectedDownload": {
+      "status": "Finished",
+      "fileExists": true
+    },
+    "timeoutSeconds": 600
+  }
+]

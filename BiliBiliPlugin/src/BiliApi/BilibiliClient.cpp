@@ -8,6 +8,8 @@
 #include "BiliApiConstants.h"
 #include "Util/JsonProcess.h"
 #include "Util/LocaleHelper.h"
+#include "PluginCrypto/Crypto.h"
+#include "PluginCrypto/Encoding.h"
 #include "BilibiliLog.h"
 #include "BilibiliUtils.h"
 #include "NetWork/NetworkLog.h"
@@ -766,7 +768,7 @@ void BilibiliClient::encodeWithWbi(ParamType& params)
         // 过滤 value 中的 "!'()*" 字符
         const std::string filteredValue = filterCharacters(value);
         // url encode
-        sortedParams.push_back(urlEncode(key) + "=" += urlEncode(filteredValue));
+        sortedParams.push_back(encoding::urlEncode(key) + "=" += encoding::urlEncode(filteredValue));
     }
     std::sort(sortedParams.begin(), sortedParams.end());
     // 序列化参数
@@ -775,7 +777,7 @@ void BilibiliClient::encodeWithWbi(ParamType& params)
     });
 
     // 计算 w_rid 字段
-    params.emplace("w_rid", MD5Hash(query + m_mixinKey.mixin_key));
+    params.emplace("w_rid", crypto::md5Hex(query + m_mixinKey.mixin_key));
 }
 
 nlohmann::json BilibiliClient::getDataFromRespones(const std::string& respones)
@@ -817,17 +819,11 @@ void BilibiliClient::initDefaultHeaders()
 
 void BilibiliClient::initDefaultOptions()
 {
-    constexpr long timeoutSecond = 5000;
+    constexpr long timeoutSecond = 5;
     auto timeout = std::make_shared<network::TimeOut>(timeoutSecond);
     m_commonOptions.insert({timeout->getOption(), timeout});
     auto acceptEncoding = std::make_shared<network::AcceptEncoding>("gzip");
     m_commonOptions.insert({acceptEncoding->getOption(), acceptEncoding});
-    auto sslVerifyHost = std::make_shared<network::SSLVerifyHost>(false);
-    m_commonOptions.insert({sslVerifyHost->getOption(), sslVerifyHost});
-    auto sslVerifyPeer = std::make_shared<network::SSLVerifyPeer>(false);
-    m_commonOptions.insert({sslVerifyPeer->getOption(), sslVerifyPeer});
-    auto verbose = std::make_shared<network::Verbose>(false);
-    m_commonOptions.insert({verbose->getOption(), verbose});
 }
 
 }  // namespace biliapi

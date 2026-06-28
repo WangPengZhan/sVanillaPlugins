@@ -8,7 +8,7 @@
 #include <openssl/rc4.h>
 #include <openssl/sha.h>
 
-#include <curl/curl.h>
+#include <PluginCrypto/Encoding.h>
 
 namespace douyinapi
 {
@@ -23,23 +23,6 @@ static const std::unordered_map<std::string, std::string> strMap = {
     {"s3", "ckdp1h4ZKsUB80/Mfvw36XIgR25+WQAlEi7NLboqYTOPuzmFjJnryx9HVGDaStCe" },
     {"s4", "Dkdpgh2ZmsQB80/MfvV36XI1R45-WUAlEixNLwoqYTOPuzKFjJnry79HbGcaStCe" }
 };
-
-std::string urlEncode(const std::string& decoded)
-{
-    auto* const encodedValue = curl_easy_escape(nullptr, decoded.c_str(), static_cast<int>(decoded.length()));
-    std::string result(encodedValue);
-    curl_free(encodedValue);
-    return result;
-}
-
-std::string urlDecode(const std::string& encoded)
-{
-    int outputLength;
-    auto* const decodedValue = curl_easy_unescape(nullptr, encoded.c_str(), static_cast<int>(encoded.length()), &outputLength);
-    std::string result(decodedValue, outputLength);
-    curl_free(decodedValue);
-    return result;
-}
 
 std::vector<uint8_t> stringToBytes(const std::string& s)
 {
@@ -67,74 +50,10 @@ std::vector<uint8_t> hexToBytes(const std::string& hex)
     return out;
 }
 
-std::vector<uint32_t> utf8ToCodePoints(const std::string& str)
-{
-    std::vector<uint32_t> cps;
-    const uint8_t* p = (const uint8_t*)str.data();
-    size_t len = str.size();
-    size_t i = 0;
-    while (i < len)
-    {
-        uint32_t c = p[i];
-        if (c < 0x80)
-        {
-            cps.push_back(c);
-            i++;
-        }
-        else if (c < 0xE0)
-        {
-            cps.push_back(((c & 0x1F) << 6) | (p[i + 1] & 0x3F));
-            i += 2;
-        }
-        else if (c < 0xF0)
-        {
-            cps.push_back(((c & 0x0F) << 12) | ((p[i + 1] & 0x3F) << 6) | (p[i + 2] & 0x3F));
-            i += 3;
-        }
-        else
-        {
-            cps.push_back(((c & 0x07) << 18) | ((p[i + 1] & 0x3F) << 12) | ((p[i + 2] & 0x3F) << 6) | (p[i + 3] & 0x3F));
-            i += 4;
-        }
-    }
-    return cps;
-}
-
-std::string codePointsToUtf8(const std::vector<uint32_t>& cps)
-{
-    std::string out;
-    for (uint32_t c : cps)
-    {
-        if (c < 0x80)
-        {
-            out += (char)c;
-        }
-        else if (c < 0x800)
-        {
-            out += (char)(0xC0 | (c >> 6));
-            out += (char)(0x80 | (c & 0x3F));
-        }
-        else if (c < 0x10000)
-        {
-            out += (char)(0xE0 | (c >> 12));
-            out += (char)(0x80 | ((c >> 6) & 0x3F));
-            out += (char)(0x80 | (c & 0x3F));
-        }
-        else
-        {
-            out += (char)(0xF0 | (c >> 18));
-            out += (char)(0x80 | ((c >> 12) & 0x3F));
-            out += (char)(0x80 | ((c >> 6) & 0x3F));
-            out += (char)(0x80 | (c & 0x3F));
-        }
-    }
-    return out;
-}
-
 std::string rc4Encrypt(const std::string& data, const std::string& key)
 {
-    std::vector<uint32_t> dataCP = utf8ToCodePoints(data);
-    std::vector<uint32_t> keyCP = utf8ToCodePoints(key);
+    std::vector<uint32_t> dataCP = encoding::utf8ToCodePoints(data);
+    std::vector<uint32_t> keyCP = encoding::utf8ToCodePoints(key);
 
     uint8_t s[256];
     for (int i = 0; i < 256; ++i)
@@ -162,7 +81,7 @@ std::string rc4Encrypt(const std::string& data, const std::string& key)
         outCP.push_back(cp ^ s[t]);
     }
 
-    return codePointsToUtf8(outCP);
+    return encoding::codePointsToUtf8(outCP);
 }
 
 std::vector<uint8_t> sm3hash(const std::vector<uint8_t>& data)
@@ -199,7 +118,7 @@ std::string generateResult(const std::string& s, const std::string& e = "s4")
     std::string r;
     r.reserve((s.size() + 2) / 3 * 4);
 
-    std::vector<uint32_t> chars = utf8ToCodePoints(s);
+    std::vector<uint32_t> chars = encoding::utf8ToCodePoints(s);
     size_t len = chars.size();
 
     for (size_t i = 0; i < len; i += 3)

@@ -57,6 +57,7 @@ if (PluginTestSources)
         Util
         PluginDownload
         PluginCommon
+        PluginCrypto
         nlohmann_json::nlohmann_json
     )
 
@@ -79,6 +80,9 @@ if (PluginTestSources)
     add_custom_command(TARGET ${PluginArtifactTest}
         POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${TestTarget}> $<TARGET_FILE_DIR:${PluginArtifactTest}>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${CMAKE_CURRENT_SOURCE_DIR}/plugin/business_flow_cases.json
+                $<TARGET_FILE_DIR:${PluginArtifactTest}>/business_flow_cases.json
     )
 endif()
 

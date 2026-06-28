@@ -7,8 +7,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include <PluginConfig.h>
-
 #include "NetWork/CNetWork.h"
 #include "NetWork/CurlCpp/CurlCookieJar.h"
 #include "NeteaseCloudMusicApi.h"
@@ -26,7 +24,7 @@ struct Option
     bool bIsLogin{false};
 };
 
-class PLUGIN_PORT NeteaseCloudMusicClient : public network::NetWork
+class NeteaseCloudMusicClient : public network::NetWork
 {
 public:
     NeteaseCloudMusicClient();

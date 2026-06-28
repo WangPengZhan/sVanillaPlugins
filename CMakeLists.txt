@@ -10,6 +10,8 @@ include(GNUInstallDirs)
 add_compile_definitions(UNICODE)
 add_library(${PROJECT_NAME} main.cpp)
 
+add_subdirectory(ThirdParty/sVanillaPluginCommon)
+
 set(PLUGINS)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 

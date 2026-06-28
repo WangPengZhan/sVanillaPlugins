@@ -8,15 +8,9 @@
 namespace douyinapi
 {
 
-std::string urlEncode(const std::string& decoded);
-std::string urlDecode(const std::string& encoded);
-
 std::vector<uint8_t> stringToBytes(const std::string& s);
 std::string bytesToHex(const std::vector<uint8_t>& data);
 std::vector<uint8_t> hexToBytes(const std::string& hex);
-
-std::vector<uint32_t> utf8ToCodePoints(const std::string& str);
-std::string codePointsToUtf8(const std::vector<uint32_t>& cps);
 
 std::string rc4Encrypt(const std::string& data, const std::string& key);
 std::vector<uint8_t> sm3hash(const std::vector<uint8_t>& data);

@@ -65,6 +65,7 @@ set(STATIC_LIBS
     Util
     PluginDownload
     PluginCommon
+    PluginCrypto
     nlohmann_json::nlohmann_json
 )
 

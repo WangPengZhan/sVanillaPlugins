@@ -57,6 +57,7 @@ if (PluginTestSources)
         Util
         PluginDownload
         PluginCommon
+        PluginCrypto
         nlohmann_json::nlohmann_json
     )
 

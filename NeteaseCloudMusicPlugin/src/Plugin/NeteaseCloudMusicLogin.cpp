@@ -7,7 +7,7 @@
 #include "NeteaseCloudMusicResource.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicClient.h"
 #include "NeteaseCloudMusicPlugin.h"
-#include "QrCodeGenerator.h"
+#include "Util/QrCodeGenerator.h"
 #include "Util/LocaleHelper.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicConstants.h"
 #include "NeteaseCloudMusicPluginMessage.h"

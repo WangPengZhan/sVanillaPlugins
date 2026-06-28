@@ -10,7 +10,7 @@
 #include "Util/TimerUtil.h"
 #include "BiliBiliPlugin.h"
 #include "Util/LocaleHelper.h"
-#include "QrCodeGenerator.h"
+#include "Util/QrCodeGenerator.h"
 #include "BiliBiliPluginMessage.h"
 
 namespace

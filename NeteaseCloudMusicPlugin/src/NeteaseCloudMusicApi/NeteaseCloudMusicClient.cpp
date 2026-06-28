@@ -11,6 +11,8 @@
 #include "NeteaseCloudMusicUtils.h"
 #include "NeteaseCloudMusicLog.h"
 #include "Util/JsonProcess.h"
+#include "PluginCrypto/Crypto.h"
+#include "PluginCrypto/Encoding.h"
 #include "NetWork/HeaderBodyResponseWrapper.h"
 #include "NetWork/CurlCpp/CurlCookie.h"
 #include "NetWork/CurlCpp/CurlOption.h"
@@ -102,7 +104,7 @@ std::string preparePostData(const std::unordered_map<std::string, std::string>& 
         {
             postFields += "&";
         }
-        postFields += netease::urlEncode(fst) + "=" + netease::urlEncode(snd);
+        postFields += encoding::urlEncode(fst) + "=" + encoding::urlEncode(snd);
         bFirst = false;
     }
     return postFields;
@@ -663,7 +665,7 @@ std::string NeteaseCloudMusicClient::getAnonimousEncodeID()
     const std::string deviceID = getRandomDeviceID();
     m_deviceId = deviceID;
     const std::string digestHex = cloudMusicDllEncodeID(deviceID);
-    return base64Encode(deviceID + " " + digestHex);
+    return encoding::base64Encode(deviceID + " " + digestHex);
 }
 
 void NeteaseCloudMusicClient::generateData(bool force)
