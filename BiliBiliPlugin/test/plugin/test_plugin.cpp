@@ -7,12 +7,16 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
 #include "IPlugin.h"
 #include "TemplatePluginCall.h"
+#include "LoggerRegisterHelpper.h"
+#include "Util/process.hpp"
+#include "Util/TimerUtil.h"
 
 namespace
 {
@@ -44,10 +48,108 @@ struct PluginDeinitGuard
     }
 };
 
-void prepareRuntimeDirectories()
+std::filesystem::path ariaExecutableName()
 {
-    std::filesystem::create_directories(kRuntimeDir / "log");
+#ifdef _WIN32
+    return "aria2c.exe";
+#else
+    return "aria2c";
+#endif
 }
+
+TinyProcessLib::Process::string_type PathToProcessString(const std::filesystem::path& path)
+{
+#if defined(_WIN32) && defined(UNICODE)
+    return path.wstring();
+#else
+    return path.string();
+#endif
+}
+
+TinyProcessLib::Process::string_type toProcessString(const std::string& value)
+{
+#if defined(_WIN32) && defined(UNICODE)
+    return std::filesystem::path(value).wstring();
+#else
+    return value;
+#endif
+}
+
+std::vector<TinyProcessLib::Process::string_type> ariaArguments(const std::filesystem::path& runtimeDir)
+{
+    const auto ariaDir = runtimeDir / "aria";
+    std::filesystem::create_directories(ariaDir);
+    const auto sessionFile = ariaDir / "aira.session";
+    const auto logFile = ariaDir / "aira.log";
+    std::ofstream(sessionFile, std::ios::app).close();
+
+    return {
+        toProcessString("--enable-rpc"),
+        toProcessString("--rpc-listen-all=false"),
+        toProcessString("--rpc-allow-origin-all=false"),
+        toProcessString("--rpc-listen-port=6800"),
+        toProcessString("--rpc-secret=sVanilla"),
+        toProcessString("--input-file=" + sessionFile.string()),
+        toProcessString("--save-session=" + sessionFile.string()),
+        toProcessString("--save-session-interval=30"),
+        toProcessString("--log=" + logFile.string()),
+        toProcessString("--log-level=debug"),
+        toProcessString("--max-concurrent-downloads=6"),
+        toProcessString("--max-connection-per-server=16"),
+        toProcessString("--split=5"),
+        toProcessString("--min-split-size=10M"),
+        toProcessString("--max-overall-download-limit=0"),
+        toProcessString("--max-download-limit=0"),
+        toProcessString("--max-overall-upload-limit=0"),
+        toProcessString("--max-upload-limit=0"),
+        toProcessString("--continue=true"),
+        toProcessString("--allow-overwrite=true"),
+        toProcessString("--auto-file-renaming=false"),
+        toProcessString("--file-allocation=none"),
+        toProcessString("--header=User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"),
+    };
+}
+
+class AriaTestEnvironment final : public testing::Environment
+{
+public:
+    void SetUp() override
+    {
+        LoggerRegisterHelpper::registerLogger("Aria2Net", kRuntimeDir.string() + "/log/Aria2Net.log");
+        LoggerRegisterHelpper::registerLogger("FFmpeg", kRuntimeDir.string() + "/log/FFmpeg.log");
+        LoggerRegisterHelpper::registerLogger("Network", kRuntimeDir.string() + "/log/Network.log");
+        LoggerRegisterHelpper::registerLogger("Download", kRuntimeDir.string() + "/log/Download.log");
+
+        const auto exeDir = getModulePath();
+        const auto ariaExecutable = std::filesystem::path(exeDir) / "aria" / ariaExecutableName();
+        ASSERT_TRUE(std::filesystem::exists(ariaExecutable)) << "Cannot find aria2c in test output aria directory";
+
+        auto args = ariaArguments(std::filesystem::path(exeDir) / kRuntimeDir);
+        args.insert(args.begin(), PathToProcessString(ariaExecutable));
+        TinyProcessLib::Config config;
+        config.show_window = TinyProcessLib::Config::ShowWindow::hide;
+        aria2Process_ = std::make_unique<TinyProcessLib::Process>(args, toProcessString(exeDir), nullptr, nullptr, false, config);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        int exitStatus = 0;
+        ASSERT_FALSE(aria2Process_->try_get_exit_status(exitStatus)) << "aria2c exited immediately";
+    }
+
+    void TearDown() override
+    {
+        if (!aria2Process_)
+        {
+            return;
+        }
+
+        aria2Process_->kill(true);
+        aria2Process_.reset();
+    }
+
+private:
+    std::unique_ptr<TinyProcessLib::Process> aria2Process_;
+};
+
+testing::Environment* const kAriaTestEnvironment = testing::AddGlobalTestEnvironment(new AriaTestEnvironment);
 
 json loadCases()
 {
@@ -165,7 +267,6 @@ void runFlowCase(plugin::IPlugin& plugin, const json& testCase)
 
 TEST(BiliBiliPluginArtifactTest, ExportedInterfaces)
 {
-    prepareRuntimeDirectories();
     initDir((kRuntimeDir.string() + "/").c_str());
 
     auto handle = pluginInit();
@@ -186,7 +287,6 @@ TEST(BiliBiliPluginArtifactTest, ExportedInterfaces)
 
 TEST(BiliBiliPluginArtifactTest, BusinessFlowsMatchJsonCases)
 {
-    prepareRuntimeDirectories();
     initDir((kRuntimeDir.string() + "/").c_str());
 
     auto handle = pluginInit();

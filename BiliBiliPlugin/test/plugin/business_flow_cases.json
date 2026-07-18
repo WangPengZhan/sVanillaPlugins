@@ -1,6 +1,6 @@
 [
   {
-    "url": "https://www.bilibili.com/video/BV1xx411c7mD",
+    "url": "https://www.bilibili.com/video/BV19cLCzvErr",
     "downloadConfig": {
       "downloadDir": "bili-plugin-test/download/",
       "videoQuality": "Best",
@@ -8,7 +8,7 @@
     },
     "expectedViews": [
       {
-        "identifier": "BV1xx411c7mD",
+        "identifier": "BV19cLCzvErr",
         "idType": "Bid",
         "pluginId": 1,
         "fileType": "Video",

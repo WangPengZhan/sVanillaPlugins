@@ -14,10 +14,31 @@ set(TestIncludeDirectories
     ${CMAKE_CURRENT_SOURCE_DIR}/../../ThirdParty/sVanillaPluginCommon
 )
 
+if (WIN32)
+    set(TOOLS_PATH ${CMAKE_SOURCE_DIR}/tools/win)
+elseif (APPLE)
+    set(TOOLS_PATH ${CMAKE_SOURCE_DIR}/tools/mac)
+elseif (UNIX AND NOT APPLE)
+    set(TOOLS_PATH ${CMAKE_SOURCE_DIR}/tools/linux)
+endif ()
+
+function(copy_plugin_test_tools test_target)
+    if (EXISTS "${TOOLS_PATH}")
+        add_custom_command(TARGET ${test_target}
+            POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${TOOLS_PATH}" $<TARGET_FILE_DIR:${test_target}>
+        )
+    else()
+        message(WARNING "tool directory not found: ${TOOLS_PATH}")
+    endif()
+endfunction()
+
 function(configure_plugin_test_target test_target)
     target_include_directories(${test_target} PRIVATE ${TestIncludeDirectories})
     target_compile_options(${test_target} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
     target_link_libraries(${test_target} PRIVATE GTest::gtest_main)
+
+    copy_plugin_test_tools(${test_target})
 
     foreach(runtime_target spdlog FFmpeg)
         if (TARGET ${runtime_target})
