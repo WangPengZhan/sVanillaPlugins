@@ -180,6 +180,13 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
         dash = result.data.dash;
     }
 
+    BILIBILI_LOG_INFO("getPlayUrl streams: dashVideo={}, dashAudio={}", dash.video.size(), dash.audio.size());
+    if (dash.video.empty())
+    {
+        BILIBILI_LOG_WARN("getPlayUrl returned no DASH video streams");
+        return {};
+    }
+
     std::list<std::string> video_urls;
     std::list<std::string> audio_urls;
     int needDownloadVideoId = 16;

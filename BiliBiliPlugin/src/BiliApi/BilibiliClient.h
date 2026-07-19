@@ -88,6 +88,7 @@ public:
 
     void resetWbi();
     void encodeWithWbi(ParamType& params);
+    void ensureWebCookies(bool forceRefresh = false);
 
     static nlohmann::json getDataFromRespones(const std::string& respones);
 

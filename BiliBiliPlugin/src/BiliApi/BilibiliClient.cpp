@@ -116,6 +116,7 @@ BilibiliClient::BilibiliClient()
 {
     initDefaultHeaders();
     initDefaultOptions();
+    ensureWebCookies();
 }
 
 BilibiliClient& BilibiliClient::globalClient()
@@ -778,6 +779,58 @@ void BilibiliClient::encodeWithWbi(ParamType& params)
 
     // 计算 w_rid 字段
     params.emplace("w_rid", crypto::md5Hex(query + m_mixinKey.mixin_key));
+}
+
+void BilibiliClient::ensureWebCookies(bool forceRefresh)
+{
+    const auto currentCookie = m_cookies.cookie(domain);
+    std::vector<network::CurlCookie> newCookies;
+    if (forceRefresh || currentCookie.value("buvid3").empty() || currentCookie.value("buvid4").empty())
+    {
+        Buvid34InfoResponse buvid;
+        for (int attempt = 0; attempt < 3 && (buvid.data.b_3.empty() || buvid.data.b_4.empty()); ++attempt)
+        {
+            buvid = getBuvid34Info();
+        }
+        if (!buvid.data.b_3.empty())
+        {
+            newCookies.emplace_back("buvid3=" + buvid.data.b_3 + "; Domain=" + domain + "; Path=/");
+        }
+        if (!buvid.data.b_4.empty())
+        {
+            newCookies.emplace_back("buvid4=" + buvid.data.b_4 + "; Domain=" + domain + "; Path=/");
+        }
+        if (buvid.data.b_3.empty())
+        {
+            const auto fallbackBuvid = getBuvidInfo();
+            if (!fallbackBuvid.data.buvid.empty())
+            {
+                newCookies.emplace_back("buvid3=" + fallbackBuvid.data.buvid + "; Domain=" + domain + "; Path=/");
+            }
+        }
+    }
+    if (forceRefresh || currentCookie.value("bili_ticket").empty())
+    {
+        const auto ticket = getTicket();
+        if (!ticket.data.ticket.empty())
+        {
+            newCookies.emplace_back("bili_ticket=" + ticket.data.ticket + "; Domain=" + domain + "; Path=/");
+        }
+    }
+    if (forceRefresh || currentCookie.value("b_nut").empty())
+    {
+        newCookies.emplace_back("b_nut=" + std::to_string(std::time(nullptr)) + "; Domain=" + domain + "; Path=/");
+    }
+
+    if (!newCookies.empty())
+    {
+        std::lock_guard lk(m_mutexRequest);
+        for (const auto& cookie : newCookies)
+        {
+            m_cookies.addCurlCookie(cookie);
+        }
+        m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
+    }
 }
 
 nlohmann::json BilibiliClient::getDataFromRespones(const std::string& respones)

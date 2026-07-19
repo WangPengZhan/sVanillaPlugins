@@ -17,6 +17,7 @@
 #include "LoggerRegisterHelpper.h"
 #include "Util/process.hpp"
 #include "Util/TimerUtil.h"
+#include "Util/LocaleHelper.h"
 
 namespace
 {
@@ -167,13 +168,6 @@ json loadCases()
     return cases;
 }
 
-DownloadConfig downloadConfigFromJson(const json& value)
-{
-    auto config = value.get<DownloadConfig>();
-    std::filesystem::create_directories(config.downloadDir);
-    return config;
-}
-
 void expectView(const adapter::BaseVideoView& actual, const json& expected)
 {
     if (expected.contains("identifier"))
@@ -225,8 +219,9 @@ void runFlowCase(plugin::IPlugin& plugin, const json& testCase)
     }
 
     VideoInfoFull videoInfo;
-    videoInfo.downloadConfig = std::make_shared<DownloadConfig>(downloadConfigFromJson(testCase.at("downloadConfig")));
+    videoInfo.downloadConfig = std::make_shared<DownloadConfig>(testCase.at("downloadConfig"));
     videoInfo.videoView = std::make_shared<adapter::BaseVideoView>(views.front());
+    videoInfo.downloadConfig->downloadDir = std::filesystem::absolute(std::filesystem::path(videoInfo.downloadConfig->downloadDir)).string();
 
     auto downloader = plugin.getDownloader(videoInfo);
     const bool expectedCreated = testCase.at("expectedDownloader").at("created").get<bool>();
@@ -260,7 +255,7 @@ void runFlowCase(plugin::IPlugin& plugin, const json& testCase)
     EXPECT_EQ(download::statusToString(downloader->status()), expectedDownload.at("status").get<std::string>());
     if (expectedDownload.value("fileExists", false))
     {
-        EXPECT_TRUE(std::filesystem::exists(std::filesystem::path(downloader->path()) / downloader->filename()));
+        EXPECT_TRUE(std::filesystem::exists(std::filesystem::path(downloader->path()) / util::utf8ToLocale(downloader->filename())));
     }
 }
 }  // namespace
