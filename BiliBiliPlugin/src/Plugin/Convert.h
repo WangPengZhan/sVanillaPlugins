@@ -2,6 +2,7 @@
 
 #include <BaseVideoView.h>
 #include "BiliApi/BiliApi.h"
+#include "BiliApi/BilibiliUrl.h"
 
 adapter::VideoView convertVideoView(const biliapi::VideoView& data);
 adapter::VideoView convertVideoView(const biliapi::History& data);
@@ -20,3 +21,5 @@ adapter::BaseVideoView convertEpisodes(const biliapi::Episode& data);
 adapter::BaseVideoView convertEpisodes(const biliapi::CheeseEpisode& data);
 adapter::BaseVideoView convertVideoInfo(const biliapi::FavVideoInfo& data);
 adapter::BaseVideoView convertVideoInfo(const biliapi::VlistItem& data);
+
+void prioritizeVideoView(adapter::VideoView& views, const biliapi::IDInfo& source);

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "YoutubeApi/YoutubeUrl.h"
+#include "Plugin/Convert.h"
 
 namespace
 {
@@ -59,4 +60,23 @@ TEST(YoutubeUrlUnitTest, RejectsUnsupportedUrls)
 {
     EXPECT_FALSE(youtubeapi::isValidUrl("https://www.youtube.com/watch"));
     EXPECT_EQ(youtubeapi::getID("https://example.com/watch?v=abcdefghijk").type, youtubeapi::IDType::Unkown);
+}
+
+TEST(YoutubeConvertUnitTest, PrioritizesSourceVideoWithoutReorderingOtherItems)
+{
+    adapter::VideoView views(3);
+    views[0].Identifier = "first";
+    views[1].Identifier = "selected";
+    views[2].Identifier = "last";
+
+    prioritizeVideoView(views, "selected");
+
+    EXPECT_EQ(views[0].Identifier, "selected");
+    EXPECT_EQ(views[1].Identifier, "first");
+    EXPECT_EQ(views[2].Identifier, "last");
+
+    prioritizeVideoView(views, "missing");
+    EXPECT_EQ(views[0].Identifier, "selected");
+    EXPECT_EQ(views[1].Identifier, "first");
+    EXPECT_EQ(views[2].Identifier, "last");
 }

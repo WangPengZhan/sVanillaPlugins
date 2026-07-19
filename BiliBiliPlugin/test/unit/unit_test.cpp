@@ -15,6 +15,7 @@
 #include "BiliApi/BilibiliClient.h"
 #include "BiliApi/BilibiliUrl.h"
 #include "BiliApi/BilibiliUtils.h"
+#include "Plugin/Convert.h"
 
 namespace
 {
@@ -293,4 +294,41 @@ TEST(BiliBiliUtilsUnitTest, FormatsHistoryQueryParameters)
     EXPECT_NE(text.find("view_at: 123456789"), std::string::npos);
     EXPECT_NE(text.find("type: article"), std::string::npos);
     EXPECT_NE(text.find("ps: 30"), std::string::npos);
+}
+
+TEST(BiliBiliConvertUnitTest, PrioritizesSourceVideoWithoutReorderingOtherItems)
+{
+    adapter::VideoView views(3);
+    views[0].Identifier = "first";
+    views[1].Identifier = "selected";
+    views[2].Identifier = "last";
+
+    biliapi::IDInfo source;
+    source.id = "selected";
+    source.type = biliapi::IDType::Bid;
+    prioritizeVideoView(views, source);
+
+    EXPECT_EQ(views[0].Identifier, "selected");
+    EXPECT_EQ(views[1].Identifier, "first");
+    EXPECT_EQ(views[2].Identifier, "last");
+}
+
+TEST(BiliBiliConvertUnitTest, PrioritizesAidAndLeavesMissingSourceUnchanged)
+{
+    adapter::VideoView views(2);
+    views[0].Identifier = "BV-first";
+    views[0].Option1 = "100";
+    views[1].Identifier = "BV-selected";
+    views[1].Option1 = "200";
+
+    biliapi::IDInfo source;
+    source.id = "200";
+    source.type = biliapi::IDType::Aid;
+    prioritizeVideoView(views, source);
+    EXPECT_EQ(views[0].Identifier, "BV-selected");
+
+    source.id = "missing";
+    prioritizeVideoView(views, source);
+    EXPECT_EQ(views[0].Identifier, "BV-selected");
+    EXPECT_EQ(views[1].Identifier, "BV-first");
 }

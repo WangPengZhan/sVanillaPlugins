@@ -123,6 +123,11 @@ adapter::VideoView BiliBiliPlugin::getVideoView(const std::string& url)
         break;
     }
 
+    if (id.type == biliapi::IDType::Aid || id.type == biliapi::IDType::Bid || id.type == biliapi::IDType::BangumiEP || id.type == biliapi::IDType::CheeseEP)
+    {
+        prioritizeVideoView(views, id);
+    }
+
     return views;
 }
 

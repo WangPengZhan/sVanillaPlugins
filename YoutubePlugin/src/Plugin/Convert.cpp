@@ -1,4 +1,5 @@
 #include <sstream>
+#include <algorithm>
 
 #include "Convert.h"
 #include "Util/TimerUtil.h"
@@ -97,4 +98,15 @@ adapter::BaseVideoView convertVideoInfo(const youtubeapi::PlaylistVideoRenderer&
     item.Duration = data.lengthText.simpleText;
     item.pluginId = youtubeplugin::pluginID;
     return item;
+}
+
+void prioritizeVideoView(adapter::VideoView& views, const std::string& sourceVideoId)
+{
+    const auto sourceView = std::find_if(views.begin(), views.end(), [&sourceVideoId](const adapter::BaseVideoView& view) {
+        return view.Identifier == sourceVideoId;
+    });
+    if (sourceView != views.end())
+    {
+        std::rotate(views.begin(), sourceView, std::next(sourceView));
+    }
 }

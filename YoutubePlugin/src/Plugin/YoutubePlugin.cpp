@@ -46,6 +46,10 @@ adapter::VideoView YoutubePlugin::getVideoView(const std::string& url)
         std::string playlistId = id.type == youtubeapi::IDType::PlaylistId ? id.id : id.parentId;
         youtubeapi::PlayListInfo playlistInfo = client.playlistInfo(playlistId);
         views = convertVideoView(playlistInfo.contents);
+        if (id.type == youtubeapi::IDType::VideoId)
+        {
+            prioritizeVideoView(views, id.id);
+        }
     }
     else if (id.type == youtubeapi::IDType::ChannelId)
     {

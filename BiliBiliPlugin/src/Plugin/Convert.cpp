@@ -3,6 +3,8 @@
 #include "BiliBiliPluginMessage.h"
 #include "BiliApi/BilibiliUrl.h"
 
+#include <algorithm>
+
 // BaseVideoView identifier and optional-field meanings by resource type:
 // - regular/UGC video: Identifier=bvid, Option1=aid, Option2=cid
 // - multipart page/history: Identifier=bvid, Option1=cid, Option2=cid
@@ -261,4 +263,20 @@ adapter::BaseVideoView convertVideoInfo(const biliapi::VlistItem& data)
     item.pluginId = biliplugin::pluginID;
     item.Publisher = data.author;
     return item;
+}
+
+void prioritizeVideoView(adapter::VideoView& views, const biliapi::IDInfo& source)
+{
+    const auto matchesSource = [&source](const adapter::BaseVideoView& view) {
+        if (source.type == biliapi::IDType::Aid)
+        {
+            return view.Option1 == source.id;
+        }
+        return view.Identifier == source.id;
+    };
+    const auto sourceView = std::find_if(views.begin(), views.end(), matchesSource);
+    if (sourceView != views.end())
+    {
+        std::rotate(views.begin(), sourceView, std::next(sourceView));
+    }
 }
