@@ -42,6 +42,7 @@ adapter::BaseVideoView convertVideoView(const dedaoapi::Article& article)
 
     view.Identifier = article.enid;
     view.ParentId = article.class_enid;
+    // Article resources use Option1 as the optional audio playback URL.
     view.Option1 = article.audio.mp3_play_url;
     view.Title = article.title;
     view.Cover = article.logo;

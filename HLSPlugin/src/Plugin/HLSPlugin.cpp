@@ -174,6 +174,8 @@ std::shared_ptr<download::FileDownloader> HLSPlugin::getDownloader(const VideoIn
     copiedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     int downloadTheadNum = 5;
+    // HLS resources optionally use Option1 as the segment-download thread
+    // count. An empty value keeps the default; accepted values are 1 through 20.
     if (!copiedVideoInfo.videoView->Option1.empty())
     {
         try

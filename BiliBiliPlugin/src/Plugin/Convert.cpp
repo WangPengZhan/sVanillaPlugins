@@ -3,10 +3,14 @@
 #include "BiliBiliPluginMessage.h"
 #include "BiliApi/BilibiliUrl.h"
 
-// Identifier => bvid
-// Option1 = aid
-// Option2 = cid
-// Option3 = bvid
+// BaseVideoView identifier and optional-field meanings by resource type:
+// - regular/UGC video: Identifier=bvid, Option1=aid, Option2=cid
+// - multipart page/history: Identifier=bvid, Option1=cid, Option2=cid
+// - bangumi episode: Identifier=ep_id, Option1=aid, Option2=cid, Option3=bvid
+// - cheese episode: Identifier=episode id, Option1=aid, Option2=cid
+// - favorite video: Identifier=bvid, Option2=first cid
+// Empty options are intentionally left unspecified when the source response
+// does not contain the corresponding value.
 
 adapter::VideoView convertVideoView(const biliapi::VideoView& data)
 {

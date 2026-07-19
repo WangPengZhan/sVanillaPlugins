@@ -55,6 +55,8 @@ adapter::BaseVideoView convertNoteDetail(const xhsapi::NoteItemInfo& note)
     view.Publisher = note.user.nickname;
     view.Cover = note.cover.url_default;
     view.pluginId = xhsplugin::pluginID;
+    // Note resources use Option1 as the optional xsec_token required when the
+    // detail endpoint is queried again for downloading.
     view.Option1 = note.xsec_token;
 
     return view;

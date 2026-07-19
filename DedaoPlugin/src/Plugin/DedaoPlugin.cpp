@@ -114,6 +114,7 @@ std::shared_ptr<download::FileDownloader> DedaoPlugin::getDownloader(const Video
     }
     else if (type == IDType::Course)
     {
+        // Course resources use Option1 as the course identifier.
         auto courseInfo = m_client.courseInfo(copyedVideoInfo.videoView->Option1);
     }
     else if (type == IDType::Article)

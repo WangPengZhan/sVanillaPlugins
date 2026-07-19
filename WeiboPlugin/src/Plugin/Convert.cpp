@@ -2,8 +2,9 @@
 #include "Util/TimerUtil.h"
 #include "WeiboPluginMessage.h"
 
-// Option1 => mid/page_id
-// Option2 => media_id
+// BaseVideoView optional-field meanings by response type:
+// - component play info: Option1=mid, Option2=media_id
+// - mixed-media item: Option1=page_id, Option2=media_id
 
 adapter::VideoView convertVideoView(const weiboapi::ComponentPlayPlayinfoResponse& data)
 {

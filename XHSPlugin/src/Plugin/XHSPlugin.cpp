@@ -56,6 +56,7 @@ adapter::VideoView XHSPlugin::getVideoView(const std::string& url)
     {
         xhsapi::NoteDetailResponse noteDetail = m_client.getNoteDetail(id.id, id.xsecToken);
         adapter::BaseVideoView view = convertNoteDetail(noteDetail.data.note_card);
+        // Preserve the URL's optional xsec_token for the later detail request.
         view.Option1 = id.xsecToken;
         views.push_back(view);
         return views;
