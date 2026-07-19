@@ -123,7 +123,7 @@ if (VCPAKG_DEP_DIRS)
                 if (TARGET ${TEST_EXECUTABLE})
                     add_custom_command(TARGET ${TEST_EXECUTABLE}
                         POST_BUILD
-                            COMMAND ${CMAKE_COMMAND} -E copy_directory ${VCPKG_LIB} $<TARGET_FILE_DIR:${TEST_EXECUTABLE}>
+                            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${VCPKG_LIB} $<TARGET_FILE_DIR:${TEST_EXECUTABLE}>
                     )
                 endif()
             endforeach()

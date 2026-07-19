@@ -73,8 +73,7 @@ std::string legacyMd5Hex(const std::string& input)
         return {};
     }
 
-    const bool success = EVP_DigestInit_ex(context, EVP_md5(), nullptr) == 1 &&
-                         EVP_DigestUpdate(context, input.data(), input.size()) == 1 &&
+    const bool success = EVP_DigestInit_ex(context, EVP_md5(), nullptr) == 1 && EVP_DigestUpdate(context, input.data(), input.size()) == 1 &&
                          EVP_DigestFinal_ex(context, digest, &digestLength) == 1;
     EVP_MD_CTX_free(context);
     if (!success)
@@ -248,8 +247,7 @@ TEST(BiliBiliUtilsUnitTest, CoversAllSharedCryptoHelpersWithFixedVectors)
     EXPECT_EQ(crypto::rsaNoPaddingPublicEncryptHexLower(std::string("\x01", 1), kRsaPublicKey), std::string(254, '0') + "01");
     EXPECT_EQ(encoding::hexEncode(crypto::md5Raw("abc")), "900150983CD24FB0D6963F7D28E17F72");
     EXPECT_EQ(crypto::md5Hex("abc"), "900150983cd24fb0d6963f7d28e17f72");
-    EXPECT_EQ(biliapi::hmac_sha256("key", "The quick brown fox jumps over the lazy dog"),
-              "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8");
+    EXPECT_EQ(biliapi::hmac_sha256("key", "The quick brown fox jumps over the lazy dog"), "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8");
 }
 
 TEST(BiliBiliUtilsUnitTest, HandlesCookiePathsAndExpiry)
