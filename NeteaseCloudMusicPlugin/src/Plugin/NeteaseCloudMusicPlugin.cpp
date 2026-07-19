@@ -114,7 +114,7 @@ std::shared_ptr<download::FileDownloader> NeteaseCloudMusicPlugin::getDownloader
     copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     std::string url;
-    auto type = static_cast<ContentType>(std::stoi(copyedVideoInfo.videoView->Identifier));
+    auto type = static_cast<ContentType>(std::stoi(copyedVideoInfo.videoView->IdType));
     switch (type)
     {
     case ContentType::MV:
