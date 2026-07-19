@@ -108,6 +108,7 @@ std::shared_ptr<download::FileDownloader> DedaoPlugin::getDownloader(const Video
         {
             HLSPlugin plugin;
             copyedVideoInfo.videoView->Identifier = it->url;
+            copyedVideoInfo.videoView->Option1 = "1";
             return plugin.getDownloader(copyedVideoInfo);
         }
     }
@@ -121,6 +122,7 @@ std::shared_ptr<download::FileDownloader> DedaoPlugin::getDownloader(const Video
         {
             HLSPlugin plugin;
             copyedVideoInfo.videoView->Identifier = copyedVideoInfo.videoView->Option1;
+            copyedVideoInfo.videoView->Option1 = "1";
             return plugin.getDownloader(copyedVideoInfo);
         }
     }
