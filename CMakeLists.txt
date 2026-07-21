@@ -7,6 +7,11 @@ set(VCPKG_APPLOCAL_DEPS ON)
 project(sVanillaPlugins VERSION 1.0.0 LANGUAGES CXX)
 include(GNUInstallDirs)
 
+option(ENABLE_TEST "Enable Test" OFF)
+if (ENABLE_TEST)
+    enable_testing()
+endif ()
+
 add_compile_definitions(UNICODE)
 add_library(${PROJECT_NAME} main.cpp)
 
@@ -25,6 +30,9 @@ if (FOLDER_CHILDREN)
 endif ()
 
 if (PLUGINS)
+    list(REMOVE_ITEM PLUGINS TemplatePlugin)
+    list(PREPEND PLUGINS TemplatePlugin)
+
     foreach(plugin ${PLUGINS})
         add_subdirectory("${plugin}")
     endforeach()
