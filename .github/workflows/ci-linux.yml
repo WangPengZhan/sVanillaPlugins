@@ -22,19 +22,11 @@ jobs:
         c_compiler: [gcc]
         cpp_compiler: [g++]
 
-
-
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE.
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
-          fetch-depth: 1
-
-      - name: Init Submodules
-        run: |
-          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
-          git submodule sync --recursive
-          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Install Dependencies
         run: |
