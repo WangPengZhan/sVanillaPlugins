@@ -102,7 +102,7 @@ std::shared_ptr<download::FileDownloader> YoutubePlugin::getDownloader(const Vid
     auto fileName = videoInfo.fileName(true);
     info.option.out = fileName;
     info.option.dir = videoInfo.downloadConfig->downloadDir;
-    const std::list<std::string> h = {youtubeapi::youtube_referer, youtubeapi::youtube_user_agent};
+    const std::list<std::string> h = {youtubeapi::youtube_referer, youtubeapi::youtube_player_user_agent};
     info.option.header = h;
 
     auto youtubeDownloader = std::shared_ptr<download::YoutubeDownloader>(new download::YoutubeDownloader(info), download::freeDownload);

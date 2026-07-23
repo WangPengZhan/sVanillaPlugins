@@ -16,6 +16,7 @@ constexpr char customNameId[] = "CustomNameId";
 const std::regex ytVideoPlaylistPattern(
     R"(https?://(?:www\.)?(?:youtube\.com/(?:watch\?v=|embed/)|youtu\.be/)([a-zA-Z0-9_-]+)(?:/)?(?:\?list=|&list=)([a-zA-Z0-9_-]+)(?:\S*)?)");
 const std::regex ytPattern(R"(https?://(?:www\.youtube\.com|youtu\.be|music\.youtube\.com|www\.youtubekids\.com)/watch\?v=([a-zA-Z0-9_-]+)(?:\S*)?)");
+const std::regex ytPartiallyShortPattern(R"(https?://youtu\.be/watch\?v=([a-zA-Z0-9_-]+)(?:\S*)?)");
 const std::regex ytShortPattern(R"(https?://youtu\.be/([a-zA-Z0-9_-]+)(?:\S*)?)");
 const std::regex ytEmbedPattern(R"(https?://www\.youtube\.com/embed/([a-zA-Z0-9_-]+)(?:\S*)?)");
 const std::regex ytShortsPattern(R"(https?://(?:www\.)?youtube\.com/shorts/([a-zA-Z0-9_-]+)(?:\S*)?)");
@@ -25,8 +26,9 @@ const std::regex ytAtChannelPattern(R"(https?://(?:www\.)?youtube\.com/@([A-Za-z
 const std::regex ytUserNamePattern(R"(https?://(?:www\.)?youtube\.com/user/([A-Za-z0-9_]+)(?:\S*)?)");
 const std::regex ytCustomNamePattern(R"(https?://(?:www\.)?youtube\.com/c/([A-Za-z0-9_]+)(?:\S*)?)");
 
-std::vector<std::regex> validUrlPatterns = {ytPattern,         ytShortPattern,         ytEmbedPattern,     ytShortsPattern,   ytChannelPattern,
-                                            ytPlaylistPattern, ytVideoPlaylistPattern, ytAtChannelPattern, ytUserNamePattern, ytCustomNamePattern};
+std::vector<std::regex> validUrlPatterns = {ytPattern,          ytPartiallyShortPattern, ytShortPattern,     ytEmbedPattern,
+                                            ytShortsPattern,    ytChannelPattern,        ytPlaylistPattern,  ytVideoPlaylistPattern,
+                                            ytAtChannelPattern, ytUserNamePattern,       ytCustomNamePattern};
 std::string typeToString(IDType type)
 {
     switch (type)
@@ -109,6 +111,10 @@ IDInfo getID(const std::string& url)
     std::smatch match;
     if (std::regex_search(url, match, ytVideoPlaylistPattern))
     {
+        if (!isValidID(match[1].str()))
+        {
+            return {};
+        }
         id.id = match[1].str();
         id.type = IDType::VideoId;
         id.parentId = match[2].str();
@@ -117,24 +123,50 @@ IDInfo getID(const std::string& url)
     }
     if (std::regex_search(url, match, ytPattern))
     {
+        if (!isValidID(match[1].str()))
+        {
+            return {};
+        }
+        id.id = match[1].str();
+        id.type = IDType::VideoId;
+        return id;
+    }
+    if (std::regex_search(url, match, ytPartiallyShortPattern))
+    {
+        if (!isValidID(match[1].str()))
+        {
+            return {};
+        }
         id.id = match[1].str();
         id.type = IDType::VideoId;
         return id;
     }
     if (std::regex_search(url, match, ytShortPattern))
     {
+        if (!isValidID(match[1].str()))
+        {
+            return {};
+        }
         id.id = match[1].str();
         id.type = IDType::VideoId;
         return id;
     }
     if (std::regex_search(url, match, ytEmbedPattern))
     {
+        if (!isValidID(match[1].str()))
+        {
+            return {};
+        }
         id.id = match[1].str();
         id.type = IDType::VideoId;
         return id;
     }
     if (std::regex_search(url, match, ytShortsPattern))
     {
+        if (!isValidID(match[1].str()))
+        {
+            return {};
+        }
         id.id = match[1].str();
         id.type = IDType::VideoId;
         return id;

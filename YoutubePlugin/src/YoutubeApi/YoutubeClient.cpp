@@ -23,7 +23,7 @@ namespace youtubeapi
 
 YoutubeClient::YoutubeClient()
     : network::NetWork()
-    , m_cookies("SOCS=CAISEwgDEgk2NzM5OTg2ODUaAmVuIAEaBgiA6p23Bg; domain=.youtube.com")
+    , m_cookies(youtube_default_cookies)
 {
     initDefaultHeaders();
     initDefaultOptions();
@@ -68,11 +68,12 @@ std::string YoutubeClient::cookies() const
 std::string YoutubeClient::getVisitorData()
 {
     network::CurlHeader header;
-    header.add(youtube_user_agent);
+    header.add(youtube_visitor_user_agent);
     header.add("Accept: application/json");
+    header.add(youtube_origin);
 
     std::string response;
-    get(swJsDataUrl, response, header, false, CurlOptions(), false);
+    get(swJsDataUrl, response, header, false, CurlOptions(), true);
     if (response.starts_with(")]}'"))
     {
         response.erase(0, 4);
@@ -113,7 +114,7 @@ MainResponse YoutubeClient::getVideoInfo(const std::string& videoId)
 {
     YOUTUBE_LOG_WARN("getVideoInfo videoId: {}", videoId);
     network::CurlHeader header;
-    header.add(youtube_user_agent);
+    header.add(youtube_player_user_agent);
     header.add(youtube_origin);
     // header.add(youtube_accept_encoding);
     // header.add(youtube_accept_language);
@@ -124,7 +125,7 @@ MainResponse YoutubeClient::getVideoInfo(const std::string& videoId)
     content["context"]["client"]["visitorData"] = visitorData();
     std::string param = content.dump();
     std::string response;
-    std::string url = youtubePlayerUrl + std::string("?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&hl=en&prettyPrint=false");
+    std::string url = youtubePlayerUrl + "?key=" + youtubePlayerApiKey + "&hl=en&prettyPrint=false";
     post(url, response, param, header, false);
 
     MainResponse ret;
@@ -227,7 +228,7 @@ std::vector<AdaptiveFormat> YoutubeClient::getStreamInfo(const std::string& vide
 
 bool YoutubeClient::logout()
 {
-    setCookies("SOCS=CAISEwgDEgk2NzM5OTg2ODUaAmVuIAEaBgiA6p23Bg; domain=youtube.com");
+    setCookies(youtube_default_cookies);
     return true;
 }
 
@@ -351,6 +352,10 @@ void YoutubeClient::initDefaultOptions()
     m_commonOptions.insert({timeout->getOption(), timeout});
     auto acceptEncoding = std::make_shared<network::AcceptEncoding>("gzip");
     m_commonOptions.insert({acceptEncoding->getOption(), acceptEncoding});
+    auto sslVerifyHost = std::make_shared<network::SSLVerifyHost>(false);
+    m_commonOptions.insert({sslVerifyHost->getOption(), sslVerifyHost});
+    auto sslVerifyPeer = std::make_shared<network::SSLVerifyPeer>(false);
+    m_commonOptions.insert({sslVerifyPeer->getOption(), sslVerifyPeer});
     if (!std::string(m_cookies).empty())
     {
         m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));

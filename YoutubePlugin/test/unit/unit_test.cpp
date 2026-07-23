@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "YoutubeApi/YoutubeConstants.h"
 #include "YoutubeApi/YoutubeUrl.h"
 #include "Plugin/Convert.h"
 
@@ -56,10 +57,39 @@ TEST(YoutubeUrlUnitTest, ExtractsCustomChannelName)
     EXPECT_EQ(id.type, youtubeapi::IDType::CustomNameId);
 }
 
+TEST(YoutubeUrlUnitTest, ExtractsPartiallyShortenedVideoId)
+{
+    const auto id = youtubeapi::getID("https://youtu.be/watch?v=Fcds0_MrgNU");
+
+    EXPECT_EQ(id.id, "Fcds0_MrgNU");
+    EXPECT_EQ(id.type, youtubeapi::IDType::VideoId);
+}
+
 TEST(YoutubeUrlUnitTest, RejectsUnsupportedUrls)
 {
     EXPECT_FALSE(youtubeapi::isValidUrl("https://www.youtube.com/watch"));
     EXPECT_EQ(youtubeapi::getID("https://example.com/watch?v=abcdefghijk").type, youtubeapi::IDType::Unkown);
+    EXPECT_EQ(youtubeapi::getID("https://youtu.be/too-short").type, youtubeapi::IDType::Unkown);
+}
+
+TEST(YoutubeClientUnitTest, UsesAndroidVrPlayerIdentity)
+{
+    const auto request = nlohmann::json::parse(youtubeapi::youtubePostContent);
+    const auto& client = request["context"]["client"];
+
+    EXPECT_EQ(client["clientName"], "ANDROID_VR");
+    EXPECT_EQ(client["clientVersion"], "1.60.19");
+    EXPECT_EQ(client["deviceMake"], "Oculus");
+    EXPECT_EQ(client["deviceModel"], "Quest 3");
+    EXPECT_EQ(client["osName"], "Android");
+    EXPECT_EQ(client["osVersion"], "12L");
+    EXPECT_EQ(client["platform"], "MOBILE");
+    EXPECT_EQ(youtubeapi::youtube_visitor_user_agent, "User-Agent: com.google.android.youtube/20.10.38 (Linux; U; ANDROID 11) gzip");
+    EXPECT_EQ(youtubeapi::youtube_player_user_agent,
+              "User-Agent: com.google.android.apps.youtube.vr.oculus/1.60.19 (Linux; U; Android 12L; Quest 3 Build/SQ3A.220605.009.A1) gzip");
+    EXPECT_EQ(youtubeapi::youtube_default_cookies, "SOCS=CAISEwgDEgk4MTM4MzYzNTIaAmVuIAEaBgiApPzGBg; domain=.youtube.com");
+    EXPECT_EQ(youtubeapi::swJsDataUrl, "https://www.youtube.com/sw.js_data?hl=en");
+    EXPECT_EQ(youtubeapi::youtubePlayerApiKey, "AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w");
 }
 
 TEST(YoutubeConvertUnitTest, PrioritizesSourceVideoWithoutReorderingOtherItems)
