@@ -85,8 +85,8 @@ void DouYinLogin::loginSuccess()
 
 UserInfo DouYinLogin::getUserInfo(std::string dir)
 {
-    douyinapi::FollowingResponse following = m_client.getFollowing();
-    douyinapi::FollowingUser user = ::getUserInfo(following);
+    const auto account = m_client.getAccountInfo();
+    const auto& user = account.data;
     if (user.sec_uid.empty())
     {
         return {};
@@ -125,7 +125,8 @@ void DouYinLogin::setCookies(std::string cookies)
 
 bool DouYinLogin::refreshCookies(std::string cookies)
 {
-    return false;
+    m_client.setCookies(std::move(cookies));
+    return m_client.isLogined();
 }
 
 bool DouYinLogin::isLoggedIn() const
@@ -135,6 +136,7 @@ bool DouYinLogin::isLoggedIn() const
 
 bool DouYinLogin::logout()
 {
+    m_client.clearSession();
     return true;
 }
 
@@ -152,9 +154,18 @@ std::vector<adapter::BaseVideoView> DouYinLogin::history()
     do
     {
         detail = m_client.getUserHistory(cursor, 10);
+        if (detail.status_code != 0 || detail.aweme_list.empty())
+        {
+            break;
+        }
         auto batch = convertSeriesDetail(detail);
         views.insert(views.end(), batch.begin(), batch.end());
-        cursor = detail.max_cursor;
+        const int nextCursor = detail.max_cursor;
+        if (detail.has_more && nextCursor == cursor)
+        {
+            break;
+        }
+        cursor = nextCursor;
     } while (detail.has_more);
 
     return views;

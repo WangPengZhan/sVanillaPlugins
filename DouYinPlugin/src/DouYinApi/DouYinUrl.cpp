@@ -25,9 +25,8 @@ const std::regex liveLinkSelfRegex(R"(\S*?https://www\.douyin\.com/follow\?webRi
 const std::regex liveShareRegex(R"(https://webcast\.amemv\.com/douyin/webcast/reflow/\S+)");
 const std::regex channelLinkRegex(R"(\S*?https://www\.douyin\.com/channel/\d+?\?modal_id=(\d{19})\S*?)");
 
-std::vector<std::regex> validUrlPatterns = {accountLinkRegex,    accountShareRegex, detailLinkRegex, detailShareRegex, detailSearchRegex,
-                                            detailDiscoverRegex, mixLinkRegex,      mixShareRegex,   seriesShareRegex, liveLinkRegex,
-                                            liveLinkSelfRegex,   liveShareRegex,    channelLinkRegex};
+const std::vector<std::regex> validUrlPatterns = {accountLinkRegex,    accountShareRegex, detailLinkRegex, detailShareRegex, detailSearchRegex,
+                                                  detailDiscoverRegex, mixLinkRegex,      mixShareRegex,   seriesShareRegex, channelLinkRegex};
 
 std::string typeToString(IDType type)
 {
@@ -110,8 +109,19 @@ IDInfo getID(const std::string& url)
     IDInfo id;
 
     std::smatch match;
-    if (std::regex_search(url, match, accountLinkRegex) || std::regex_search(url, match, detailLinkRegex) || std::regex_search(url, match, detailShareRegex) ||
-        std::regex_search(url, match, detailDiscoverRegex))
+    if (std::regex_search(url, match, accountLinkRegex))
+    {
+        id.id = match[1].str();
+        id.type = IDType::UserId;
+        if (match.size() > 2 && match[2].matched)
+        {
+            id.parentId = match[2].str();
+            id.parentIdType = IDType::AwemeId;
+        }
+    }
+    else if (std::regex_search(url, match, detailLinkRegex) || std::regex_search(url, match, detailShareRegex) ||
+             std::regex_search(url, match, detailSearchRegex) || std::regex_search(url, match, detailDiscoverRegex) ||
+             std::regex_search(url, match, channelLinkRegex))
     {
         id.id = match[1].str();
         id.type = IDType::AwemeId;
@@ -126,7 +136,7 @@ IDInfo getID(const std::string& url)
         id.id = match[1].str();
         id.type = IDType::SeriesId;
     }
-    else if (std::regex_search(url, match, accountShareRegex) || std::regex_search(url, match, accountShareRegex))
+    else if (std::regex_search(url, match, accountShareRegex))
     {
         id.id = match[1].str();
         id.type = IDType::UserId;

@@ -93,7 +93,7 @@ QRCodeResponse DouYinClient::getQRCode()
     std::string url = login + Login::QRCreate;
     network::CurlHeader headers = createLoginHeaders();
     ParamType params = loginParams;
-    std::string paramsStr = encryptionParams(params, "GET");
+    std::string paramsStr = encryptionParams(params);
     url += "?" + paramsStr;
 
     std::string response;
@@ -117,16 +117,16 @@ QRCodeStatusResponse DouYinClient::getLoginStatus(const std::string& token, cons
     network::CurlHeader headers = createLoginHeaders();
     headers.add("Content-type: application/x-www-form-urlencoded");
 
-    ParamType params = loginParams;
-    std::string paramsStr = encryptionParams(params, "POST");
-    url += "?" + paramsStr;
     ParamType check = checkData;
     check["token"] = token;
     if (!captcha.empty())
     {
         check["captcha"] = captcha;
     }
-    std::string data = encryptionParams(check, "POST");
+    const std::string data = encodeData(check);
+    ParamType params = loginParams;
+    const std::string paramsStr = encryptionParams(params, data);
+    url += "?" + paramsStr;
 
     network::ResponseHeaderAndBody response;
     post(url, response, data, headers, false);
@@ -135,7 +135,9 @@ QRCodeStatusResponse DouYinClient::getLoginStatus(const std::string& token, cons
     {
         DOUYIN_LOG_INFO("Login success!");
         std::lock_guard lk(m_mutexRequest);
-        m_cookies = network::CurlCookies().addCurlCookie(header.at(network::set_cookies));
+        network::CurlCookie cookie(header.at(network::set_cookies));
+        cookie.setDomain(domain);
+        m_cookies.addCurlCookie(cookie);
         m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
     }
 
@@ -157,7 +159,7 @@ AccountInfoResponse DouYinClient::getAccountInfo()
     std::string url = login + Login::AccountInfo;
     network::CurlHeader headers = createLoginHeaders();
     ParamType params = loginParams;
-    std::string paramsStr = encryptionParams(params, "GET");
+    std::string paramsStr = encryptionParams(params);
     url += "?" + paramsStr;
 
     std::string response;
@@ -184,7 +186,7 @@ FollowingResponse DouYinClient::getFollowing()
     params["source"] = "coldup";
     params["need_remove_share_panel"] = "true";
     params["need_sorted_info"] = "true";
-    std::string paramsStr = encryptionParams(params, "GET");
+    std::string paramsStr = encryptionParams(params);
     url += "?" + paramsStr;
 
     std::string response;
@@ -229,7 +231,7 @@ AwemeDetailResponse DouYinClient::getAwemeDetail(const std::string& awemeId)
         params["uifid"] = uifid;
     }
 
-    std::string paramsStr = encryptionParams(params, "GET");
+    std::string paramsStr = encryptionParams(params);
     url += "?" + paramsStr;
 
     std::string response;
@@ -250,7 +252,7 @@ AwemeDetailResponse DouYinClient::getAwemeDetail(const std::string& awemeId)
 
 SeriesDetail DouYinClient::getSeriesDetail(const std::string& seriesId, int cursor, int count)
 {
-    std::string url = home + Api::Detail;
+    std::string url = home + Api::Series;
     network::CurlHeader headers = createDetailHeaders();
 
     ParamType params = detailParams;
@@ -258,7 +260,7 @@ SeriesDetail DouYinClient::getSeriesDetail(const std::string& seriesId, int curs
     params["cursor"] = std::to_string(cursor);
     params["count"] = std::to_string(count);
     params["pull_type"] = "2";
-    std::string paramsStr = encryptionParams(params, "GET");
+    std::string paramsStr = encryptionParams(params);
     url += "?" + paramsStr;
 
     std::string response;
@@ -287,7 +289,7 @@ SeriesDetail DouYinClient::getMixDetail(const std::string& mixId, int cursor, in
     params["cursor"] = std::to_string(cursor);
     params["count"] = std::to_string(count);
 
-    std::string paramsStr = encryptionParams(params, "GET");
+    std::string paramsStr = encryptionParams(params);
     url += "?" + paramsStr;
 
     std::string response;
@@ -312,11 +314,11 @@ SeriesDetail DouYinClient::getUserAll(const std::string& userId, int cursor, int
     network::CurlHeader headers = createDetailHeaders();
 
     ParamType params = detailParams;
-    params["uid_sec"] = userId;
-    params["cursor"] = std::to_string(cursor);
+    params["sec_user_id"] = userId;
+    params["max_cursor"] = std::to_string(cursor);
     params["count"] = std::to_string(count);
 
-    std::string paramsStr = encryptionParams(params, "GET");
+    std::string paramsStr = encryptionParams(params);
     url += "?" + paramsStr;
 
     std::string response;
@@ -344,7 +346,7 @@ SeriesDetail DouYinClient::getUserHistory(int cursor, int count)
     params["max_cursor"] = std::to_string(cursor);
     params["count"] = std::to_string(count);
 
-    std::string paramsStr = encryptionParams(params, "GET");
+    std::string paramsStr = encryptionParams(params);
     url += "?" + paramsStr;
 
     std::string response;
@@ -368,15 +370,14 @@ SeriesDetail DouYinClient::getUserCollection(int cursor, int count)
     std::string url = home + Api::ListCollection;
     network::CurlHeader headers = createDetailHeaders();
 
-    ParamType params = detailParams;
-    std::string paramsStr = encryptionParams(params, "POST");
-    url += "?" + paramsStr;
-
     ParamType dataParam;
     dataParam["cursor"] = std::to_string(cursor);
     dataParam["count"] = std::to_string(count);
 
-    std::string data = encodeData(dataParam);
+    const std::string data = encodeData(dataParam);
+    ParamType params = detailParams;
+    const std::string paramsStr = encryptionParams(params, data);
+    url += "?" + paramsStr;
 
     std::string response;
     post(url, response, data, headers, true);
@@ -396,7 +397,9 @@ SeriesDetail DouYinClient::getUserCollection(int cursor, int count)
 
 bool DouYinClient::isLogined() const
 {
-    return false;
+    std::lock_guard lk(m_mutexRequest);
+    const auto cookie = m_cookies.cookie(domain);
+    return !cookie.value("sessionid").empty() || !cookie.value("sessionid_ss").empty() || !cookie.value("sid_guard").empty();
 }
 
 std::string DouYinClient::cookies() const
@@ -409,7 +412,18 @@ void DouYinClient::setCookies(std::string cookies)
 {
     std::lock_guard lk(m_mutexRequest);
     m_cookies = network::CurlCookies(cookies);
+    const auto cookie = m_cookies.cookie(domain);
+    m_msToken = cookie.value("msToken");
     m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
+}
+
+void DouYinClient::clearSession()
+{
+    std::lock_guard lk(m_mutexRequest);
+    m_cookies = {};
+    m_userId.clear();
+    m_msToken.clear();
+    m_commonOptions.erase(network::CookieFields::opt);
 }
 
 std::string DouYinClient::encodeData(const ParamType& params)
@@ -420,16 +434,19 @@ std::string DouYinClient::encodeData(const ParamType& params)
         ss << encoding::urlEncode(key) + "=" << encoding::urlEncode(value) << "&";
     }
     std::string paramsStr = ss.str();
-    paramsStr.pop_back();
+    if (!paramsStr.empty())
+    {
+        paramsStr.pop_back();
+    }
 
     return paramsStr;
 }
 
-std::string DouYinClient::encryptionParams(const ParamType& params, const std::string& method)
+std::string DouYinClient::encryptionParams(const ParamType& params, const std::string& body)
 {
     std::string paramsStr = encodeData(params);
     ABogus bogus(kUserAgent);
-    std::string abogus = bogus.getValue(paramsStr, method);
+    std::string abogus = bogus.getValue(paramsStr, body);
 
     paramsStr += "&a_bogus=" + abogus;
 
@@ -542,6 +559,8 @@ void DouYinClient::getMsToken()
         network::CurlCookie cookie = network::CurlCookie(header.at(network::set_cookies));
         cookie.setDomain(domain);
         m_msToken = cookie.value("msToken");
+        m_cookies.addCurlCookie(cookie);
+        m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
     }
 }
 

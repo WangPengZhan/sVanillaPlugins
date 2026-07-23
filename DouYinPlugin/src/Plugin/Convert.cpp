@@ -8,7 +8,7 @@ std::string getCover(const douyinapi::Video& video)
 {
     if (!video.origin_cover.url_list.empty())
     {
-        return video.cover.url_list[0];
+        return video.origin_cover.url_list[0];
     }
     else if (!video.cover_original_scale.url_list.empty())
     {
@@ -30,11 +30,15 @@ std::string getPlayUrl(const douyinapi::Video& video)
     int bitRate = 0;
     for (const auto& videoInfo : video.bit_rate)
     {
-        if (videoInfo.bit_rate > bitRate)
+        if (videoInfo.bit_rate > bitRate && !videoInfo.play_addr.url_list.empty())
         {
             bitRate = videoInfo.bit_rate;
             url = videoInfo.play_addr.url_list[0];
         }
+    }
+    if (url.empty() && !video.play_addr.url_list.empty())
+    {
+        url = video.play_addr.url_list[0];
     }
     return url;
 }

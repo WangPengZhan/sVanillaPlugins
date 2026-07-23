@@ -3,6 +3,9 @@
 #include <gtest/gtest.h>
 
 #include "DouYinApi/DouYinUrl.h"
+#include "DouYinApi/DouYinUtils.h"
+#include "PluginCrypto/Crypto.h"
+#include "PluginCrypto/Encoding.h"
 
 namespace
 {
@@ -52,8 +55,63 @@ TEST(DouYinUrlUnitTest, ExtractsSeriesShareId)
     EXPECT_EQ(id.type, douyinapi::IDType::SeriesId);
 }
 
+TEST(DouYinUrlUnitTest, ExtractsUserPageAndModalWork)
+{
+    constexpr char userUrl[] = "https://www.douyin.com/user/MS4wLjABAAAAUserId";
+    auto id = douyinapi::getID(userUrl);
+    EXPECT_EQ(id.id, "MS4wLjABAAAAUserId");
+    EXPECT_EQ(id.type, douyinapi::IDType::UserId);
+
+    constexpr char modalUrl[] = "https://www.douyin.com/user/MS4wLjABAAAAUserId?modal_id=7000000000000000011";
+    id = douyinapi::getID(modalUrl);
+    EXPECT_EQ(id.id, "MS4wLjABAAAAUserId");
+    EXPECT_EQ(id.type, douyinapi::IDType::UserId);
+    EXPECT_EQ(id.parentId, "7000000000000000011");
+    EXPECT_EQ(id.parentIdType, douyinapi::IDType::AwemeId);
+}
+
+TEST(DouYinUrlUnitTest, ExtractsSearchAndChannelModalWork)
+{
+    for (const char* url :
+         {"https://www.douyin.com/search/example?modal_id=7000000000000000012", "https://www.douyin.com/channel/123?modal_id=7000000000000000013"})
+    {
+        const auto id = douyinapi::getID(url);
+        EXPECT_EQ(id.type, douyinapi::IDType::AwemeId);
+        EXPECT_FALSE(id.id.empty());
+    }
+}
+
 TEST(DouYinUrlUnitTest, RejectsUnsupportedUrls)
 {
     EXPECT_FALSE(douyinapi::isValidUrl("https://www.douyin.com/video/123"));
+    EXPECT_FALSE(douyinapi::isValidUrl("https://live.douyin.com/123456"));
     EXPECT_EQ(douyinapi::getID("https://example.com/video/7000000000000000001").type, douyinapi::IDType::Unkown);
+}
+
+TEST(DouYinABogusUnitTest, SignsExactQueryAndBody)
+{
+    constexpr char userAgent[] = "Mozilla/5.0 test";
+    constexpr uint64_t startTime = 1700000000000ULL;
+    constexpr uint64_t endTime = startTime + 5;
+
+    constexpr std::array<double, 3> randomValues = {17, 29, 41};
+    const auto baseline = douyinapi::ABogus(userAgent, "").getValue("aid=6383&count=10", "cursor=0", startTime, endTime, randomValues);
+
+    const auto sameInput = douyinapi::ABogus(userAgent, "").getValue("aid=6383&count=10", "cursor=0", startTime, endTime, randomValues);
+    EXPECT_EQ(baseline, sameInput);
+    EXPECT_FALSE(baseline.empty());
+
+    const auto changedQuery = douyinapi::ABogus(userAgent, "").getValue("aid=6383&count=20", "cursor=0", startTime, endTime, randomValues);
+    EXPECT_NE(baseline, changedQuery);
+
+    const auto changedBody = douyinapi::ABogus(userAgent, "").getValue("aid=6383&count=10", "cursor=10", startTime, endTime, randomValues);
+    EXPECT_NE(baseline, changedBody);
+}
+
+TEST(DouYinCryptoUnitTest, MatchesRc4AndSm3StandardVectors)
+{
+    const auto rc4 = crypto::rc4("Plaintext", "Key");
+    EXPECT_EQ(encoding::hexEncode(rc4), "BBF316E8D940AF0AD3");
+
+    EXPECT_EQ(encoding::hexEncode(crypto::sm3Raw("abc")), "66C7F0F462EEEDD9D1F2D46BDC10E4E24167C4875CF2F7A2297DA02B8F4BA8E0");
 }

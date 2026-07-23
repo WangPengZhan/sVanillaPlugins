@@ -56,7 +56,10 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
     case douyinapi::IDType::AwemeId:
     {
         auto detail = m_client.getAwemeDetail(id);
-        views.push_back(convertAwemeDetail(detail.aweme_detail));
+        if (detail.status_code == 0 && !detail.aweme_detail.aweme_id.empty())
+        {
+            views.push_back(convertAwemeDetail(detail.aweme_detail));
+        }
         break;
     }
     case douyinapi::IDType::SeriesId:
@@ -66,9 +69,18 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
         do
         {
             detail = m_client.getSeriesDetail(id, cursor, 10);
+            if (detail.status_code != 0 || detail.aweme_list.empty())
+            {
+                break;
+            }
             auto batch = convertSeriesDetail(detail);
             views.insert(views.end(), batch.begin(), batch.end());
-            cursor = detail.max_cursor;
+            const int nextCursor = detail.max_cursor;
+            if (detail.has_more && nextCursor == cursor)
+            {
+                break;
+            }
+            cursor = nextCursor;
         } while (detail.has_more);
         break;
     }
@@ -79,14 +91,41 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
         do
         {
             detail = m_client.getMixDetail(id, cursor, 10);
+            if (detail.status_code != 0 || detail.aweme_list.empty())
+            {
+                break;
+            }
             auto batch = convertSeriesDetail(detail);
             views.insert(views.end(), batch.begin(), batch.end());
-            cursor = detail.cursor;
+            const int nextCursor = detail.cursor;
+            if (detail.has_more && nextCursor == cursor)
+            {
+                break;
+            }
+            cursor = nextCursor;
         } while (detail.has_more);
         break;
     }
     case douyinapi::IDType::UserId:
     {
+        int cursor = 0;
+        douyinapi::SeriesDetail detail;
+        do
+        {
+            detail = m_client.getUserAll(id, cursor, 10);
+            if (detail.status_code != 0 || detail.aweme_list.empty())
+            {
+                break;
+            }
+            auto batch = convertSeriesDetail(detail);
+            views.insert(views.end(), batch.begin(), batch.end());
+            const int nextCursor = detail.max_cursor;
+            if (detail.has_more && nextCursor == cursor)
+            {
+                break;
+            }
+            cursor = nextCursor;
+        } while (detail.has_more);
         break;
     }
     default:
@@ -98,14 +137,29 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
 
 std::shared_ptr<download::FileDownloader> DouYinPlugin::getDownloader(const VideoInfoFull& videoInfo)
 {
+    if (!videoInfo.downloadConfig || !videoInfo.videoView || videoInfo.videoView->Identifier.empty())
+    {
+        return {};
+    }
+
     auto copyedVideoInfo = videoInfo;
     copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
     copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     auto detail = m_client.getAwemeDetail(copyedVideoInfo.videoView->Identifier);
+    if (detail.status_code != 0 || detail.aweme_detail.aweme_id.empty())
+    {
+        return {};
+    }
+
+    const auto playUrl = getPlayUrl(detail.aweme_detail.video);
+    if (playUrl.empty())
+    {
+        return {};
+    }
 
     download::ResourceInfo info;
-    info.videoUris.push_back(getPlayUrl(detail.aweme_detail.video));
+    info.videoUris.push_back(playUrl);
     auto fileName = videoInfo.fileName(true);
     info.option.out = fileName;
     info.option.dir = videoInfo.downloadConfig->downloadDir;

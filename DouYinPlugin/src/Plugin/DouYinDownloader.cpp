@@ -24,11 +24,10 @@ DouYinDownloader::DouYinDownloader(std::list<std::string> videoUris, std::list<s
     , m_videoDownloader(videoUris, m_path)
     , m_audioDownloader(audioUris, m_path)
 {
-    m_haveTwoPart = !videoUris.empty() && audioUris.empty();
+    m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
     setAriaFileName();
     m_videoDownloader.setStatus(Ready);
     m_audioDownloader.setStatus(Ready);
-    m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
 }
 
 DouYinDownloader::DouYinDownloader(ResourceInfo info)
@@ -65,7 +64,7 @@ void DouYinDownloader::stop()
     {
         m_audioDownloader.stop();
     }
-    m_status = Waiting;
+    m_status = Stopped;
 }
 
 void DouYinDownloader::pause()
@@ -122,9 +121,14 @@ void DouYinDownloader::downloadStatus()
             merge.audio = m_audioDownloader.path() + "/" + m_audioDownloader.filename();
             merge.video = m_videoDownloader.path() + "/" + m_videoDownloader.filename();
             merge.targetVideo = path() + "/" + filename();
-            m_info.stage = "ffmpeg mixed!";
-
-            ffmpeg::FFmpegHelper::mergeVideo(merge);
+            m_info.stage = "ffmpeg merging";
+            if (!ffmpeg::FFmpegHelper::mergeVideo(merge))
+            {
+                m_info.stage = "ffmpeg merge failed";
+                m_status = Error;
+                return;
+            }
+            m_info.stage = "ffmpeg merged";
         }
 
         m_status = Finished;

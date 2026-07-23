@@ -37,6 +37,7 @@ public:
     bool isLogined() const;
     std::string cookies() const;
     void setCookies(std::string cookies);
+    void clearSession();
 
     bool downloadImage(const std::string& url, const std::filesystem::path& path);
 
@@ -55,7 +56,7 @@ private:
     static network::CurlHeader createParamHeaders();
     network::CurlHeader createCollectionHeaders();
     static std::string encodeData(const ParamType& params);
-    static std::string encryptionParams(const ParamType& params, const std::string& method = "GET");
+    static std::string encryptionParams(const ParamType& params, const std::string& body = {});
 
     static nlohmann::json getDataFromRespones(const std::string& respones);
 
