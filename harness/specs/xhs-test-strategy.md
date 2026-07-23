@@ -62,4 +62,14 @@ use CMake's default executable output location.
 - Static-library tests can call `xhsapi::getID()` and `xhsapi::isValidUrl()`
   directly.
 - URL parser tests remain deterministic and require no network access.
+- Diagnostic URL output does not expose `xsec_token` values.
+- Media selection tests cover resolution/bitrate preference and backup URL
+  fallback without network access.
+- An empty media resource transitions `XHSDownloader` to `Error` without
+  starting an Aria task.
+- Cookie parsing and signing tests must use synthetic values and must not print
+  `a1`, `web_session`, `x-s`, or `x-s-common`.
+- The XYW signer must match a fixed upstream reference vector for URI, `a1`,
+  and timestamp; XYS tests verify the encoded header family because its payload
+  intentionally contains random browser-session fields.
 - Both test binaries are registered with CTest when `ENABLE_TEST=ON`.

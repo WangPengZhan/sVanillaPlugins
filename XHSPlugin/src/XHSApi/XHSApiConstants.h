@@ -37,18 +37,6 @@ inline const std::string WebProfile = "/api/sec/v1/sheild/profile";
 
 }  // namespace Api
 
-constexpr char feedData[] = R"delimiter(       
-    {
-        "extra": {
-            "need_body_topic": "1",
-        },
-        "image_formats": [
-            "jpg",
-            "webp",
-            "avif",
-        ]
-    })delimiter";
-
 constexpr char scriptingData[] = R"delimiter({
     "appId": "xhs-pc-web",
     "callFrom": "web",

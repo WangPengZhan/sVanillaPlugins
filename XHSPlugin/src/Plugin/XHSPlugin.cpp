@@ -41,7 +41,7 @@ bool XHSPlugin::canParseUrl(const std::string& url)
 
 adapter::VideoView XHSPlugin::getVideoView(const std::string& url)
 {
-    XHS_LOG_INFO("getVideoView: {}", url);
+    XHS_LOG_INFO("getVideoView request received");
     xhsapi::IDInfo id = xhsapi::getID(url);
     XHS_LOG_INFO("id( {} )", id.to_string());
     if (id.id.empty())
@@ -64,14 +64,16 @@ adapter::VideoView XHSPlugin::getVideoView(const std::string& url)
     case xhsapi::IDType::UserId:
     {
         xhsapi::NoteItemList noteList;
-        int cursor = 0;
+        std::string cursor;
+        std::string previousCursor;
         do
         {
             noteList = m_client.getAccountNotes(id.id, cursor, 10, id.xsecToken).data;
             auto viewList = convertNoteDetail(noteList);
             views.insert(views.end(), viewList.begin(), viewList.end());
-            cursor += 10;
-        } while (noteList.has_more);
+            previousCursor = cursor;
+            cursor = noteList.cursor;
+        } while (noteList.has_more && !cursor.empty() && cursor != previousCursor);
 
         return views;
     }

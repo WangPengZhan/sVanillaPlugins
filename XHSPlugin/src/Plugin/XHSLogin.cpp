@@ -2,6 +2,7 @@
 
 #include <BaseVideoView.h>
 #include <fstream>
+#include <utility>
 
 #include "XHSResource.h"
 #include "XHSApi/XHSClient.h"
@@ -86,7 +87,19 @@ void XHSLogin::loginSuccess()
 
 UserInfo XHSLogin::getUserInfo(std::string dir)
 {
+    (void)dir;
     UserInfo userInfo;
+    const auto account = m_client.getAccountInfo();
+    if (account.code != 0 || account.data.guest || account.data.user_id.empty())
+    {
+        return userInfo;
+    }
+
+    userInfo.id = account.data.user_id;
+    userInfo.uname = account.data.nickname;
+    userInfo.sign = account.data.desc;
+    userInfo.home = std::string(xhsapi::home) + "/user/profile/" + account.data.user_id;
+    userInfo.option1 = account.data.red_id;
 
     return userInfo;
 }
@@ -108,7 +121,8 @@ void XHSLogin::setCookies(std::string cookies)
 
 bool XHSLogin::refreshCookies(std::string cookies)
 {
-    return false;
+    m_client.setCookies(std::move(cookies));
+    return m_client.isLogined();
 }
 
 bool XHSLogin::isLoggedIn() const
@@ -118,7 +132,8 @@ bool XHSLogin::isLoggedIn() const
 
 bool XHSLogin::logout()
 {
-    return true;
+    m_client.setCookies({});
+    return !m_client.isLogined();
 }
 
 std::string XHSLogin::domain() const

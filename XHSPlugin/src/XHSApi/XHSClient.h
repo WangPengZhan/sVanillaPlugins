@@ -9,6 +9,7 @@
 #include <NetWork/CurlCpp/CurlCookies.h>
 
 #include "XHSApi.h"
+#include "XHSUtils.h"
 
 namespace xhsapi
 {
@@ -26,9 +27,9 @@ public:
     AccountInfoResponse getAccountInfo();
 
     NoteDetailResponse getNoteDetail(const std::string& noteId, const std::string& xsecToken, const std::string& xsecSource = "pc_feed");
-    NoteItemListResponse getAccountNotes(const std::string& userId, int cursor = 0, int num = 10, const std::string& xsecToken = "",
+    NoteItemListResponse getAccountNotes(const std::string& userId, const std::string& cursor = "", int num = 10, const std::string& xsecToken = "",
                                          const std::string& xsecSource = "");
-    NoteItemListResponse getFavoriteNotes(const std::string& userId, int cursor = 0, int num = 10, const std::string& xsecToken = "",
+    NoteItemListResponse getFavoriteNotes(const std::string& userId, const std::string& cursor = "", int num = 10, const std::string& xsecToken = "",
                                           const std::string& xsecSource = "");
 
     bool isLogined() const;
@@ -45,6 +46,8 @@ private:
 
 private:
     static network::CurlHeader createLoginHeaders();
+    network::CurlHeader createSignedHeaders(const std::string& method, const std::string& uri, const std::string& body,
+                                            SignFormat format = SignFormat::Xys) const;
     static std::string encodeData(const ParamType& params);
     static nlohmann::json getDataFromRespones(const std::string& respones);
 

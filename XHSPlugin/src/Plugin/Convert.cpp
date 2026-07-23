@@ -5,15 +5,28 @@
 
 std::string getVideoUrl(const std::vector<xhsapi::StreamItem>& stream)
 {
-    if (!stream.empty())
+    const xhsapi::StreamItem* selected = nullptr;
+    for (const auto& item : stream)
     {
-        if (!stream.front().master_url.empty())
+        if (item.master_url.empty() && item.backup_urls.empty())
         {
-            return stream.front().master_url;
+            continue;
+        }
+        if (!selected || item.height > selected->height || (item.height == selected->height && item.video_bitrate > selected->video_bitrate))
+        {
+            selected = &item;
         }
     }
 
-    return "";
+    if (!selected)
+    {
+        return "";
+    }
+    if (!selected->master_url.empty())
+    {
+        return selected->master_url;
+    }
+    return selected->backup_urls.front();
 }
 
 std::string getVideoUrl(const xhsapi::Media& media)

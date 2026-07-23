@@ -33,10 +33,10 @@ XHSClient& XHSClient::globalClient()
 QRCodeResponse XHSClient::getQRCode()
 {
     std::string url = apiBase + Login::QRCreate;
-    network::CurlHeader headers = createLoginHeaders();
     nlohmann::json data;
     data["qr_type"] = 1;
     std::string dataStr = data.dump();
+    network::CurlHeader headers = createSignedHeaders("POST", Login::QRCreate, dataStr);
 
     std::string response;
     post(url, response, dataStr, headers, false);
@@ -48,7 +48,7 @@ QRCodeResponse XHSClient::getQRCode()
     }
     catch (const std::exception& e)
     {
-        XHS_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        XHS_LOG_ERROR("getQRCode response parsing failed: {}", e.what());
     }
 
     return ret;
@@ -57,11 +57,12 @@ QRCodeResponse XHSClient::getQRCode()
 LoginStatusResponse XHSClient::getLoginStatus(const std::string& code, const std::string& qrId)
 {
     std::string url = apiBase + Login::QRCheck;
-    network::CurlHeader headers = createLoginHeaders();
     nlohmann::json data;
     data["code"] = code;
-    data["qr_id"] = qrId;
+    data["qrId"] = qrId;
     std::string dataStr = data.dump();
+    network::CurlHeader headers = createSignedHeaders("POST", Login::QRCheck, dataStr);
+    headers.add("service-tag: webcn");
 
     std::string response;
     post(url, response, dataStr, headers, false);
@@ -73,7 +74,7 @@ LoginStatusResponse XHSClient::getLoginStatus(const std::string& code, const std
     }
     catch (const std::exception& e)
     {
-        XHS_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        XHS_LOG_ERROR("getLoginStatus response parsing failed: {}", e.what());
     }
 
     return ret;
@@ -82,7 +83,7 @@ LoginStatusResponse XHSClient::getLoginStatus(const std::string& code, const std
 AccountInfoResponse XHSClient::getAccountInfo()
 {
     std::string url = apiBase + Login::AccountInfo;
-    network::CurlHeader headers = createLoginHeaders();
+    network::CurlHeader headers = createSignedHeaders("GET", Login::AccountInfo, "", SignFormat::Xyw);
 
     std::string response;
     get(url, response, headers, false);
@@ -94,7 +95,7 @@ AccountInfoResponse XHSClient::getAccountInfo()
     }
     catch (const std::exception& e)
     {
-        XHS_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        XHS_LOG_ERROR("getAccountInfo response parsing failed: {}", e.what());
     }
 
     return ret;
@@ -102,13 +103,17 @@ AccountInfoResponse XHSClient::getAccountInfo()
 
 NoteDetailResponse XHSClient::getNoteDetail(const std::string& noteId, const std::string& xsecToken, const std::string& xsecSource)
 {
-    std::string url = apiBase + Login::QRCheck;
-    network::CurlHeader headers = createLoginHeaders();
-    nlohmann::json data = nlohmann::json::parse(feedData);
+    std::string url = apiBase + Api::NoteDetail;
+    nlohmann::json data;
+    data["extra"] = {
+        {"need_body_topic", "1"}
+    };
+    data["image_formats"] = {"jpg", "webp", "avif"};
     data["source_note_id"] = noteId;
     data["xsec_token"] = xsecToken;
     data["xsec_source"] = xsecSource;
     std::string dataStr = data.dump();
+    network::CurlHeader headers = createSignedHeaders("POST", Api::NoteDetail, dataStr);
 
     std::string response;
     post(url, response, dataStr, headers, false);
@@ -120,26 +125,29 @@ NoteDetailResponse XHSClient::getNoteDetail(const std::string& noteId, const std
     }
     catch (const std::exception& e)
     {
-        XHS_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        XHS_LOG_ERROR("getNoteDetail response parsing failed, noteId: {}, error: {}", noteId, e.what());
     }
 
     return ret;
 }
 
-NoteItemListResponse XHSClient::getAccountNotes(const std::string& userId, int cursor, int num, const std::string& xsecToken, const std::string& xsecSource)
+NoteItemListResponse XHSClient::getAccountNotes(const std::string& userId, const std::string& cursor, int num, const std::string& xsecToken,
+                                                const std::string& xsecSource)
 {
     std::string url = apiBase + Api::UserAllNotes;
-    network::CurlHeader headers = createLoginHeaders();
     ParamType data;
     data["cursor"] = cursor;
-    data["num"] = num;
+    data["num"] = std::to_string(num);
     data["user_id"] = userId;
     data["image_formats"] = "jpg,webp,avif";
     data["xsec_token"] = xsecToken;
     data["xsec_source"] = xsecSource;
 
+    const auto query = encodeData(data);
+    network::CurlHeader headers = createSignedHeaders("GET", Api::UserAllNotes + "?" + query, "", SignFormat::Xyw);
+
     std::string response;
-    get(url, response, data, headers, false);
+    get(url + "?" + query, response, headers, false);
 
     NoteItemListResponse ret;
     try
@@ -148,26 +156,29 @@ NoteItemListResponse XHSClient::getAccountNotes(const std::string& userId, int c
     }
     catch (const std::exception& e)
     {
-        XHS_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        XHS_LOG_ERROR("getAccountNotes response parsing failed, userId: {}, error: {}", userId, e.what());
     }
 
     return ret;
 }
 
-NoteItemListResponse XHSClient::getFavoriteNotes(const std::string& userId, int cursor, int num, const std::string& xsecToken, const std::string& xsecSource)
+NoteItemListResponse XHSClient::getFavoriteNotes(const std::string& userId, const std::string& cursor, int num, const std::string& xsecToken,
+                                                 const std::string& xsecSource)
 {
     std::string url = apiBase + Api::FavoriteNotes;
-    network::CurlHeader headers = createLoginHeaders();
     ParamType data;
     data["cursor"] = cursor;
-    data["num"] = num;
+    data["num"] = std::to_string(num);
     data["user_id"] = userId;
     data["image_formats"] = "jpg,webp,avif";
     data["xsec_token"] = xsecToken;
     data["xsec_source"] = xsecSource;
 
+    const auto query = encodeData(data);
+    network::CurlHeader headers = createSignedHeaders("GET", Api::FavoriteNotes + "?" + query, "", SignFormat::Xyw);
+
     std::string response;
-    get(url, response, data, headers, false);
+    get(url + "?" + query, response, headers, false);
 
     NoteItemListResponse ret;
     try
@@ -176,7 +187,7 @@ NoteItemListResponse XHSClient::getFavoriteNotes(const std::string& userId, int 
     }
     catch (const std::exception& e)
     {
-        XHS_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        XHS_LOG_ERROR("getFavoriteNotes response parsing failed, userId: {}, error: {}", userId, e.what());
     }
 
     return ret;
@@ -184,7 +195,9 @@ NoteItemListResponse XHSClient::getFavoriteNotes(const std::string& userId, int 
 
 bool XHSClient::isLogined() const
 {
-    return false;
+    std::lock_guard lk(m_mutexRequest);
+    const auto cookie = m_cookies.cookie(domain).content();
+    return cookie.find("web_session=") != std::string::npos;
 }
 
 std::string XHSClient::cookies() const
@@ -293,7 +306,7 @@ void XHSClient::setScriptingCookie()
     }
     catch (const std::exception& e)
     {
-        XHS_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        XHS_LOG_ERROR("setScriptingCookie response parsing failed: {}", e.what());
     }
 
     if (!ret.data.data.empty())
@@ -328,6 +341,21 @@ network::CurlHeader XHSClient::createLoginHeaders()
     headers.add("Priority: u=1, i");
     headers.add("Accept-Encoding: gzip, deflate, br, zstd");
     headers.add("Content-Type: application/json;charset=UTF-8");
+    return headers;
+}
+
+network::CurlHeader XHSClient::createSignedHeaders(const std::string& method, const std::string& uri, const std::string& body, SignFormat format) const
+{
+    std::string cookieHeader;
+    {
+        std::lock_guard lk(m_mutexRequest);
+        cookieHeader = m_cookies.cookie(domain).content();
+    }
+    const auto signature = signRequest(method, uri, body, parseSignCookies(cookieHeader), format);
+    auto headers = createLoginHeaders();
+    headers.add("x-s: " + signature.xS);
+    headers.add("x-s-common: " + signature.xSCommon);
+    headers.add("x-t: " + signature.xT);
     return headers;
 }
 

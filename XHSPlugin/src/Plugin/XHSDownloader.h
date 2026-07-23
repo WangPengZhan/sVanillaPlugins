@@ -1,5 +1,6 @@
 #pragma once
 #include <Download/FileDownloader.h>
+#include <Download/AriaDownloader.h>
 
 namespace download
 {
@@ -24,9 +25,8 @@ public:
     const std::string& filename() const override;
 
 private:
-    void downloadVideo();
-
-private:
+    ResourceInfo m_resourceInfo;
+    AriaDownloader m_videoDownloader;
     std::string m_path;
     std::string m_filename;
 };

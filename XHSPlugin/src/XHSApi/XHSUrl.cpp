@@ -47,8 +47,8 @@ IDType stringToType(const std::string& type)
 std::string IDInfo::to_string() const
 {
     std::stringstream ss;
-    ss << "id=" << id << ", type=" << typeToString(type) << ", xsecToken=" << xsecToken << ", parentId=" << parentId
-       << ", parentIdType=" << typeToString(parentIdType) << ", parentXsecToken=" << parentXsecToken;
+    ss << "id=" << id << ", type=" << typeToString(type) << ", hasXsecToken=" << std::boolalpha << !xsecToken.empty() << ", parentId=" << parentId
+       << ", parentIdType=" << typeToString(parentIdType) << ", hasParentXsecToken=" << !parentXsecToken.empty();
     return ss.str();
 }
 
