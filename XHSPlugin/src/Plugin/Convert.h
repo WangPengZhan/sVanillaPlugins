@@ -3,6 +3,8 @@
 #include <BaseVideoView.h>
 #include "XHSApi/XHSApi.h"
 
+std::string getVideoUrl(const std::vector<xhsapi::StreamItem>& stream);
+
 std::string getVideoUrl(const xhsapi::Media& media);
 
 adapter::BaseVideoView convertNoteDetail(const xhsapi::NoteItemInfo& note);

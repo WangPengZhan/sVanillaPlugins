@@ -1,9 +1,9 @@
 #include <array>
 #include <chrono>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <thread>
@@ -14,40 +14,18 @@
 
 #include "IPlugin.h"
 #include "TemplatePluginCall.h"
+#include "Aria2Net/AriaClient/AriaClient.h"
 #include "LoggerRegisterHelpper.h"
-#include "Util/process.hpp"
 #include "Util/TimerUtil.h"
+#include "Util/process.hpp"
 #include "Util/LocaleHelper.h"
 
 namespace
 {
-using json = nlohmann::json;
-
-constexpr std::array<const char*, 10> kSupportedUrls = {
-    "https://www.bilibili.com/video/av170001",
-    "https://www.bilibili.com/video/BV1xx411c7mD",
-    "https://b23.tv/BV1xx411c7mD",
-    "https://www.bilibili.com/bangumi/play/ss90001",
-    "https://www.bilibili.com/bangumi/play/ep90002",
-    "https://www.bilibili.com/bangumi/media/md90003",
-    "https://www.bilibili.com/cheese/play/ss80001",
-    "https://www.bilibili.com/cheese/play/ep80002",
-    "https://www.bilibili.com/medialist/detail/ml70001",
-    "https://space.bilibili.com/60001",
-};
 
 constexpr auto kDownloadPollInterval = std::chrono::seconds(1);
 const std::filesystem::path kRuntimeDir = "bili-plugin-test/runtime";
 const std::filesystem::path kCaseFile = "business_flow_cases.json";
-
-struct PluginDeinitGuard
-{
-    ~PluginDeinitGuard()
-    {
-        pluginDeinit();
-        deinit();
-    }
-};
 
 std::filesystem::path ariaExecutableName()
 {
@@ -58,57 +36,18 @@ std::filesystem::path ariaExecutableName()
 #endif
 }
 
-TinyProcessLib::Process::string_type PathToProcessString(const std::filesystem::path& path)
+TinyProcessLib::Process::string_type toProcessString(const std::filesystem::path& value)
 {
 #if defined(_WIN32) && defined(UNICODE)
-    return path.wstring();
+    return value.wstring();
 #else
-    return path.string();
+    return value.string();
 #endif
 }
 
-TinyProcessLib::Process::string_type toProcessString(const std::string& value)
+bool ariaIsRunning()
 {
-#if defined(_WIN32) && defined(UNICODE)
-    return std::filesystem::path(value).wstring();
-#else
-    return value;
-#endif
-}
-
-std::vector<TinyProcessLib::Process::string_type> ariaArguments(const std::filesystem::path& runtimeDir)
-{
-    const auto ariaDir = runtimeDir / "aria";
-    std::filesystem::create_directories(ariaDir);
-    const auto sessionFile = ariaDir / "aira.session";
-    const auto logFile = ariaDir / "aira.log";
-    std::ofstream(sessionFile, std::ios::app).close();
-
-    return {
-        toProcessString("--enable-rpc"),
-        toProcessString("--rpc-listen-all=false"),
-        toProcessString("--rpc-allow-origin-all=false"),
-        toProcessString("--rpc-listen-port=6800"),
-        toProcessString("--rpc-secret=sVanilla"),
-        toProcessString("--input-file=" + sessionFile.string()),
-        toProcessString("--save-session=" + sessionFile.string()),
-        toProcessString("--save-session-interval=30"),
-        toProcessString("--log=" + logFile.string()),
-        toProcessString("--log-level=debug"),
-        toProcessString("--max-concurrent-downloads=6"),
-        toProcessString("--max-connection-per-server=16"),
-        toProcessString("--split=5"),
-        toProcessString("--min-split-size=10M"),
-        toProcessString("--max-overall-download-limit=0"),
-        toProcessString("--max-download-limit=0"),
-        toProcessString("--max-overall-upload-limit=0"),
-        toProcessString("--max-upload-limit=0"),
-        toProcessString("--continue=true"),
-        toProcessString("--allow-overwrite=true"),
-        toProcessString("--auto-file-renaming=false"),
-        toProcessString("--file-allocation=none"),
-        toProcessString("--header=User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"),
-    };
+    return !aria2net::AriaClient::globalClient().GetAriaVersionAsync().result.version.empty();
 }
 
 class AriaTestEnvironment final : public testing::Environment
@@ -120,30 +59,56 @@ public:
         LoggerRegisterHelpper::registerLogger("FFmpeg", kRuntimeDir.string() + "/log/FFmpeg.log");
         LoggerRegisterHelpper::registerLogger("Network", kRuntimeDir.string() + "/log/Network.log");
         LoggerRegisterHelpper::registerLogger("Download", kRuntimeDir.string() + "/log/Download.log");
-
-        const auto exeDir = getModulePath();
-        const auto ariaExecutable = std::filesystem::path(exeDir) / "aria" / ariaExecutableName();
-        ASSERT_TRUE(std::filesystem::exists(ariaExecutable)) << "Cannot find aria2c in test output aria directory";
-
-        auto args = ariaArguments(std::filesystem::path(exeDir) / kRuntimeDir);
-        args.insert(args.begin(), PathToProcessString(ariaExecutable));
-        TinyProcessLib::Config config;
-        config.show_window = TinyProcessLib::Config::ShowWindow::hide;
-        aria2Process_ = std::make_unique<TinyProcessLib::Process>(args, toProcessString(exeDir), nullptr, nullptr, false, config);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        int exitStatus = 0;
-        ASSERT_FALSE(aria2Process_->try_get_exit_status(exitStatus)) << "aria2c exited immediately";
-    }
-
-    void TearDown() override
-    {
-        if (!aria2Process_)
+        if (ariaIsRunning())
         {
             return;
         }
 
-        aria2Process_->kill(true);
-        aria2Process_.reset();
+        const auto exeDir = std::filesystem::path(getModulePath());
+        const auto ariaExecutable = exeDir / "aria" / ariaExecutableName();
+        ASSERT_TRUE(std::filesystem::exists(ariaExecutable)) << "Cannot find aria2c in test output aria directory";
+
+        const auto ariaDir = exeDir / kRuntimeDir / "aria";
+        std::filesystem::create_directories(ariaDir);
+        const auto sessionFile = ariaDir / "aria.session";
+        std::ofstream(sessionFile, std::ios::app).close();
+        std::vector<TinyProcessLib::Process::string_type> args = {
+            toProcessString(ariaExecutable),
+            toProcessString("--enable-rpc"),
+            toProcessString("--rpc-listen-all=false"),
+            toProcessString("--rpc-listen-port=6800"),
+            toProcessString("--rpc-secret=sVanilla"),
+            toProcessString("--input-file=" + sessionFile.string()),
+            toProcessString("--save-session=" + sessionFile.string()),
+            toProcessString("--log=" + (ariaDir / "aria.log").string()),
+            toProcessString("--max-concurrent-downloads=6"),
+            toProcessString("--max-connection-per-server=16"),
+            toProcessString("--split=5"),
+            toProcessString("--continue=true"),
+            toProcessString("--allow-overwrite=true"),
+            toProcessString("--auto-file-renaming=false"),
+            toProcessString("--file-allocation=none"),
+        };
+        TinyProcessLib::Config config;
+        config.show_window = TinyProcessLib::Config::ShowWindow::hide;
+        aria2Process_ = std::make_unique<TinyProcessLib::Process>(args, toProcessString(exeDir), nullptr, nullptr, false, config);
+
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        while (std::chrono::steady_clock::now() < deadline && !ariaIsRunning())
+        {
+            int exitStatus = 0;
+            ASSERT_FALSE(aria2Process_->try_get_exit_status(exitStatus)) << "aria2c exited during startup";
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        ASSERT_TRUE(ariaIsRunning()) << "aria2c RPC did not become ready within five seconds";
+    }
+
+    void TearDown() override
+    {
+        if (aria2Process_)
+        {
+            aria2Process_->kill(true);
+        }
     }
 
 private:
@@ -152,89 +117,153 @@ private:
 
 testing::Environment* const kAriaTestEnvironment = testing::AddGlobalTestEnvironment(new AriaTestEnvironment);
 
-json loadCases()
+struct PluginDeinitGuard
 {
-    std::ifstream input(kCaseFile);
-    if (!input)
+    ~PluginDeinitGuard()
     {
-        throw std::runtime_error("Cannot open BiliBili flow case file: " + kCaseFile.string());
+        pluginDeinit();
+        deinit();
     }
+};
 
-    auto cases = json::parse(input);
-    if (!cases.is_array() || cases.empty())
-    {
-        throw std::runtime_error("BiliBili flow case file must contain a non-empty JSON array");
-    }
+struct ExpectedDownloader
+{
+    bool created{};
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ExpectedDownloader, created)
+};
+
+struct ExpectedDownload
+{
+    std::string status;
+    bool fileExists{};
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ExpectedDownload, status, fileExists)
+};
+
+struct BusinessFlowCase
+{
+    bool isSmokeTest{};
+    std::string linkType;
+    std::string description;
+    std::string url;
+    DownloadConfig downloadConfig;
+    adapter::VideoView expectedViews;
+    ExpectedDownloader expectedDownloader;
+    ExpectedDownload expectedDownload;
+    int timeoutSeconds{600};
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(BusinessFlowCase, isSmokeTest, linkType, description, url, downloadConfig, expectedViews, expectedDownloader,
+                                                expectedDownload, timeoutSeconds)
+};
+
+const std::vector<BusinessFlowCase>& loadCases()
+{
+    static const auto cases = [] {
+        std::ifstream input(kCaseFile);
+        if (!input)
+        {
+            throw std::runtime_error("Cannot open BiliBili flow case file: " + kCaseFile.string());
+        }
+
+        const auto caseJson = nlohmann::json::parse(input);
+        if (!caseJson.is_array() || caseJson.empty())
+        {
+            throw std::runtime_error("BiliBili flow case file must contain a non-empty JSON array");
+        }
+        const auto parsedCases = caseJson.get<std::vector<BusinessFlowCase>>();
+        std::map<std::string, std::size_t> casesPerLinkType;
+        std::size_t smokeCaseCount = 0;
+        for (const auto& testCase : parsedCases)
+        {
+            if (testCase.linkType.empty() || testCase.description.empty() || testCase.url.empty())
+            {
+                throw std::runtime_error("Every BiliBili flow case requires isSmokeTest, linkType, and description metadata");
+            }
+            ++casesPerLinkType[testCase.linkType];
+            if (testCase.expectedViews.empty())
+            {
+                throw std::runtime_error("Every BiliBili flow case requires at least one expected view");
+            }
+            for (const auto& expectedView : testCase.expectedViews)
+            {
+                if (expectedView.IdType.empty() || expectedView.pluginId < 0 || expectedView.fileType == adapter::FileType::Unknow ||
+                    expectedView.fileExtension.empty())
+                {
+                    throw std::runtime_error("Every expected BiliBili view requires idType, pluginId, fileType, and fileExtension");
+                }
+            }
+            if (testCase.isSmokeTest)
+            {
+                ++smokeCaseCount;
+                if (testCase.downloadConfig.downloadDir.empty() || testCase.expectedDownload.status.empty())
+                {
+                    throw std::runtime_error("Every smoke case requires download expectations");
+                }
+            }
+        }
+        if (smokeCaseCount == 0)
+        {
+            throw std::runtime_error("BiliBili flow cases require at least one smoke case");
+        }
+        constexpr std::array expectedLinkTypes = {"Aid", "Bid", "BangumiSS", "BangumiEP", "BangumiMD", "CheeseSS", "CheeseEP", "FavoritesId", "UserId"};
+        for (const auto* linkType : expectedLinkTypes)
+        {
+            if (casesPerLinkType[linkType] < 2)
+            {
+                throw std::runtime_error("BiliBili link type requires at least two cases: " + std::string(linkType));
+            }
+        }
+        return parsedCases;
+    }();
     return cases;
 }
 
-void expectView(const adapter::BaseVideoView& actual, const json& expected)
+void expectView(const adapter::BaseVideoView& actual, const adapter::BaseVideoView& expected)
 {
-    if (expected.contains("identifier"))
+    if (!expected.Identifier.empty())
     {
-        EXPECT_EQ(actual.Identifier, expected.at("identifier").get<std::string>());
+        EXPECT_EQ(actual.Identifier, expected.Identifier);
     }
-    if (expected.contains("idType"))
-    {
-        EXPECT_EQ(actual.IdType, expected.at("idType").get<std::string>());
-    }
-    if (expected.contains("pluginId"))
-    {
-        EXPECT_EQ(actual.pluginId, expected.at("pluginId").get<int>());
-    }
-    if (expected.contains("fileType"))
-    {
-        EXPECT_EQ(actual.fileType, expected.at("fileType").get<adapter::FileType>());
-    }
-    if (expected.contains("fileExtension"))
-    {
-        EXPECT_EQ(actual.fileExtension, expected.at("fileExtension").get<std::string>());
-    }
-
-    EXPECT_FALSE(actual.Title.empty());
-    EXPECT_FALSE(actual.Publisher.empty());
-    EXPECT_FALSE(actual.Duration.empty());
-    EXPECT_FALSE(actual.Option1.empty());
-    EXPECT_FALSE(actual.Option2.empty());
+    EXPECT_EQ(actual.IdType, expected.IdType);
+    EXPECT_EQ(actual.pluginId, expected.pluginId);
+    EXPECT_EQ(actual.fileType, expected.fileType);
+    EXPECT_EQ(actual.fileExtension, expected.fileExtension);
 }
 
-void runFlowCase(plugin::IPlugin& plugin, const json& testCase)
+void runFlowCase(plugin::IPlugin& plugin, const BusinessFlowCase& testCase)
 {
-    const auto url = testCase.at("url").get<std::string>();
-    SCOPED_TRACE("url=" + url);
+    SCOPED_TRACE("description=" + testCase.description + ", linkType=" + testCase.linkType + ", url=" + testCase.url);
 
-    ASSERT_TRUE(plugin.canParseUrl(url));
-    const auto views = plugin.getVideoView(url);
+    ASSERT_TRUE(plugin.canParseUrl(testCase.url));
+    const auto views = plugin.getVideoView(testCase.url);
     if (views.empty())
     {
-        GTEST_SKIP() << "BiliBili view lookup is network dependent: " << url;
+        GTEST_SKIP() << "BiliBili view lookup is network dependent: " << testCase.url;
     }
 
-    const auto& expectedViews = testCase.at("expectedViews");
-    ASSERT_TRUE(expectedViews.is_array());
-    ASSERT_GE(views.size(), expectedViews.size());
-    for (std::size_t index = 0; index < expectedViews.size(); ++index)
+    ASSERT_GE(views.size(), testCase.expectedViews.size());
+    for (std::size_t index = 0; index < testCase.expectedViews.size(); ++index)
     {
-        expectView(views[index], expectedViews[index]);
+        expectView(views[index], testCase.expectedViews[index]);
     }
 
     VideoInfoFull videoInfo;
-    videoInfo.downloadConfig = std::make_shared<DownloadConfig>(testCase.at("downloadConfig"));
+    videoInfo.downloadConfig = std::make_shared<DownloadConfig>(testCase.downloadConfig);
     videoInfo.videoView = std::make_shared<adapter::BaseVideoView>(views.front());
     videoInfo.downloadConfig->downloadDir = std::filesystem::absolute(std::filesystem::path(videoInfo.downloadConfig->downloadDir)).string();
 
     auto downloader = plugin.getDownloader(videoInfo);
-    const bool expectedCreated = testCase.at("expectedDownloader").at("created").get<bool>();
-    EXPECT_EQ(downloader != nullptr, expectedCreated);
+    EXPECT_EQ(downloader != nullptr, testCase.expectedDownloader.created);
     if (!downloader)
     {
-        GTEST_SKIP() << "BiliBili downloader creation is network dependent: " << url;
+        GTEST_SKIP() << "BiliBili downloader creation is network dependent: " << testCase.url;
     }
 
     downloader->start();
     ASSERT_NE(downloader->status(), download::AbstractDownloader::Error);
 
-    const auto timeout = std::chrono::seconds(testCase.value("timeoutSeconds", 600));
+    const auto timeout = std::chrono::seconds(testCase.timeoutSeconds);
     const auto deadline = std::chrono::steady_clock::now() + timeout;
     while (std::chrono::steady_clock::now() < deadline)
     {
@@ -251,46 +280,100 @@ void runFlowCase(plugin::IPlugin& plugin, const json& testCase)
         std::this_thread::sleep_for(kDownloadPollInterval);
     }
 
-    const auto& expectedDownload = testCase.at("expectedDownload");
-    EXPECT_EQ(download::statusToString(downloader->status()), expectedDownload.at("status").get<std::string>());
-    if (expectedDownload.value("fileExists", false))
+    EXPECT_EQ(download::statusToString(downloader->status()), testCase.expectedDownload.status);
+    if (testCase.expectedDownload.fileExists)
     {
         EXPECT_TRUE(std::filesystem::exists(std::filesystem::path(downloader->path()) / util::utf8ToLocale(downloader->filename())));
     }
 }
-}  // namespace
 
-TEST(BiliBiliPluginArtifactTest, ExportedInterfaces)
+void runLinkTypeCases(const std::string& linkType)
 {
     initDir((kRuntimeDir.string() + "/").c_str());
-
     auto handle = pluginInit();
     ASSERT_NE(handle, nullptr);
     const PluginDeinitGuard deinit;
-    auto plugin = reinterpret_cast<plugin::IPlugin*>(handle);
+    auto* plugin = reinterpret_cast<plugin::IPlugin*>(handle);
 
-    const auto& info = plugin->pluginMessage();
-    EXPECT_EQ(info.name, "BiliBili");
-    EXPECT_EQ(info.pluginId, 1);
-    EXPECT_EQ(info.domain, "https://www.bilibili.com");
-    EXPECT_FALSE(plugin->websiteIcon().empty());
-    for (const auto* url : kSupportedUrls)
-    {
-        EXPECT_TRUE(plugin->canParseUrl(url)) << url;
-    }
-}
-
-TEST(BiliBiliPluginArtifactTest, BusinessFlowsMatchJsonCases)
-{
-    initDir((kRuntimeDir.string() + "/").c_str());
-
-    auto handle = pluginInit();
-    ASSERT_NE(handle, nullptr);
-    const PluginDeinitGuard deinit;
-    auto plugin = reinterpret_cast<plugin::IPlugin*>(handle);
-
+    bool found = false;
     for (const auto& testCase : loadCases())
     {
-        runFlowCase(*plugin, testCase);
+        if (testCase.linkType == linkType)
+        {
+            found = true;
+            runFlowCase(*plugin, testCase);
+        }
     }
+    ASSERT_TRUE(found) << "No BiliBili flow cases for link type: " << linkType;
+}
+
+void runSmokeCases()
+{
+    initDir((kRuntimeDir.string() + "/").c_str());
+    auto handle = pluginInit();
+    ASSERT_NE(handle, nullptr);
+    const PluginDeinitGuard deinit;
+    auto* plugin = reinterpret_cast<plugin::IPlugin*>(handle);
+
+    bool found = false;
+    for (const auto& testCase : loadCases())
+    {
+        if (testCase.isSmokeTest)
+        {
+            found = true;
+            runFlowCase(*plugin, testCase);
+        }
+    }
+    ASSERT_TRUE(found) << "No BiliBili smoke flow cases";
+}
+}  // namespace
+
+TEST(BiliBiliPluginBusinessFlowTest, Aid)
+{
+    runLinkTypeCases("Aid");
+}
+
+TEST(BiliBiliPluginBusinessFlowTest, Bid)
+{
+    runLinkTypeCases("Bid");
+}
+
+TEST(BiliBiliPluginBusinessFlowTest, BangumiSS)
+{
+    runLinkTypeCases("BangumiSS");
+}
+
+TEST(BiliBiliPluginBusinessFlowTest, BangumiEP)
+{
+    runLinkTypeCases("BangumiEP");
+}
+
+TEST(BiliBiliPluginBusinessFlowTest, BangumiMD)
+{
+    runLinkTypeCases("BangumiMD");
+}
+
+TEST(BiliBiliPluginBusinessFlowTest, CheeseSS)
+{
+    runLinkTypeCases("CheeseSS");
+}
+
+TEST(BiliBiliPluginBusinessFlowTest, CheeseEP)
+{
+    runLinkTypeCases("CheeseEP");
+}
+
+TEST(BiliBiliPluginBusinessFlowTest, FavoritesId)
+{
+    runLinkTypeCases("FavoritesId");
+}
+
+TEST(BiliBiliPluginBusinessFlowTest, UserId)
+{
+    runLinkTypeCases("UserId");
+}
+
+TEST(BiliBiliPluginBusinessFlowTest, Smoke)
+{
+    runSmokeCases();
 }

@@ -1,0 +1,322 @@
+[
+    {
+        "url": "https://www.dedao.cn/live/detail?id=abcdefghijklmnopqrst",
+        "description": "Live business flow 1",
+        "isSmokeTest": true,
+        "linkType": "Live",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "Live",
+                "Identifier": "abcdefghijklmnopqrst",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 6
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "dedao-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.dedao.cn/live/detail?id=ABCDEFGHIJKLMNOPQRST1234",
+        "description": "Live business flow 2",
+        "isSmokeTest": false,
+        "linkType": "Live",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "Live",
+                "Identifier": "ABCDEFGHIJKLMNOPQRST1234",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 6
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "dedao-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.dedao.cn/ebook/reader?id=ORa2P4NNLqmQPG2178z5gvkDndlOxWyDKL0ajK6BEVXYRrJpA9M4oybeZpqAKQgj",
+        "description": "EBook business flow 1",
+        "isSmokeTest": false,
+        "linkType": "EBook",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "EBook",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 6
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "dedao-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.dedao.cn/ebook/reader?id=lxaVvndNG6D4kgLJ2OKxqVMmE1zXPwV2Yl1wAdjyQeYR75vbaBnr9ol8pZERLg1m",
+        "description": "EBook business flow 2",
+        "isSmokeTest": false,
+        "linkType": "EBook",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "EBook",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 6
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "dedao-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.dedao.cn/course/detail?id=course30003",
+        "description": "Course business flow 1",
+        "isSmokeTest": false,
+        "linkType": "Course",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "Course",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 6
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "dedao-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.dedao.cn/course/detail?id=COURSE40004",
+        "description": "Course business flow 2",
+        "isSmokeTest": false,
+        "linkType": "Course",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "Course",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 6
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "dedao-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.dedao.cn/course/article?id=article50005",
+        "description": "Article business flow 1",
+        "isSmokeTest": false,
+        "linkType": "Article",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "Article",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 6
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "dedao-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.dedao.cn/course/article?id=ARTICLE60006",
+        "description": "Article business flow 2",
+        "isSmokeTest": false,
+        "linkType": "Article",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "Article",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 6
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "dedao-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    }
+]

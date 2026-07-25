@@ -3,8 +3,10 @@
 #include <gtest/gtest.h>
 
 #include "YoutubeApi/YoutubeConstants.h"
+#include "YoutubeApi/Cipher/CipherList.h"
 #include "YoutubeApi/YoutubeUrl.h"
 #include "Plugin/Convert.h"
+#include "Plugin/YoutubeDownloader.h"
 
 namespace
 {
@@ -109,4 +111,92 @@ TEST(YoutubeConvertUnitTest, PrioritizesSourceVideoWithoutReorderingOtherItems)
     EXPECT_EQ(views[0].Identifier, "selected");
     EXPECT_EQ(views[1].Identifier, "first");
     EXPECT_EQ(views[2].Identifier, "last");
+}
+
+TEST(YoutubeCipherUnitTest, AppliesReverseSpliceAndSwapOperations)
+{
+    youtubeapi::ReverseCipher reverse;
+    EXPECT_EQ(reverse.decipher("abcdef"), "fedcba");
+    EXPECT_EQ(reverse.to_string(), "Reverse");
+
+    youtubeapi::SpliceCipher splice(2);
+    EXPECT_EQ(splice.decipher("abcdef"), "cdef");
+    EXPECT_EQ(splice.to_string(), "Splice 2");
+    splice.setIndex(4);
+    EXPECT_EQ(splice.index(), 4);
+    EXPECT_EQ(splice.decipher("abcdef"), "ef");
+
+    youtubeapi::SwapCipher swap(3);
+    EXPECT_EQ(swap.decipher("abcdef"), "dbcaef");
+    EXPECT_EQ(swap.to_string(), "Swap 3");
+    swap.setIndex(99);
+    EXPECT_EQ(swap.decipher("abcdef"), "abcdef");
+    swap.setIndex(-1);
+    EXPECT_EQ(swap.decipher("abcdef"), "abcdef");
+}
+
+TEST(YoutubeConvertUnitTest, ConvertsPlayerResponseAndHandlesInvalidDuration)
+{
+    youtubeapi::MainResponse response;
+    response.videoDetails.videoId = "abcdefghijk";
+    response.videoDetails.title = "video title";
+    response.videoDetails.author = "publisher";
+    response.videoDetails.lengthSeconds = "125";
+    response.videoDetails.shortDescription = "description";
+    response.videoDetails.thumbnail.thumbnails = {
+        {.url = "small", .width = 120,  .height = 90 },
+        {.url = "large", .width = 1280, .height = 720},
+    };
+    response.microformat.playerMicroformatRenderer.publishDate = "2026-07-25T12:34:56Z";
+
+    auto views = convertVideoView(response);
+    ASSERT_EQ(views.size(), 1);
+    EXPECT_EQ(views[0].Identifier, "abcdefghijk");
+    EXPECT_EQ(views[0].Title, "video title");
+    EXPECT_EQ(views[0].Publisher, "publisher");
+    EXPECT_EQ(views[0].Cover, "large");
+    EXPECT_EQ(views[0].Duration, "02:05");
+    EXPECT_EQ(views[0].Description, "description");
+    EXPECT_EQ(views[0].PublishDate, "2026-07-25 12:34:56");
+    EXPECT_EQ(views[0].pluginId, 2);
+
+    response.videoDetails.lengthSeconds = "not-a-number";
+    response.videoDetails.thumbnail.thumbnails.clear();
+    response.microformat.playerMicroformatRenderer.publishDate = "invalid";
+    views = convertVideoView(response);
+    ASSERT_EQ(views.size(), 1);
+    EXPECT_EQ(views[0].Duration, "0:00");
+    EXPECT_TRUE(views[0].Cover.empty());
+    EXPECT_TRUE(views[0].PublishDate.empty());
+}
+
+TEST(YoutubeConvertUnitTest, ConvertsPlaylistItemMetadata)
+{
+    youtubeapi::PlaylistVideoRenderer renderer;
+    renderer.videoId = "bcdefghijkl";
+    renderer.title.runs = {{.text = "playlist title"}};
+    renderer.shortBylineText.runs = {{.text = "author one"}, {.text = "author two"}};
+    renderer.thumbnail.thumbnails = {
+        {.url = "cover", .width = 320, .height = 180}
+    };
+    renderer.lengthText.simpleText = "3:21";
+
+    const auto view = convertVideoInfo(renderer);
+    EXPECT_EQ(view.Identifier, "bcdefghijkl");
+    EXPECT_EQ(view.Title, "playlist title");
+    EXPECT_EQ(view.Publisher, "author one;author two");
+    EXPECT_EQ(view.Cover, "cover");
+    EXPECT_EQ(view.Duration, "3:21");
+    EXPECT_EQ(view.pluginId, 2);
+}
+
+TEST(YoutubeDownloaderUnitTest, PreservesResourceOutputWithoutStartingAria)
+{
+    download::ResourceInfo info;
+    info.option.dir = "download-dir";
+    info.option.out = "video.mp4";
+    download::YoutubeDownloader downloader(info);
+    EXPECT_EQ(downloader.path(), "download-dir");
+    EXPECT_EQ(downloader.filename(), "video.mp4");
+    EXPECT_FALSE(downloader.isFinished());
 }

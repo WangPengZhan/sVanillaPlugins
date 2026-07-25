@@ -1,0 +1,162 @@
+[
+    {
+        "url": "https://www.xiaohongshu.com/explore/69abf6df0000000028009901?xsec_token=token001",
+        "description": "NoteId business flow 1",
+        "isSmokeTest": true,
+        "linkType": "NoteId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "00:00",
+                "IdType": "",
+                "Identifier": "",
+                "Option1": "token001",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "1970-01-01",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 7
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "xhs-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.xiaohongshu.com/discovery/item/69abf6df0000000028009902?xsec_token=token002",
+        "description": "NoteId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "NoteId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "00:00",
+                "IdType": "",
+                "Identifier": "",
+                "Option1": "token002",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "1970-01-01",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 7
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "xhs-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.xiaohongshu.com/user/profile/69ac18060000000032019221?xsec_token=token101",
+        "description": "UserId business flow 1",
+        "isSmokeTest": false,
+        "linkType": "UserId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "UserId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 7
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "xhs-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.xiaohongshu.com/user/profile/69ac18060000000032019222?xsec_token=token102",
+        "description": "UserId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "UserId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "UserId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 7
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "xhs-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    }
+]

@@ -1,0 +1,482 @@
+[
+    {
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "description": "VideoId business flow 1",
+        "isSmokeTest": true,
+        "linkType": "VideoId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "0:00",
+                "IdType": "",
+                "Identifier": "",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://youtu.be/jNQXAC9IVRw",
+        "description": "VideoId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "VideoId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "0:00",
+                "IdType": "",
+                "Identifier": "",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI",
+        "description": "PlaylistId business flow 1",
+        "isSmokeTest": false,
+        "linkType": "PlaylistId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "PlaylistId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj",
+        "description": "PlaylistId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "PlaylistId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "PlaylistId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw",
+        "description": "ChannelId business flow 1",
+        "isSmokeTest": false,
+        "linkType": "ChannelId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "ChannelId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/channel/UC-lHJZR3Gqxm24_Vd_AJ5Yw",
+        "description": "ChannelId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "ChannelId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "ChannelId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/@GoogleDevelopers",
+        "description": "AtChannelId business flow 1",
+        "isSmokeTest": false,
+        "linkType": "AtChannelId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "AtChannelId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/@YouTube",
+        "description": "AtChannelId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "AtChannelId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "AtChannelId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/user/Google",
+        "description": "UserNameId business flow 1",
+        "isSmokeTest": false,
+        "linkType": "UserNameId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "UserNameId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/user/YouTube",
+        "description": "UserNameId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "UserNameId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "UserNameId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/c/GoogleDevelopers",
+        "description": "CustomNameId business flow 1",
+        "isSmokeTest": false,
+        "linkType": "CustomNameId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "CustomNameId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.youtube.com/c/YouTubeCreators",
+        "description": "CustomNameId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "CustomNameId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "CustomNameId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 2
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "youtube-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    }
+]

@@ -1,0 +1,162 @@
+[
+    {
+        "url": "https://m.weibo.cn/status/N1a2b3c4D",
+        "description": "Status business flow 1",
+        "isSmokeTest": true,
+        "linkType": "Status",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "Status",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 4
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "weibo-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://weibo.com/1234567890/N3a2b3c4D",
+        "description": "Status business flow 2",
+        "isSmokeTest": false,
+        "linkType": "Status",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "Status",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 4
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "weibo-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://weibo.com/tv/show/1034:5258587056832577",
+        "description": "TV business flow 1",
+        "isSmokeTest": false,
+        "linkType": "TV",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "TV",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 4
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "weibo-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://video.weibo.com/show?fid=1034:5258587056832577",
+        "description": "TV business flow 2",
+        "isSmokeTest": false,
+        "linkType": "TV",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "TV",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 4
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "weibo-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    }
+]

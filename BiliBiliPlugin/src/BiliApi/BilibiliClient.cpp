@@ -138,6 +138,7 @@ VideoViewOrigin BilibiliClient::getVideoView(const std::string& bvid, IDType typ
 
     std::string response;
     get(VideoURL::View, response, param);
+    BILIBILI_LOG_INFO("getVideoView response: {}: {}", VideoURL::View, response);
     VideoViewOrigin ret;
     try
     {

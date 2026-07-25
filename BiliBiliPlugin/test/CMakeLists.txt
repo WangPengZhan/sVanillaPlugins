@@ -3,6 +3,7 @@ set(TestTarget BiliBiliPlugin)
 set(StaticTestTarget ${TestTarget}_static)
 set(PluginArtifactTest ${TestTarget}_plugin_test)
 set(PluginUnitTest ${TestTarget}_unit_test)
+set(ExpectedViewsGenerator ${TestTarget}_expected_views_generator)
 
 find_package(GTest CONFIG REQUIRED)
 enable_testing()
@@ -33,22 +34,44 @@ function(copy_plugin_test_tools test_target)
     endif()
 endfunction()
 
-function(configure_plugin_test_target test_target)
-    target_include_directories(${test_target} PRIVATE ${TestIncludeDirectories})
-    target_compile_options(${test_target} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
-    target_link_libraries(${test_target} PRIVATE GTest::gtest_main)
+function(configure_plugin_runtime_target target)
+    target_include_directories(${target} PRIVATE ${TestIncludeDirectories})
+    target_compile_options(${target} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
+    target_link_libraries(${target} PRIVATE spdlog)
 
-    copy_plugin_test_tools(${test_target})
+    copy_plugin_test_tools(${target})
 
     foreach(runtime_target spdlog FFmpeg)
         if (TARGET ${runtime_target})
-            add_custom_command(TARGET ${test_target}
+            add_custom_command(TARGET ${target}
                 POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${runtime_target}> $<TARGET_FILE_DIR:${test_target}>
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${runtime_target}> $<TARGET_FILE_DIR:${target}>
             )
         endif()
     endforeach()
 endfunction()
+
+function(configure_plugin_test_target test_target)
+    configure_plugin_runtime_target(${test_target})
+    target_link_libraries(${test_target} PRIVATE GTest::gtest_main)
+endfunction()
+
+set(DYNAMIC_LIBS
+    CURL::libcurl
+    ${OPENSSL_LIBRARIES}
+    FFmpeg
+    spdlog
+)
+
+set(STATIC_LIBS
+    AriaClient
+    NetWork
+    Util
+    PluginDownload
+    PluginCommon
+    PluginCrypto
+    nlohmann_json::nlohmann_json
+)
 
 file(GLOB_RECURSE PluginTestSources CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/plugin/*.h"
@@ -63,23 +86,6 @@ if (PluginTestSources)
     add_test(NAME ${PluginArtifactTest} COMMAND ${PluginArtifactTest})
     set_tests_properties(${PluginArtifactTest} PROPERTIES
         WORKING_DIRECTORY $<TARGET_FILE_DIR:${PluginArtifactTest}>
-    )
-
-    set(DYNAMIC_LIBS
-        CURL::libcurl
-        spdlog
-        ${OPENSSL_LIBRARIES}
-        FFmpeg
-    )
-
-    set(STATIC_LIBS
-        AriaClient
-        NetWork
-        Util
-        PluginDownload
-        PluginCommon
-        PluginCrypto
-        nlohmann_json::nlohmann_json
     )
 
     target_link_libraries(${PluginArtifactTest} PRIVATE ${DYNAMIC_LIBS})
@@ -104,6 +110,34 @@ if (PluginTestSources)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 ${CMAKE_CURRENT_SOURCE_DIR}/plugin/business_flow_cases.json
                 $<TARGET_FILE_DIR:${PluginArtifactTest}>/business_flow_cases.json
+    )
+endif()
+
+file(GLOB_RECURSE ExpectedViewsGeneratorSources CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/generate_expected_views/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/generate_expected_views/*.cpp"
+)
+if (ExpectedViewsGeneratorSources)
+    add_executable(${ExpectedViewsGenerator} "${ExpectedViewsGeneratorSources}")
+    set_target_properties(${ExpectedViewsGenerator} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:${TestTarget}>
+    )
+
+    target_link_libraries(${ExpectedViewsGenerator} PRIVATE ${DYNAMIC_LIBS})
+    if(UNIX AND NOT APPLE)
+        target_link_libraries(${ExpectedViewsGenerator}
+            PRIVATE
+                -Wl,--whole-archive ${STATIC_LIBS} -Wl,--no-whole-archive
+        )
+    else()
+        target_link_libraries(${ExpectedViewsGenerator} PRIVATE ${STATIC_LIBS})
+    endif()
+
+    configure_plugin_runtime_target(${ExpectedViewsGenerator})
+    target_link_libraries(${ExpectedViewsGenerator} PRIVATE ${TestTarget})
+    add_custom_command(TARGET ${ExpectedViewsGenerator}
+        POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${TestTarget}> $<TARGET_FILE_DIR:${ExpectedViewsGenerator}>
     )
 endif()
 
@@ -143,7 +177,7 @@ if (VCPAKG_DEP_DIRS)
 
         string(FIND "${VCPAKG_DEP_DIR}" "gtest" POS)
         if (EXISTS "${VCPKG_LIB}" AND "${POS}" EQUAL -1)
-            foreach(TEST_EXECUTABLE ${PluginArtifactTest} ${PluginUnitTest})
+            foreach(TEST_EXECUTABLE ${PluginArtifactTest} ${PluginUnitTest} ${ExpectedViewsGenerator})
                 if (TARGET ${TEST_EXECUTABLE})
                     add_custom_command(TARGET ${TEST_EXECUTABLE}
                         POST_BUILD

@@ -37,6 +37,8 @@ adapter::VideoView convertVideoView(const biliapi::VideoView& data)
         {
             auto item = convertPages(p);
             item.Identifier = data.bvid;
+            item.Publisher = data.owner.name;
+            item.PlayListTitle = data.title;
             videoListView.push_back(item);
         }
         return videoListView;

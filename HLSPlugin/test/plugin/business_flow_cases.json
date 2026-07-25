@@ -1,0 +1,162 @@
+[
+    {
+        "url": "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8",
+        "description": "MediaPlaylist business flow 1",
+        "isSmokeTest": true,
+        "linkType": "MediaPlaylist",
+        "expectedViews": [
+            {
+                "Cover": ".\\HLSPlugin-generator-runtime\\cover/HLS_1784961855_41.jpg",
+                "Description": "",
+                "Duration": "10:00",
+                "IdType": "",
+                "Identifier": "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "master.m3u8",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 3
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "hls-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+        "description": "MediaPlaylist business flow 2",
+        "isSmokeTest": false,
+        "linkType": "MediaPlaylist",
+        "expectedViews": [
+            {
+                "Cover": ".\\HLSPlugin-generator-runtime\\cover/HLS_1784961869_6334.jpg",
+                "Description": "",
+                "Duration": "00:00",
+                "IdType": "",
+                "Identifier": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "x36xhzz.m3u8",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 3
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "hls-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://test-streams.mux.dev/test_001/stream.m3u8",
+        "description": "MasterPlaylist business flow 1",
+        "isSmokeTest": false,
+        "linkType": "MasterPlaylist",
+        "expectedViews": [
+            {
+                "Cover": ".\\HLSPlugin-generator-runtime\\cover/HLS_1784961870_26500.jpg",
+                "Description": "",
+                "Duration": "08:30",
+                "IdType": "",
+                "Identifier": "https://test-streams.mux.dev/test_001/stream.m3u8",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "stream.m3u8",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 3
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "hls-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://test-streams.mux.dev/bbb-abr/bbb.m3u8",
+        "description": "MasterPlaylist business flow 2",
+        "isSmokeTest": false,
+        "linkType": "MasterPlaylist",
+        "expectedViews": [
+            {
+                "Cover": ".\\HLSPlugin-generator-runtime\\cover/HLS_1784961879_15724.jpg",
+                "Description": "",
+                "Duration": "00:00",
+                "IdType": "",
+                "Identifier": "https://test-streams.mux.dev/bbb-abr/bbb.m3u8",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "bbb.m3u8",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 3
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "hls-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    }
+]

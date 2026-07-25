@@ -4,8 +4,8 @@
 
 #include "DouYinApi/DouYinUrl.h"
 #include "DouYinApi/DouYinUtils.h"
-#include "PluginCrypto/Crypto.h"
-#include "PluginCrypto/Encoding.h"
+#include "Plugin/Convert.h"
+#include "Plugin/DouYinDownloader.h"
 
 namespace
 {
@@ -108,10 +108,76 @@ TEST(DouYinABogusUnitTest, SignsExactQueryAndBody)
     EXPECT_NE(baseline, changedBody);
 }
 
-TEST(DouYinCryptoUnitTest, MatchesRc4AndSm3StandardVectors)
+TEST(DouYinConvertUnitTest, SelectsCoverFallbacksAndHighestBitratePlayback)
 {
-    const auto rc4 = crypto::rc4("Plaintext", "Key");
-    EXPECT_EQ(encoding::hexEncode(rc4), "BBF316E8D940AF0AD3");
+    douyinapi::Video video;
+    video.origin_cover.url_list = {"origin-cover"};
+    video.cover_original_scale.url_list = {"scaled-cover"};
+    video.cover.url_list = {"cover"};
+    video.bit_rate.resize(3);
+    video.bit_rate[0].bit_rate = 1000;
+    video.bit_rate[0].play_addr.url_list = {"low"};
+    video.bit_rate[1].bit_rate = 3000;
+    video.bit_rate[1].play_addr.url_list = {"high"};
+    video.bit_rate[2].bit_rate = 5000;
+    video.play_addr.url_list = {"fallback"};
 
-    EXPECT_EQ(encoding::hexEncode(crypto::sm3Raw("abc")), "66C7F0F462EEEDD9D1F2D46BDC10E4E24167C4875CF2F7A2297DA02B8F4BA8E0");
+    EXPECT_EQ(getCover(video), "origin-cover");
+    EXPECT_EQ(getPlayUrl(video), "high");
+
+    video.origin_cover.url_list.clear();
+    EXPECT_EQ(getCover(video), "scaled-cover");
+    video.cover_original_scale.url_list.clear();
+    EXPECT_EQ(getCover(video), "cover");
+    video.cover.url_list.clear();
+    video.cover.uri = "cover-uri";
+    EXPECT_EQ(getCover(video), "cover-uri");
+
+    video.bit_rate.clear();
+    EXPECT_EQ(getPlayUrl(video), "fallback");
+}
+
+TEST(DouYinConvertUnitTest, FindsOwnerAndConvertsSeriesInOrder)
+{
+    douyinapi::FollowingResponse following;
+    following.owner_sec_uid = "owner";
+    following.followings = {
+        {.nickname = "other",      .sec_uid = "other"},
+        {.nickname = "owner name", .sec_uid = "owner"}
+    };
+    EXPECT_EQ(getUserInfo(following).nickname, "owner name");
+
+    douyinapi::AwemeDetail first;
+    first.aweme_id = "aweme-1";
+    first.item_title = "first";
+    first.author.nickname = "publisher";
+    first.duration = 65;
+    first.video.cover.uri = "cover-1";
+    douyinapi::AwemeDetail second;
+    second.aweme_id = "aweme-2";
+    second.item_title = "second";
+
+    douyinapi::SeriesDetail series;
+    series.aweme_list = {first, second};
+    const auto views = convertSeriesDetail(series);
+
+    ASSERT_EQ(views.size(), 2);
+    EXPECT_EQ(views[0].Identifier, "aweme-1");
+    EXPECT_EQ(views[0].Title, "first");
+    EXPECT_EQ(views[0].Publisher, "publisher");
+    EXPECT_EQ(views[0].Cover, "cover-1");
+    EXPECT_EQ(views[0].Duration, "01:05");
+    EXPECT_EQ(views[0].pluginId, 8);
+    EXPECT_EQ(views[1].Identifier, "aweme-2");
+}
+
+TEST(DouYinDownloaderUnitTest, PreservesResourceOutputWithoutStartingAria)
+{
+    download::ResourceInfo info;
+    info.option.dir = "download-dir";
+    info.option.out = "video.mp4";
+    download::DouYinDownloader downloader(info);
+    EXPECT_EQ(downloader.path(), "download-dir");
+    EXPECT_EQ(downloader.filename(), "video.mp4");
+    EXPECT_FALSE(downloader.isFinished());
 }

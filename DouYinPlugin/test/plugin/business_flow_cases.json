@@ -1,0 +1,322 @@
+[
+    {
+        "url": "https://www.douyin.com/video/7618980634866534834",
+        "description": "AwemeId business flow 1",
+        "isSmokeTest": true,
+        "linkType": "AwemeId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "AwemeId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 8
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "douyin-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.douyin.com/video/7000000000000000001",
+        "description": "AwemeId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "AwemeId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "AwemeId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 8
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "douyin-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.douyin.com/collection/7000000000000000008",
+        "description": "MixId business flow 1",
+        "isSmokeTest": false,
+        "linkType": "MixId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "MixId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 8
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "douyin-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.iesdouyin.com/share/mix/detail/7000000000000000009/",
+        "description": "MixId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "MixId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "MixId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 8
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "douyin-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.iesdouyin.com/share/series/detail/7000000000000000010/",
+        "description": "SeriesId business flow 1",
+        "isSmokeTest": false,
+        "linkType": "SeriesId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "SeriesId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 8
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "douyin-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.iesdouyin.com/share/series/detail/7000000000000000011/",
+        "description": "SeriesId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "SeriesId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "SeriesId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 8
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "douyin-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.douyin.com/user/MS4wLjABAAAAUserId",
+        "description": "UserId business flow 1",
+        "isSmokeTest": false,
+        "linkType": "UserId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "UserId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 8
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "douyin-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    },
+    {
+        "url": "https://www.iesdouyin.com/share/user/MS4wLjABAAAAUserId?sec_uid=MS4wLjABAAAAUserId",
+        "description": "UserId business flow 2",
+        "isSmokeTest": false,
+        "linkType": "UserId",
+        "expectedViews": [
+            {
+                "Cover": "",
+                "Description": "",
+                "Duration": "",
+                "IdType": "UserId",
+                "Identifier": "placeholder",
+                "Option1": "",
+                "Option2": "",
+                "Option3": "",
+                "ParentId": "",
+                "ParentIdType": "",
+                "PlayListTitle": "",
+                "PublishDate": "",
+                "Publisher": "",
+                "Title": "",
+                "fileExtension": ".mp4",
+                "fileType": "Video",
+                "pluginId": 8
+            }
+        ],
+        "downloadConfig": {
+            "downloadDir": "douyin-plugin-test/download/",
+            "videoQuality": "Best",
+            "nameRule": "$title$"
+        },
+        "expectedDownloader": {
+            "created": true
+        },
+        "expectedDownload": {
+            "status": "Finished",
+            "fileExists": true
+        },
+        "timeoutSeconds": 600
+    }
+]

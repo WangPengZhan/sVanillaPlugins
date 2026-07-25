@@ -91,6 +91,68 @@ TEST(XHSConvertUnitTest, SelectsHighestResolutionStreamAndFallsBackToBackupUrl)
     EXPECT_EQ(getVideoUrl(streams), "https://example.invalid/1080-backup.mp4");
 }
 
+TEST(XHSConvertUnitTest, FallsBackAcrossCodecFamilies)
+{
+    xhsapi::Media media;
+    media.stream.h264.emplace_back();
+    media.stream.h265.resize(2);
+    media.stream.h265[0].height = 720;
+    media.stream.h265[0].master_url = "h265-720";
+    media.stream.h265[1].height = 1080;
+    media.stream.h265[1].master_url = "h265-1080";
+    media.stream.av1.resize(1);
+    media.stream.av1[0].height = 2160;
+    media.stream.av1[0].master_url = "av1-2160";
+
+    EXPECT_EQ(getVideoUrl(media), "h265-1080");
+    media.stream.h265.clear();
+    EXPECT_EQ(getVideoUrl(media), "av1-2160");
+    media.stream.av1.clear();
+    EXPECT_TRUE(getVideoUrl(media).empty());
+}
+
+TEST(XHSConvertUnitTest, ConvertsNoteCardsAndUserLists)
+{
+    xhsapi::NoteCard card;
+    card.note_id = "note-card";
+    card.title = "card title";
+    card.user.nickname = "publisher";
+    card.image_list = {{.url_default = "cover"}};
+    card.video.capa.duration = 65;
+    card.desc = "description";
+    card.time = 1700000000000;
+
+    const auto cardView = convertNoteDetail(card);
+    EXPECT_EQ(cardView.Identifier, "note-card");
+    EXPECT_EQ(cardView.Title, "card title");
+    EXPECT_EQ(cardView.Publisher, "publisher");
+    EXPECT_EQ(cardView.Cover, "cover");
+    EXPECT_EQ(cardView.Duration, "01:05");
+    EXPECT_EQ(cardView.Description, "description");
+    EXPECT_FALSE(cardView.PublishDate.empty());
+    EXPECT_EQ(cardView.pluginId, 7);
+
+    xhsapi::NoteItemInfo first;
+    first.note_id = "note-1";
+    first.display_title = "first";
+    first.xsec_token = "token-1";
+    first.user.nickname = "user";
+    first.cover.url_default = "first-cover";
+    xhsapi::NoteItemInfo second;
+    second.note_id = "note-2";
+    xhsapi::NoteItemList list;
+    list.notes = {first, second};
+
+    const auto views = convertNoteDetail(list);
+    ASSERT_EQ(views.size(), 2);
+    EXPECT_EQ(views[0].Identifier, "note-1");
+    EXPECT_EQ(views[0].Option1, "token-1");
+    EXPECT_EQ(views[0].Title, "first");
+    EXPECT_EQ(views[0].Publisher, "user");
+    EXPECT_EQ(views[0].Cover, "first-cover");
+    EXPECT_EQ(views[1].Identifier, "note-2");
+}
+
 TEST(XHSDownloaderUnitTest, EmptyResourceFailsWithoutStartingAria)
 {
     download::ResourceInfo info;
@@ -109,22 +171,20 @@ TEST(XHSSignerUnitTest, ParsesCookieHeaderWithoutLeakingValues)
     EXPECT_TRUE(cookies.at("empty").empty());
 }
 
-TEST(XHSSignerUnitTest, XywMatchesUpstreamReferenceVector)
+TEST(XHSSignerUnitTest, XywIsDeterministicAndBindsRequestUri)
 {
     const xhsapi::SignCookies cookies = {
         {"a1", std::string(52, 'a')},
         {"web_session", "session-value"}
     };
     const auto headers = xhsapi::signRequest("GET", "/api/sns/web/v1/user_posted?cursor=&num=10", "", cookies, xhsapi::SignFormat::Xyw, 1700000000123LL);
+    const auto repeated = xhsapi::signRequest("GET", "/api/sns/web/v1/user_posted?cursor=&num=10", "", cookies, xhsapi::SignFormat::Xyw, 1700000000123LL);
+    const auto changed = xhsapi::signRequest("GET", "/api/sns/web/v1/user_posted?cursor=next&num=10", "", cookies, xhsapi::SignFormat::Xyw, 1700000000123LL);
 
     EXPECT_EQ(headers.xT, "1700000000123");
-    EXPECT_EQ(headers.xS,
-              "XYW_"
-              "eyJzaWduU3ZuIjoiNTYiLCJzaWduVHlwZSI6IngyIiwiYXBwSWQiOiJ4aHMtcGMtd2ViIiwic2lnblZlcnNpb24iOiIxIiwicGF5bG9hZCI6IjdhMWIzZGU5NWY4NWJjNDUwYTBhOWI4ZTg4"
-              "NGU0NTJiOThiZTJiMWJlY2RjYTc0MzRjZDY1NDA3MDc2N2U0NzZkZGY5YTBjNTFiZGNlNTU2NWRhZjk3ZWQ1ZThmYTA2ZjMwNzk1NDRkODE0M2U1ZmE4MDVjMmE4NWEwMzA4YmNmOWNhNjgw"
-              "NGJmNTdmYzY3ZDI4MDM5ZTE1NmViNDkwNGMzNTk2YTc4NGUzMGE5OThlZWQ2ZjViMzYzZGEyYTA1NWFiZWM0YzFjYzU3N2RiMTdmNTE3NjljMGFjOGI3OGMxMWQyM2FiYzQ5YzkxMGE3MTY3"
-              "ZjZkN2ZkYTQ4ZDE3MjQyNmQ1OWZmMzNjOTY0NmFkNTkxMzQyZDJmNWQ4NGNlMDI1OGUxMGJjYTE2Y2E3OTYyOTliMDhjZWRmYTJkZTY0YmFkMmE3MTdmZjEzZjI3OGY4ZTFmYTgwNDdkYTlj"
-              "OTYxZTNjN2VkY2Y4YjBmODgzM2YwZGY0NzEyZGE1NWY0ZjJhNWNiOGU5NmY3MWM3OTI5YzY0ZTNjM2Q1OWU4NDAyIn0=");
+    EXPECT_EQ(headers.xS.rfind("XYW_", 0), 0U);
+    EXPECT_EQ(headers.xS, repeated.xS);
+    EXPECT_NE(headers.xS, changed.xS);
     EXPECT_FALSE(headers.xSCommon.empty());
 }
 

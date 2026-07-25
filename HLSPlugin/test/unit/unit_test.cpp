@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "HLSApi/HLSApi.h"
 #include "HLSApi/HLSParser.h"
 
 namespace
@@ -81,4 +82,73 @@ TEST(HLSParserUnitTest, ParsesMasterPlaylistVariants)
     ASSERT_EQ(parser.master().mediaInfos.size(), 1);
     EXPECT_EQ(parser.master().streams[0].getUri(), "https://stream.example.com/live/360p/index.m3u8");
     EXPECT_EQ(parser.master().mediaInfos[0].getUri(), "https://stream.example.com/live/audio/main.m3u8");
+}
+
+TEST(HLSApiUnitTest, ParsesQuotedAttributesAndBooleanForms)
+{
+    const auto attributes = hlsapi::parseAttributes(R"(TYPE=AUDIO,GROUP-ID="stereo,audio",DEFAULT=YES,AUTOSELECT=1,NAME="Main")");
+
+    EXPECT_EQ(attributes.at("TYPE"), "AUDIO");
+    EXPECT_EQ(attributes.at("GROUP-ID"), "stereo,audio");
+    EXPECT_EQ(attributes.at("NAME"), "Main");
+    EXPECT_TRUE(hlsapi::attrBool(attributes.at("DEFAULT")));
+    EXPECT_TRUE(hlsapi::attrBool(attributes.at("AUTOSELECT")));
+    EXPECT_FALSE(hlsapi::attrBool("NO"));
+    EXPECT_EQ(hlsapi::trim(" \t playlist value\r\n"), "playlist value");
+}
+
+TEST(HLSApiUnitTest, ParsesMediaKeyMapAndSegmentTags)
+{
+    hlsapi::MediaInfo media;
+    ASSERT_TRUE(
+        media.parseContent(R"(#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",LANGUAGE="zh",NAME="Chinese",DEFAULT=YES,AUTOSELECT=YES,URI="audio/index.m3u8")"));
+    EXPECT_EQ(media.type, hlsapi::MediaInfo::Audio);
+    EXPECT_EQ(media.groupId, "audio");
+    EXPECT_EQ(media.language, "zh");
+    EXPECT_TRUE(media.strDefault);
+    EXPECT_TRUE(media.autoSelect);
+    EXPECT_EQ(media.uri, "audio/index.m3u8");
+
+    hlsapi::KeyInfo key;
+    ASSERT_TRUE(key.parseContent(R"(#EXT-X-KEY:METHOD=AES-128,URI="key.bin",IV=0x01,KEYFORMAT="identity")"));
+    EXPECT_EQ(key.method, hlsapi::KeyInfo::Aes128);
+    EXPECT_EQ(key.uri, "key.bin");
+    EXPECT_EQ(key.iv, "0x01");
+    EXPECT_EQ(key.keyFormat, "identity");
+
+    hlsapi::MediaMap map;
+    ASSERT_TRUE(map.parseContent(R"(#EXT-X-MAP:URI="init.mp4",BYTERANGE="1024@256")"));
+    EXPECT_EQ(map.uri, "init.mp4");
+    EXPECT_EQ(map.byteRangeLength, 1024);
+    EXPECT_EQ(map.byteRangeOffset, 256);
+
+    hlsapi::MediaSegment segment;
+    ASSERT_TRUE(segment.parseContent("#EXTINF:6.25,chapter one"));
+    EXPECT_DOUBLE_EQ(segment.duration, 6.25);
+    EXPECT_EQ(segment.title, "chapter one");
+}
+
+TEST(HLSApiUnitTest, ResolvesAbsoluteRootAndNestedRelativeUris)
+{
+    hlsapi::PendingInfo info;
+    info.baseUri = "https://media.example.com/a/b/c/";
+
+    info.uri = "segment.ts";
+    EXPECT_EQ(info.getUri(), "https://media.example.com/a/b/c/segment.ts");
+    info.uri = "../../shared/segment.ts";
+    EXPECT_EQ(info.getUri(), "https://media.example.com/a/shared/segment.ts");
+    info.uri = "/root/segment.ts";
+    EXPECT_EQ(info.getUri(), "https://media.example.com/root/segment.ts");
+    info.uri = "https://cdn.example.com/segment.ts";
+    EXPECT_EQ(info.getUri(), "https://cdn.example.com/segment.ts");
+}
+
+TEST(HLSParserUnitTest, ParsesCrLfPlaylistWithoutEmptySegments)
+{
+    hlsapi::HLSParser parser;
+    parser.setOriginUri("https://example.invalid/live/index.m3u8");
+    ASSERT_TRUE(parser.parse("#EXTM3U\r\n#EXTINF:1.5,clip\r\nsegment.ts\r\n"));
+    ASSERT_EQ(parser.playlist().segments.size(), 1);
+    EXPECT_DOUBLE_EQ(parser.playlist().segments[0].duration, 1.5);
+    EXPECT_EQ(parser.playlist().segments[0].getUri(), "https://example.invalid/live/segment.ts");
 }
