@@ -328,6 +328,22 @@ void runSmokeCases()
 }
 }  // namespace
 
+TEST(BiliBiliPluginBusinessTesting, SingleTest)
+{
+    initDir((kRuntimeDir.string() + "/").c_str());
+    auto handle = pluginInit();
+    ASSERT_NE(handle, nullptr);
+    const PluginDeinitGuard deinit;
+    auto* plugin = reinterpret_cast<plugin::IPlugin*>(handle);
+
+    BusinessFlowCase testCase;
+    testCase.url = "https://www.bilibili.com/video/BV19cLCzvErr";
+
+    testCase.downloadConfig.downloadDir = "bili-plugin-test/download/";
+
+    runFlowCase(*plugin, testCase);
+}
+
 TEST(BiliBiliPluginBusinessFlowTest, Aid)
 {
     runLinkTypeCases("Aid");

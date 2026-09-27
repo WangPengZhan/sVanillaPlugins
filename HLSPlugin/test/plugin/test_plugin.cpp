@@ -292,6 +292,26 @@ void runLinkTypeCases(const std::string& linkType)
 }
 }  // namespace
 
+TEST(HLSPluginBusinessTesting, SingleTest)
+{
+    initDir((kRuntimeDir.string() + "/").c_str());
+    const auto handle = pluginInit();
+    ASSERT_NE(handle, nullptr);
+    const PluginGuard guard;
+    auto* plugin = reinterpret_cast<plugin::IPlugin*>(handle);
+
+    BusinessFlowCase testCase;
+    testCase.url = "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8";
+    testCase.description = "Single URL download";
+    testCase.linkType = "MediaPlaylist";
+    testCase.downloadConfig.downloadDir = "hls-plugin-test/download/";
+    testCase.expectedDownloader.created = true;
+    testCase.expectedDownload.status = "Finished";
+    testCase.expectedDownload.fileExists = true;
+
+    runCase(*plugin, testCase);
+}
+
 TEST(HLSPluginArtifactTest, ExportedInterfaces)
 {
     initDir((kRuntimeDir.string() + "/").c_str());

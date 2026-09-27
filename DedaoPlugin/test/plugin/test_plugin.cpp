@@ -292,6 +292,26 @@ void runLinkTypeCases(const std::string& linkType)
 }
 }  // namespace
 
+TEST(DedaoPluginBusinessTesting, SingleTest)
+{
+    initDir((kRuntimeDir.string() + "/").c_str());
+    const auto handle = pluginInit();
+    ASSERT_NE(handle, nullptr);
+    const PluginGuard guard;
+    auto* plugin = reinterpret_cast<plugin::IPlugin*>(handle);
+
+    BusinessFlowCase testCase;
+    testCase.url = "https://www.dedao.cn/ebook/reader?id=ORa2P4NNLqmQPG2178z5gvkDndlOxWyDKL0ajK6BEVXYRrJpA9M4oybeZpqAKQgj";
+    testCase.description = "Single URL download";
+    testCase.linkType = "EBook";
+    testCase.downloadConfig.downloadDir = "dedao-plugin-test/download/";
+    testCase.expectedDownloader.created = true;
+    testCase.expectedDownload.status = "Finished";
+    testCase.expectedDownload.fileExists = true;
+
+    runCase(*plugin, testCase);
+}
+
 TEST(DedaoPluginArtifactTest, ExportedInterfaces)
 {
     initDir((kRuntimeDir.string() + "/").c_str());

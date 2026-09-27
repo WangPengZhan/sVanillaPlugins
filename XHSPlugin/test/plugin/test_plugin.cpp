@@ -292,6 +292,27 @@ void runLinkTypeCases(const std::string& linkType)
 }
 }  // namespace
 
+TEST(XHSPluginBusinessTesting, SingleTest)
+{
+    initDir((kRuntimeDir.string() + "/").c_str());
+    const auto handle = pluginInit();
+    ASSERT_NE(handle, nullptr);
+    const PluginGuard guard;
+    auto* plugin = reinterpret_cast<plugin::IPlugin*>(handle);
+
+    BusinessFlowCase testCase;
+    // Replace this sample with a valid shared note URL and xsec_token.
+    testCase.url = "https://www.xiaohongshu.com/explore/69abf6df0000000028009901?xsec_token=token001";
+    testCase.description = "Single URL download";
+    testCase.linkType = "NoteId";
+    testCase.downloadConfig.downloadDir = "xhs-plugin-test/download/";
+    testCase.expectedDownloader.created = true;
+    testCase.expectedDownload.status = "Finished";
+    testCase.expectedDownload.fileExists = true;
+
+    runCase(*plugin, testCase);
+}
+
 TEST(XHSPluginArtifactTest, ExportedInterfaces)
 {
     initDir((kRuntimeDir.string() + "/").c_str());

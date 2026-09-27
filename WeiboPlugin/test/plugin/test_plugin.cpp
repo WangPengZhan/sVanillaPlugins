@@ -292,6 +292,26 @@ void runLinkTypeCases(const std::string& linkType)
 }
 }  // namespace
 
+TEST(WeiboPluginBusinessTesting, SingleTest)
+{
+    initDir((kRuntimeDir.string() + "/").c_str());
+    const auto handle = pluginInit();
+    ASSERT_NE(handle, nullptr);
+    const PluginGuard guard;
+    auto* plugin = reinterpret_cast<plugin::IPlugin*>(handle);
+
+    BusinessFlowCase testCase;
+    testCase.url = "https://weibo.com/tv/show/1034:5258587056832577";
+    testCase.description = "Single URL download";
+    testCase.linkType = "TV";
+    testCase.downloadConfig.downloadDir = "weibo-plugin-test/download/";
+    testCase.expectedDownloader.created = true;
+    testCase.expectedDownload.status = "Finished";
+    testCase.expectedDownload.fileExists = true;
+
+    runCase(*plugin, testCase);
+}
+
 TEST(WeiboPluginArtifactTest, ExportedInterfaces)
 {
     initDir((kRuntimeDir.string() + "/").c_str());

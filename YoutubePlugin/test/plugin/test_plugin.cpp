@@ -292,6 +292,26 @@ void runLinkTypeCases(const std::string& linkType)
 }
 }  // namespace
 
+TEST(YoutubePluginBusinessTesting, SingleTest)
+{
+    initDir((kRuntimeDir.string() + "/").c_str());
+    const auto handle = pluginInit();
+    ASSERT_NE(handle, nullptr);
+    const PluginGuard guard;
+    auto* plugin = reinterpret_cast<plugin::IPlugin*>(handle);
+
+    BusinessFlowCase testCase;
+    testCase.url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    testCase.description = "Single URL download";
+    testCase.linkType = "VideoId";
+    testCase.downloadConfig.downloadDir = "youtube-plugin-test/download/";
+    testCase.expectedDownloader.created = true;
+    testCase.expectedDownload.status = "Finished";
+    testCase.expectedDownload.fileExists = true;
+
+    runCase(*plugin, testCase);
+}
+
 TEST(YoutubePluginArtifactTest, ExportedInterfaces)
 {
     initDir((kRuntimeDir.string() + "/").c_str());

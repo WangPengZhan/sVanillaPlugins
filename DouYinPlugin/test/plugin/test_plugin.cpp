@@ -292,6 +292,26 @@ void runLinkTypeCases(const std::string& linkType)
 }
 }  // namespace
 
+TEST(DouYinPluginBusinessTesting, SingleTest)
+{
+    initDir((kRuntimeDir.string() + "/").c_str());
+    const auto handle = pluginInit();
+    ASSERT_NE(handle, nullptr);
+    const PluginGuard guard;
+    auto* plugin = reinterpret_cast<plugin::IPlugin*>(handle);
+
+    BusinessFlowCase testCase;
+    testCase.url = "https://www.douyin.com/video/7618980634866534834";
+    testCase.description = "Single URL download";
+    testCase.linkType = "AwemeId";
+    testCase.downloadConfig.downloadDir = "douyin-plugin-test/download/";
+    testCase.expectedDownloader.created = true;
+    testCase.expectedDownload.status = "Finished";
+    testCase.expectedDownload.fileExists = true;
+
+    runCase(*plugin, testCase);
+}
+
 TEST(DouYinPluginArtifactTest, ExportedInterfaces)
 {
     initDir((kRuntimeDir.string() + "/").c_str());
