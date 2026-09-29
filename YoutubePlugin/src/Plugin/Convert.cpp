@@ -1,12 +1,14 @@
 #include <sstream>
 #include <algorithm>
+#include <iomanip>
+#include <ctime>
 
 #include "Convert.h"
 #include "Util/TimerUtil.h"
 #include "YoutubePluginMessage.h"
 #include "YoutubeApi/YoutubeUrl.h"
 
-std::string authorFormat(const std::vector<youtubeapi::ShortBylineTextItem> teachers)
+std::string authorFormat(const std::vector<youtubeapi::ShortBylineTextItem>& teachers)
 {
     std::string result;
     for (const auto& teacher : teachers)
@@ -43,10 +45,16 @@ adapter::VideoView convertVideoView(const youtubeapi::MainResponse& data)
 {
     adapter::VideoView videoListView;
 
+    if (!data.playabilityStatus.status.empty() && !data.isPlayable())
+    {
+        return videoListView;
+    }
+
     adapter::BaseVideoView item;
 
     const auto& thumbnails = data.videoDetails.thumbnail.thumbnails;
     item.Identifier = data.videoDetails.videoId;
+    item.IdType = youtubeapi::typeToString(youtubeapi::IDType::VideoId);
     item.Title = data.videoDetails.title;
     item.Publisher = data.videoDetails.author;
     item.Cover = thumbnails.empty() ? "" : thumbnails.back().url;
@@ -54,7 +62,7 @@ adapter::VideoView convertVideoView(const youtubeapi::MainResponse& data)
     {
         item.Duration = formatDuration(std::stoll(data.videoDetails.lengthSeconds));
     }
-    catch (const std::exception& e)
+    catch (const std::exception&)
     {
         item.Duration = "0:00";
     }

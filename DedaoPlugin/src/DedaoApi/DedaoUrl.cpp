@@ -5,10 +5,11 @@
 
 namespace
 {
-std::regex livePattern(R"(https?://(?:www\.)?dedao\.cn/live/detail\?id=([A-Za-z0-9]{20,100}))");
-std::regex ebookPattern(R"(https?://(?:www\.)?dedao\.cn/ebook/reader\?id=([A-Za-z0-9]+))");
-std::regex coursePattern(R"(https?://(?:www\.)?dedao\.cn/course/detail\?id=([A-Za-z0-9]+))");
-std::regex articlePattern(R"(https?://(?:www\.)?dedao\.cn/course/article\?id=([A-Za-z0-9]+))");
+
+std::regex livePattern(R"(https?://(?:www\.)?dedao\.cn/live/detail\?id=([A-Za-z0-9]{20,100})(?:[/?&#][^\s]*)?)");
+std::regex ebookPattern(R"(https?://(?:www\.)?dedao\.cn/ebook/reader\?id=([A-Za-z0-9]+)(?:[/?&#][^\s]*)?)");
+std::regex coursePattern(R"(https?://(?:www\.)?dedao\.cn/course/detail\?id=([A-Za-z0-9]+)(?:[/?&#][^\s]*)?)");
+std::regex articlePattern(R"(https?://(?:www\.)?dedao\.cn/course/article\?id=([A-Za-z0-9]+)(?:[/?&#][^\s]*)?)");
 
 std::vector<std::regex> validUrlPatterns = {livePattern, ebookPattern, coursePattern, articlePattern};
 
@@ -124,21 +125,21 @@ IDInfo getID(const std::string& url)
             return id;
         }
 
-        if (std::regex_search(url, match, ebookPattern))
+        if (std::regex_match(url, match, ebookPattern))
         {
             id.id = match[1];
             id.type = IDType::EBook;
             return id;
         }
 
-        if (std::regex_search(url, match, coursePattern))
+        if (std::regex_match(url, match, coursePattern))
         {
             id.id = match[1];
             id.type = IDType::Course;
             return id;
         }
 
-        if (std::regex_search(url, match, articlePattern))
+        if (std::regex_match(url, match, articlePattern))
         {
             id.id = match[1];
             id.type = IDType::Article;

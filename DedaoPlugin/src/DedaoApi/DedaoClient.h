@@ -37,7 +37,7 @@ public:
                                   const std::string& media_alias_id = "");
 
     CourseInfo courseInfo(const std::string& detail_id);
-    ArticleInfo articleInfo(const std::string& detail_id, int count, bool reverse, int max_order_num, bool unlearn_switch, const std::string& chapter_id);
+    ArticleInfo articleInfo(const std::string& detail_id, int count, bool reverse, uint64_t max_id, bool unlearn_switch, const std::string& chapter_id);
 
     bool logout(const std::string& token);
 

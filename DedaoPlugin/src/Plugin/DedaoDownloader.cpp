@@ -1,48 +1,45 @@
+#include <filesystem>
 #include <utility>
 
 #include "DedaoDownloader.h"
+
 #include "FFmpeg/FFmpegHelper.h"
 #include "Util/LocaleHelper.h"
 
 namespace download
 {
+
 DedaoDownloader::DedaoDownloader()
-    : m_finished(false)
-    , m_haveTwoPart(false)
 {
     m_videoDownloader.setStatus(Ready);
     m_audioDownloader.setStatus(Ready);
 }
 
 DedaoDownloader::DedaoDownloader(std::list<std::string> videoUris, std::list<std::string> audioUris, std::string path, std::string filename)
-    : m_finished(false)
-    , m_haveTwoPart(false)
-    , m_path(std::move(path))
+    : m_path(std::move(path))
     , m_filename(std::move(filename))
+    , m_uris(videoUris)
     , m_videoDownloader(videoUris, m_path)
     , m_audioDownloader(audioUris, m_path)
+    , m_haveTwoPart(!videoUris.empty() && !audioUris.empty())
 {
-    m_haveTwoPart = !videoUris.empty() && audioUris.empty();
     setAriaFileName();
     m_videoDownloader.setStatus(Ready);
     m_audioDownloader.setStatus(Ready);
-    m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
 }
 
 DedaoDownloader::DedaoDownloader(ResourceInfo info)
     : m_resourceInfo(std::move(info))
-    , m_haveTwoPart(false)
     , m_path(m_resourceInfo.option.dir)
     , m_filename(m_resourceInfo.option.out)
+    , m_uris(m_resourceInfo.videoUris)
     , m_videoDownloader(m_resourceInfo.videoUris, m_resourceInfo.option)
     , m_audioDownloader(m_resourceInfo.audioUris, m_resourceInfo.option)
-    , m_finished(false)
+    , m_haveTwoPart(!m_resourceInfo.videoUris.empty() && !m_resourceInfo.audioUris.empty())
 {
-    m_haveTwoPart = !m_resourceInfo.videoUris.empty() && !m_resourceInfo.audioUris.empty();
     setAriaFileName();
     m_videoDownloader.setStatus(Ready);
     m_audioDownloader.setStatus(Ready);
-    m_uris = m_resourceInfo.videoUris;
 }
 
 void DedaoDownloader::start()
@@ -88,9 +85,15 @@ void DedaoDownloader::resume()
 
 void DedaoDownloader::downloadStatus()
 {
+    // Terminal states must not be re-evaluated by repeated polls: a second
+    // pass after Finished would run the FFmpeg merge again.
+    if (m_status == Finished || m_status == Error)
+    {
+        return;
+    }
+
     if (m_videoDownloader.status() == Error || (m_haveTwoPart && m_audioDownloader.status() == Error))
     {
-        // DOWNLOAD_LOG_ERROR("WeiboDownloader downloadStatus error, filename: {}", filename());
         m_status = Error;
         return;
     }
@@ -105,14 +108,17 @@ void DedaoDownloader::downloadStatus()
         m_videoDownloader.downloadStatus();
     }
 
-    auto video = m_videoDownloader.info();
-    auto audio = m_audioDownloader.info();
+    const auto video = m_videoDownloader.info();
+    const auto audio = m_audioDownloader.info();
 
     m_info.total = video.total + audio.total;
     m_info.complete = video.complete + audio.complete;
     m_info.speed = video.speed + audio.speed;
 
-    if (m_info.total == m_info.complete && m_videoDownloader.status() == Finished && (!m_haveTwoPart || m_audioDownloader.status() == Finished))
+    // total > 0 guards against a 0 == 0 comparison reporting success for an
+    // empty response.
+    if (m_info.total > 0 && m_info.total == m_info.complete && m_videoDownloader.status() == Finished &&
+        (!m_haveTwoPart || m_audioDownloader.status() == Finished))
     {
         if (m_haveTwoPart)
         {
@@ -120,9 +126,15 @@ void DedaoDownloader::downloadStatus()
             merge.audio = m_audioDownloader.path() + "/" + m_audioDownloader.filename();
             merge.video = m_videoDownloader.path() + "/" + m_videoDownloader.filename();
             merge.targetVideo = path() + "/" + filename();
-            m_info.stage = "ffmpeg mixed!";
+            m_info.stage = "ffmpeg merging";
 
-            ffmpeg::FFmpegHelper::mergeVideo(merge);
+            if (!ffmpeg::FFmpegHelper::mergeVideo(merge))
+            {
+                m_info.stage = "ffmpeg merge failed";
+                m_status = Error;
+                return;
+            }
+            m_info.stage = "ffmpeg merged";
         }
 
         m_status = Finished;
@@ -136,6 +148,7 @@ void DedaoDownloader::finish()
 
 void DedaoDownloader::setVideoUris(const std::list<std::string>& videoUris)
 {
+    m_uris = videoUris;
     m_videoDownloader.setUris(videoUris);
 }
 
@@ -143,6 +156,7 @@ void DedaoDownloader::setAudioUris(const std::list<std::string>& audioUri)
 {
     m_audioDownloader.setUris(audioUri);
     m_haveTwoPart = !audioUri.empty();
+    setAriaFileName();
 }
 
 void DedaoDownloader::setPath(std::string path)

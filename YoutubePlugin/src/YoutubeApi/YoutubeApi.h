@@ -357,7 +357,7 @@ struct MainResponse
     {
         std::string status = playabilityStatus.status;
         std::transform(status.begin(), status.end(), status.begin(), ::tolower);
-        return status == "error";
+        return status != "error";
     }
 
     bool isPlayable() const

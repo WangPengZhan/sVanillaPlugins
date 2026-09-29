@@ -15,7 +15,8 @@ constexpr char customNameId[] = "CustomNameId";
 
 const std::regex ytVideoPlaylistPattern(
     R"(https?://(?:www\.)?(?:youtube\.com/(?:watch\?v=|embed/)|youtu\.be/)([a-zA-Z0-9_-]+)(?:/)?(?:\?list=|&list=)([a-zA-Z0-9_-]+)(?:\S*)?)");
-const std::regex ytPattern(R"(https?://(?:www\.youtube\.com|youtu\.be|music\.youtube\.com|www\.youtubekids\.com)/watch\?v=([a-zA-Z0-9_-]+)(?:\S*)?)");
+const std::regex
+    ytPattern(R"(https?://(?:www\.youtube\.com|youtube\.com|youtu\.be|music\.youtube\.com|www\.youtubekids\.com)/watch\?v=([a-zA-Z0-9_-]+)(?:\S*)?)");
 const std::regex ytPartiallyShortPattern(R"(https?://youtu\.be/watch\?v=([a-zA-Z0-9_-]+)(?:\S*)?)");
 const std::regex ytShortPattern(R"(https?://youtu\.be/([a-zA-Z0-9_-]+)(?:\S*)?)");
 const std::regex ytEmbedPattern(R"(https?://www\.youtube\.com/embed/([a-zA-Z0-9_-]+)(?:\S*)?)");

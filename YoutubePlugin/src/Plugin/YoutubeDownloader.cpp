@@ -22,11 +22,10 @@ YoutubeDownloader::YoutubeDownloader(std::list<std::string> videoUris, std::list
     , m_videoDownloader(videoUris, m_path)
     , m_audioDownloader(audioUris, m_path)
 {
-    m_haveTwoPart = !videoUris.empty() && audioUris.empty();
+    m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
     setAriaFileName();
     m_videoDownloader.setStatus(Ready);
     m_audioDownloader.setStatus(Ready);
-    m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
 }
 
 YoutubeDownloader::YoutubeDownloader(ResourceInfo info)
@@ -122,7 +121,12 @@ void YoutubeDownloader::downloadStatus()
             merge.targetVideo = path() + "/" + filename();
             m_info.stage = "ffmpeg mixed!";
 
-            ffmpeg::FFmpegHelper::mergeVideo(merge);
+            if (!ffmpeg::FFmpegHelper::mergeVideo(merge))
+            {
+                m_info.stage = "ffmpeg merge failed";
+                m_status = Error;
+                return;
+            }
         }
 
         m_status = Finished;

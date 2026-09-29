@@ -9,6 +9,7 @@
 #include "BiliApi/BilibiliLog.h"
 
 #include <Util/UrlProccess.h>
+#include <Util/NumberParse.h>
 
 PluginMessage BiliBiliPlugin::m_pluginMessage = {
     biliplugin::pluginID, biliplugin::name, biliplugin::version, biliplugin::description, biliplugin::domain,
@@ -67,6 +68,11 @@ adapter::VideoView BiliBiliPlugin::getVideoView(const std::string& url)
     case biliapi::IDType::BangumiMD:
     {
         auto mdInfo = m_client.getMdVideoView(id.id);
+        if (mdInfo.code != 0 || mdInfo.result.media.season_id == 0)
+        {
+            BILIBILI_LOG_WARN("getMdVideoView failed or empty season, media_id: {}, code: {}", id.id, mdInfo.code);
+            break;
+        }
         std::string season_id = std::to_string(mdInfo.result.media.season_id);
         auto videoView = m_client.getSeasonVideoView(season_id, biliapi::IDType::BangumiSS);
         views = convertVideoView(videoView.result);
@@ -104,11 +110,15 @@ adapter::VideoView BiliBiliPlugin::getVideoView(const std::string& url)
                 auto detailViews = convertVideoView(videoView.data);
                 for (const auto& detailView : detailViews)
                 {
-                    if (detailView.Identifier == view.Identifier)
+                    if (detailView.Identifier == view.Identifier && view.Option2.empty())
                     {
                         view.Option2 = detailView.Option2;
                     }
-                    bvMap[detailView.Identifier] = detailView.Option2;
+
+                    if (bvMap.find(detailView.Identifier) == bvMap.end())
+                    {
+                        bvMap[detailView.Identifier] = detailView.Option2;
+                    }
                 }
             }
             else
@@ -143,19 +153,23 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
     {
         qn = 80;
     }
-    if (false)
-    {
-        qn = 116;
-    }
 
     long long fnval = 16;
     BILIBILI_LOG_INFO("getDownloader, guid: {}, qn: {}, fnval: {}", copyedVideoInfo.getGuid(), qn, fnval);
 
+    const auto& view = *copyedVideoInfo.videoView;
     biliapi::PlayDash dash;
-    auto idType = biliapi::stringToType(copyedVideoInfo.videoView->IdType);
+    auto idType = biliapi::stringToType(view.IdType);
     if (idType == biliapi::IDType::BangumiEP)
     {
-        const auto result = biliClient.getPlayUrl(std::stoll(copyedVideoInfo.videoView->Identifier), idType, qn, fnval);
+        long long epId = 0;
+        if (!util::parseNumber(view.Identifier, epId))
+        {
+            BILIBILI_LOG_WARN("getDownloader: invalid bangumi ep id: {}", view.Identifier);
+            return {};
+        }
+
+        const auto result = biliClient.getPlayUrl(epId, idType, qn, fnval);
         if (result.code != 0)
         {
             BILIBILI_LOG_WARN("getPlayUrl error {}, error message: {}", result.code, result.message);
@@ -165,8 +179,16 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
     }
     else if (idType == biliapi::IDType::CheeseEP)
     {
-        const auto result = biliClient.getPlayUrl(std::stoll(copyedVideoInfo.videoView->Option1), std::stoll(copyedVideoInfo.videoView->Identifier),
-                                                  std::stoll(copyedVideoInfo.videoView->Identifier), qn, fnval);
+        long long avid = 0;
+        long long epId = 0;
+        long long cid = 0;
+        if (!util::parseNumber(view.Option1, avid) || !util::parseNumber(view.Identifier, epId) || !util::parseNumber(view.Option2, cid))
+        {
+            BILIBILI_LOG_WARN("getDownloader: invalid cheese ids, aid: {}, ep: {}, cid: {}", view.Option1, view.Identifier, view.Option2);
+            return {};
+        }
+
+        const auto result = biliClient.getPlayUrl(avid, epId, cid, qn, fnval);
         if (result.code != 0)
         {
             BILIBILI_LOG_WARN("getPlayUrl error {}, error message: {}", result.code, result.message);
@@ -176,7 +198,14 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
     }
     else
     {
-        const auto result = biliClient.getPlayUrl(std::stoll(copyedVideoInfo.videoView->Option2), qn, copyedVideoInfo.videoView->Identifier, fnval);
+        long long cid = 0;
+        if (!util::parseNumber(view.Option2, cid))
+        {
+            BILIBILI_LOG_WARN("getDownloader: invalid cid: {} for bvid: {}", view.Option2, view.Identifier);
+            return {};
+        }
+
+        const auto result = biliClient.getPlayUrl(cid, qn, view.Identifier, fnval);
         if (result.code != 0)
         {
             BILIBILI_LOG_WARN("getPlayUrl error {}, error message: {}", result.code, result.message);
@@ -212,14 +241,32 @@ std::shared_ptr<download::FileDownloader> BiliBiliPlugin::getDownloader(const Vi
         }
     }
 
-    int needDownloadAudioId = 30216;
+    // Prefer the standard DASH audio qualities (192K > 132K > 64K) instead of
+    // blindly taking the largest id, which may be a Dolby/Hi-Res stream that
+    // requires a paid membership.
+    static const int audioQualityPriority[] = {30280, 30232, 30216};
     const auto& audios = dash.audio;
-    for (const auto& audio : audios)
+    int needDownloadAudioId = 0;
+    for (const int quality : audioQualityPriority)
     {
-        if (audio.id > needDownloadAudioId)
+        for (const auto& audio : audios)
         {
-            needDownloadAudioId = audio.id;
+            if (audio.id == quality)
+            {
+                needDownloadAudioId = audio.id;
+                break;
+            }
         }
+
+        if (needDownloadAudioId != 0)
+        {
+            break;
+        }
+    }
+
+    if (needDownloadAudioId == 0 && !audios.empty())
+    {
+        needDownloadAudioId = audios.front().id;
     }
 
     for (const auto& audio : audios)

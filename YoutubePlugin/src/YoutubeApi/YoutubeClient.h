@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <atomic>
+#include <chrono>
 
 #include <nlohmann/json.hpp>
 
@@ -47,6 +48,7 @@ protected:
 private:
     network::CurlCookies m_cookies;  // we sellect this mode for debug
     std::string m_visitorData;
+    std::chrono::steady_clock::time_point m_visitorDataExpireTime{};
     std::mutex m_vistorDataMutex;
 };
 

@@ -3,6 +3,7 @@
 #include <BaseVideoView.h>
 
 #include <fstream>
+#include <mutex>
 
 #include "BiliBiliResource.h"
 #include "BiliApi/BilibiliClient.h"
@@ -12,37 +13,10 @@
 #include "Util/LocaleHelper.h"
 #include "Util/QrCodeGenerator.h"
 #include "BiliBiliPluginMessage.h"
+#include "Convert.h"
 
 namespace
 {
-
-adapter::BaseVideoView convertHistory(const biliapi::HistoryInfo& data)
-{
-    auto item = adapter::BaseVideoView();
-    item.Identifier = data.history.bvid;
-    item.Option1 = std::to_string(data.history.cid);
-    item.Option2 = std::to_string(data.history.cid);
-    item.Title = data.title;
-    item.Cover = data.cover.empty() ? (data.covers.empty() ? "" : data.covers.front()) : data.cover;
-    item.Duration = formatDuration(data.duration);
-    item.Description = data.new_desc;
-    item.PublishDate = convertTimestamp(data.view_at);
-
-    return item;
-}
-
-std::vector<adapter::BaseVideoView> convertVideoView(const biliapi::History& data)
-{
-    std::vector<adapter::BaseVideoView> videoListView;
-    videoListView.reserve(256);
-
-    for (const auto& historyInfo : data.data.list)
-    {
-        videoListView.emplace_back(convertHistory(historyInfo));
-    }
-
-    return videoListView;
-}
 
 std::string vipTypeToString(int type)
 {
@@ -65,7 +39,13 @@ BiliBiliLogin::LoginResource BiliBiliLogin::m_biliRes{qrc_background, qrc_loadin
 
 BiliBiliLogin::LoginStatus BiliBiliLogin::getLoginStatus()
 {
-    const auto loginStatus = biliapi::BilibiliClient::globalClient().getLoginStatus(m_qrcodeKey);
+    std::string qrcodeKey;
+    {
+        std::lock_guard lk(m_mutex);
+        qrcodeKey = m_qrcodeKey;
+    }
+
+    const auto loginStatus = biliapi::BilibiliClient::globalClient().getLoginStatus(qrcodeKey);
 
     if (loginStatus.code == 0)
     {
@@ -104,8 +84,6 @@ bool BiliBiliLogin::getScanContext(std::string& content)
         return false;
     }
 
-    m_qrcodeKey = login.data.qrcode_key;
-
     std::string path = BiliBiliPlugin::getDir() + "login/bilibili_qrc.svg";
     if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
     {
@@ -113,8 +91,18 @@ bool BiliBiliLogin::getScanContext(std::string& content)
     }
 
     std::ofstream file(path);
+    if (!file)
+    {
+        return false;
+    }
+
     file << QrCodeGenerator::generateQR(login.data.url);
     file.close();
+
+    {
+        std::lock_guard lk(m_mutex);
+        m_qrcodeKey = login.data.qrcode_key;
+    }
 
     content = util::localeToUtf8(path);
     return true;
@@ -140,11 +128,16 @@ UserInfo BiliBiliLogin::getUserInfo(std::string dir)
 
     if (!nav.data.face.empty())
     {
+        if (!dir.empty() && !std::filesystem::exists(dir))
+        {
+            std::filesystem::create_directories(dir);
+        }
+
         std::string path = dir + "/" + std::to_string(nav.data.mid) + ".jpg";
-        FILE* file = fopen(path.c_str(), "wb");
-        biliapi::BilibiliClient::globalClient().get(nav.data.face, file);
-        fclose(file);
-        userInfo.facePath = util::localeToUtf8(path);
+        if (network::downloadFileChecked(biliapi::BilibiliClient::globalClient(), nav.data.face, path))
+        {
+            userInfo.facePath = util::localeToUtf8(path);
+        }
     }
 
     return userInfo;

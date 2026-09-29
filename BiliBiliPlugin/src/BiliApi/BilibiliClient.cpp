@@ -110,8 +110,6 @@ std::string HistoryQueryParam::toString() const
     return res;
 }
 
-std::string BilibiliClient::m_cookieTicket;
-
 BilibiliClient::BilibiliClient()
 {
     initDefaultHeaders();
@@ -138,7 +136,7 @@ VideoViewOrigin BilibiliClient::getVideoView(const std::string& bvid, IDType typ
 
     std::string response;
     get(VideoURL::View, response, param);
-    BILIBILI_LOG_INFO("getVideoView response: {}: {}", VideoURL::View, response);
+    BILIBILI_LOG_DEBUG("getVideoView response: {}: {}", VideoURL::View, response);
     VideoViewOrigin ret;
     try
     {
@@ -342,7 +340,7 @@ FavDetailInfo BilibiliClient::getFavDetail(const std::string& media_id)
     return ret;
 }
 
-FavVideoInfoResponse BilibiliClient::getFavVideoInfo(const std::vector<FavItemInfo> ids, int folder_mid, int folder_id)
+FavVideoInfoResponse BilibiliClient::getFavVideoInfo(const std::vector<FavItemInfo>& ids, int folder_mid, int folder_id)
 {
     std::string resources;
     for (const auto& id : ids)
@@ -420,7 +418,7 @@ FavListInfo BilibiliClient::getCollectFavList(int ps, int pn, int up_mid)
     }
     catch (const std::exception& e)
     {
-        BILIBILI_LOG_ERROR("getCreatedFavList error! up_mid: {}, error: {}", up_mid, e.what());
+        BILIBILI_LOG_ERROR("getCollectFavList error! up_mid: {}, error: {}", up_mid, e.what());
         BILIBILI_LOG_ERROR("response is {}", response);
     }
     return ret;
@@ -450,7 +448,7 @@ FavDataResponse BilibiliClient::getFavInfo(const std::string& media_id)
     }
     catch (const std::exception& e)
     {
-        BILIBILI_LOG_ERROR("getVideoView error! bvid: {}, error: {}", media_id, e.what());
+        BILIBILI_LOG_ERROR("getFavInfo error! media_id: {}, error: {}", media_id, e.what());
         BILIBILI_LOG_ERROR("response is {}", response);
     }
     return ret;
@@ -691,7 +689,7 @@ LogoutExitV2 BilibiliClient::getLogoutExitV2()
 
     if (logout.code == 0)
     {
-        BILIBILI_LOG_ERROR("getLogoutExitV2");
+        BILIBILI_LOG_INFO("getLogoutExitV2 success");
         std::lock_guard lk(m_mutexRequest);
         m_cookies = network::CurlCookies();
         m_commonOptions.erase(network::CookieFields::opt);
@@ -733,18 +731,19 @@ void BilibiliClient::setCookies(std::string cookies)
 
 bool BilibiliClient::isLogined() const
 {
+    std::lock_guard lk(m_mutexRequest);
     return !m_cookies.cookie(domain).value("SESSDATA").empty();
 }
 
 void BilibiliClient::resetWbi()
 {
+    std::lock_guard lk(m_mutexMixinKey);
     const auto navData = getNavInfo();
     const auto key = navData.data.wbi_img;
     if (!key.img_url.empty() && !key.sub_url.empty())
     {
         const auto img_url = std::filesystem::path(util::utf8ToLocale(key.img_url)).stem().string();
         const auto sub_url = std::filesystem::path(util::utf8ToLocale(key.sub_url)).stem().string();
-        nlohmann::json j;
         m_mixinKey.mixin_key = GetMixinKey(img_url + sub_url);
         m_mixinKey.Expires = (std::time(nullptr) + daySeconds) / daySeconds;
     }
@@ -752,6 +751,7 @@ void BilibiliClient::resetWbi()
 
 void BilibiliClient::encodeWithWbi(ParamType& params)
 {
+    std::lock_guard lk(m_mutexMixinKey);
     if (m_mixinKey.mixin_key.empty() || isExpired(m_mixinKey.Expires))
     {
         // 如果 mixinKey 过期或不存在，则从 Nav 中获取最新的 mixinKey
@@ -845,6 +845,10 @@ nlohmann::json BilibiliClient::getDataFromRespones(const std::string& respones)
     catch (std::exception& e)
     {
         BILIBILI_LOG_ERROR("Error parsing response: {}", e.what());
+        // Keep the failure visible for callers that check `code != 0`, otherwise
+        // a failed parse would look like a successful empty response.
+        json = nlohmann::json::object();
+        json["code"] = -1;
     }
 
     return json;

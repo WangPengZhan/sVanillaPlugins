@@ -29,16 +29,19 @@ DedaoClient& DedaoClient::globalClient()
 
 bool DedaoClient::isLogined() const
 {
+    std::shared_lock lk(m_mutexRequest);
     return m_cookies.cookie(domain).contains("GAT");
 }
 
 std::string DedaoClient::cookie() const
 {
+    std::shared_lock lk(m_mutexRequest);
     return network::CurlCookieOpt(m_cookies.cookie(domain)).shortContent();
 }
 
 std::string DedaoClient::cookies() const
 {
+    std::shared_lock lk(m_mutexRequest);
     return std::string(m_cookies);
 }
 
@@ -115,6 +118,7 @@ LoginQrcode DedaoClient::loginQrcode(const std::string& token)
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     return loginQrcode;
@@ -144,6 +148,7 @@ LoginCheck DedaoClient::loginCheck(const std::string& token, const std::string& 
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     // add cookie
@@ -167,7 +172,6 @@ V2TokenInfo DedaoClient::getV2Token()
     headers.add("xi-csrf-token:" + csrfToken());
     headers.add("Content-Type: application/json");
     headers.add(std::string("referer: " + dedaoHomeUrl));
-    headers.add("xi-csrf-token:" + csrfToken());
     headers.add("xi-dt: web");
 
     std::string response;
@@ -180,6 +184,7 @@ V2TokenInfo DedaoClient::getV2Token()
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     return ret;
@@ -201,6 +206,7 @@ UserInfoResponse DedaoClient::userInfo()
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     return ret;
@@ -222,6 +228,7 @@ LiveInfo DedaoClient::liveInfo(const std::string& alias_id)
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     return ret;
@@ -244,6 +251,7 @@ LiveTokenInfo DedaoClient::livetoken(const std::string& alias_id, const std::str
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     return ret;
@@ -267,6 +275,7 @@ RoomDetail DedaoClient::roomDetail(const std::string& alias_id, const std::strin
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     return ret;
@@ -291,6 +300,7 @@ MediaStreamInfo DedaoClient::webStreamInfo(const std::string& alias_id, const st
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     return ret;
@@ -313,12 +323,13 @@ CourseInfo DedaoClient::courseInfo(const std::string& detail_id)
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     return ret;
 }
 
-ArticleInfo DedaoClient::articleInfo(const std::string& detail_id, int count, bool reverse, int max_id, bool unlearn_switch, const std::string& chapter_id)
+ArticleInfo DedaoClient::articleInfo(const std::string& detail_id, int count, bool reverse, uint64_t max_id, bool unlearn_switch, const std::string& chapter_id)
 {
     nlohmann::json data;
     data["chapter_id"] = chapter_id;
@@ -344,6 +355,7 @@ ArticleInfo DedaoClient::articleInfo(const std::string& detail_id, int count, bo
     }
     catch (const std::exception& e)
     {
+        DEDAO_LOG_WARN("failed to parse response: {}", e.what());
     }
 
     return ret;

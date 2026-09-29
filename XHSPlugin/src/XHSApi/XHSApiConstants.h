@@ -41,7 +41,7 @@ constexpr char scriptingData[] = R"delimiter({
     "appId": "xhs-pc-web",
     "callFrom": "web",
     "callback": "",
-    "type": "ds
+    "type": "ds"
 })delimiter";
 
 namespace Encrypt

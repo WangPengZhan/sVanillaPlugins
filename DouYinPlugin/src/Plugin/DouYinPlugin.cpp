@@ -64,7 +64,7 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
     }
     case douyinapi::IDType::SeriesId:
     {
-        int cursor = 0;
+        int64_t cursor = 0;
         douyinapi::SeriesDetail detail;
         do
         {
@@ -75,7 +75,7 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
             }
             auto batch = convertSeriesDetail(detail);
             views.insert(views.end(), batch.begin(), batch.end());
-            const int nextCursor = detail.max_cursor;
+            const int64_t nextCursor = detail.cursor;
             if (detail.has_more && nextCursor == cursor)
             {
                 break;
@@ -86,7 +86,7 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
     }
     case douyinapi::IDType::MixId:
     {
-        int cursor = 0;
+        int64_t cursor = 0;
         douyinapi::SeriesDetail detail;
         do
         {
@@ -97,7 +97,7 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
             }
             auto batch = convertSeriesDetail(detail);
             views.insert(views.end(), batch.begin(), batch.end());
-            const int nextCursor = detail.cursor;
+            const int64_t nextCursor = detail.cursor;
             if (detail.has_more && nextCursor == cursor)
             {
                 break;
@@ -108,7 +108,7 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
     }
     case douyinapi::IDType::UserId:
     {
-        int cursor = 0;
+        int64_t cursor = 0;
         douyinapi::SeriesDetail detail;
         do
         {
@@ -119,7 +119,7 @@ adapter::VideoView DouYinPlugin::getVideoView(const std::string& url)
             }
             auto batch = convertSeriesDetail(detail);
             views.insert(views.end(), batch.begin(), batch.end());
-            const int nextCursor = detail.max_cursor;
+            const int64_t nextCursor = detail.max_cursor;
             if (detail.has_more && nextCursor == cursor)
             {
                 break;

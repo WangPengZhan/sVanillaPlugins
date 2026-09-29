@@ -11,7 +11,6 @@
 #include <spdlog/async.h>
 
 YoutubePlugin* pPlugin = nullptr;
-constexpr int logFileMaxSize = 100 * 1024 * 1024;  // 20M
 
 void initDir(const char* dir)
 {

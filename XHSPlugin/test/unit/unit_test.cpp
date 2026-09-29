@@ -75,7 +75,7 @@ TEST(XHSUrlUnitTest, DoesNotExposeXsecTokenInDiagnosticText)
     EXPECT_NE(diagnostic.find("hasXsecToken=true"), std::string::npos);
 }
 
-TEST(XHSConvertUnitTest, SelectsHighestResolutionStreamAndFallsBackToBackupUrl)
+TEST(XHSConvertUnitTest, PrefersMasterStreamThenFallsBackToBackupUrl)
 {
     std::vector<xhsapi::StreamItem> streams(3);
     streams[0].height = 720;
@@ -88,6 +88,10 @@ TEST(XHSConvertUnitTest, SelectsHighestResolutionStreamAndFallsBackToBackupUrl)
     streams[2].video_bitrate = 1500;
     streams[2].master_url = "https://example.invalid/1080-low.mp4";
 
+    EXPECT_EQ(getVideoUrl(streams), "https://example.invalid/1080-low.mp4");
+
+    streams[0].master_url.clear();
+    streams[2].master_url.clear();
     EXPECT_EQ(getVideoUrl(streams), "https://example.invalid/1080-backup.mp4");
 }
 

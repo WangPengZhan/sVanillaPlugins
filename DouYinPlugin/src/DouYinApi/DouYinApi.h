@@ -779,13 +779,13 @@ struct SeriesDetail
 {
     std::vector<AwemeDetail> aweme_list;
     bool has_more{};
-    int cursor{};
-    int max_cursor{};
-    int min_cursor{};
+    int64_t cursor{};
+    int64_t max_cursor{};
+    int64_t min_cursor{};
     int status_code{};
     std::string status_msg;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(SeriesDetail, aweme_list, has_more, max_cursor, min_cursor, status_code, status_msg)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(SeriesDetail, aweme_list, has_more, cursor, max_cursor, min_cursor, status_code, status_msg)
 };
 
 struct AwemeDetailResponse

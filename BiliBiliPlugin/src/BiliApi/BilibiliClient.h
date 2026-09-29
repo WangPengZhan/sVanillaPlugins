@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <mutex>
 
 #include "BiliApi.h"
 #include "BilibiliUrl.h"
@@ -64,7 +65,7 @@ public:
     CheesePlayUrlResponse getPlayUrl(long long avid, long long ep_id, long long cid, long long qn, long long fnval);
 
     FavDetailInfo getFavDetail(const std::string& media_id);
-    FavVideoInfoResponse getFavVideoInfo(const std::vector<FavItemInfo> ids, int folder_mid, int folder_id);
+    FavVideoInfoResponse getFavVideoInfo(const std::vector<FavItemInfo>& ids, int folder_mid, int folder_id);
     FavListInfo getCreatedFavList(int ps, int pn, int up_mid);
     FavListInfo getCollectFavList(int ps, int pn, int up_mid);
     FavDataResponse getFavInfo(const std::string& media_id);
@@ -101,7 +102,7 @@ protected:
 private:
     network::CurlCookies m_cookies;  // we sellect this mode for debug
     MixinKey m_mixinKey;
-    static std::string m_cookieTicket;
+    mutable std::recursive_mutex m_mutexMixinKey;  // guards m_mixinKey
 };
 
 }  // namespace biliapi

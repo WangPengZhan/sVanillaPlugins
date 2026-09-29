@@ -1,10 +1,13 @@
 #include "WeiboLogin.h"
 
+#include <utility>
+
 #include <BaseVideoView.h>
 
 #include "WeiboResource.h"
 #include "WeiboApi/WeiboClient.h"
 #include "WeiboApi/WeiboApiConstants.h"
+#include "WeiboApi/WeiboLog.h"
 #include "Util/TimerUtil.h"
 #include "Util/LocaleHelper.h"
 #include "WeiboPlugin.h"
@@ -20,7 +23,13 @@ WeiboLogin::WeiboLogin()
 
 WeiboLogin::LoginStatus WeiboLogin::getLoginStatus()
 {
-    const auto loginStatus = m_client.getLoginStatus(m_qrid);
+    std::string qrid;
+    {
+        std::lock_guard<std::mutex> lock(m_mutexData);
+        qrid = m_qrid;
+    }
+
+    const auto loginStatus = m_client.getLoginStatus(qrid);
 
     if (loginStatus.retcode == 50114003)
     {
@@ -59,7 +68,10 @@ bool WeiboLogin::getScanContext(std::string& content)
     }
 
     bool ret = m_client.getQrcImage("https:" + qrc.data.image, path);
-    m_qrid = qrc.data.qrid;
+    {
+        std::lock_guard<std::mutex> lock(m_mutexData);
+        m_qrid = qrc.data.qrid;
+    }
     content = util::localeToUtf8(path);
 
     return ret;
@@ -75,12 +87,28 @@ void WeiboLogin::loginSuccess()
 
     auto loginInfo = m_client.loginWeibo(alt);
     m_client.crossDomainRequest(loginInfo.crossDomainUrlList);
+    if (!m_client.isLogined())
+    {
+        WEIBO_LOG_ERROR("login did not establish a session, retcode: {}", loginInfo.retcode);
+    }
 }
 
 UserInfo WeiboLogin::getUserInfo(std::string dir)
 {
     std::string userId = m_client.getCurrentUserId();
+    if (userId.empty())
+    {
+        WEIBO_LOG_ERROR("cannot resolve the current user id, the session may be invalid");
+        return {};
+    }
+
     weiboapi::UserInfoResponse weiboUserInfo = m_client.getUserInfo(userId);
+    if (weiboUserInfo.data.user.id == 0)
+    {
+        WEIBO_LOG_ERROR("cannot resolve user info for id: {}", userId);
+        return {};
+    }
+
     UserInfo userInfo;
     userInfo.id = std::to_string(weiboUserInfo.data.user.id);
     userInfo.uname = weiboUserInfo.data.user.screen_name;
@@ -112,7 +140,8 @@ void WeiboLogin::setCookies(std::string cookies)
 
 bool WeiboLogin::refreshCookies(std::string cookies)
 {
-    return false;
+    m_client.setCookies(std::move(cookies));
+    return m_client.isLogined();
 }
 
 bool WeiboLogin::isLoggedIn() const
@@ -122,7 +151,7 @@ bool WeiboLogin::isLoggedIn() const
 
 bool WeiboLogin::logout()
 {
-    return false;
+    return m_client.getLogout();
 }
 
 std::string WeiboLogin::domain() const
@@ -142,7 +171,7 @@ const WeiboLogin::LoginResource& WeiboLogin::allResources() const
 
 const std::vector<uint8_t>& WeiboLogin::resource(ResourceIndex index) const
 {
-    if (index >= 0 && index < m_weiboRes.size())
+    if (index >= 0 && static_cast<std::size_t>(index) < m_weiboRes.size())
     {
         return m_weiboRes.at(index);
     }

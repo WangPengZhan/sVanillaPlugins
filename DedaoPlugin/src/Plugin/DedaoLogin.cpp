@@ -6,11 +6,13 @@
 #include "DedaoResource.h"
 #include "DedaoApi/DedaoClient.h"
 #include "DedaoApi/DedaoApiConstants.h"
+#include "DedaoApi/DedaoLog.h"
 #include "PluginCrypto/Encoding.h"
 #include "Util/TimerUtil.h"
 #include "Util/LocaleHelper.h"
 #include "DedaoPlugin.h"
 #include "DedaoPluginMessage.h"
+#include "NetWork/CNetWork.h"
 
 DedaoLogin::LoginResource DedaoLogin::m_dedaoRes{qrc_background, qrc_loading, qrc_tip, qrc_waitConfirm, qrc_complete, qrc_init, qrc_refresh};
 
@@ -59,22 +61,30 @@ bool DedaoLogin::getScanContext(std::string& content)
         m_qrString = res.data.qrCodeString;
     }
 
+    auto pos = res.data.qrCode.find(",");
+    if (res.data.qrCode.empty() || pos == std::string::npos)
+    {
+        DEDAO_LOG_ERROR("invalid qrcode payload");
+        return false;
+    }
+
     std::string path = DedaoPlugin::getDir() + "login/dedao_qrc.png";
     if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
     {
         std::filesystem::create_directories(std::filesystem::path(path).parent_path());
     }
 
-    auto pos = res.data.qrCode.find(",");
     std::string base_content = res.data.qrCode.substr(pos + 1);
     auto bin = encoding::base64Decode(base_content);
     std::ofstream qrFile(path, std::ios::binary);
-    qrFile << bin;
-
+    if (!qrFile.is_open() || bin.empty())
     {
-        m_token = token;
-        m_qrString = res.data.qrCodeString;
+        DEDAO_LOG_ERROR("failed to write qrcode file: {}", path);
+        return false;
     }
+    qrFile << bin;
+    qrFile.close();
+
     content = util::localeToUtf8(path);
 
     return true;
@@ -101,9 +111,12 @@ UserInfo DedaoLogin::getUserInfo(std::string dir)
     if (!dedaoUser.c.avatar.empty())
     {
         std::string path = dir + "/" + dedaoUser.c.uid_hazy + ".png";
-        FILE* file = fopen(path.c_str(), "wb");
-        m_client.get(dedaoUser.c.avatar, file, network::CurlHeader(), false);
-        fclose(file);
+        if (!network::downloadFileChecked(m_client, dedaoUser.c.avatar, path))
+        {
+            DEDAO_LOG_ERROR("failed to download avatar: {}", path);
+            return userInfo;
+        }
+
         userInfo.facePath = util::localeToUtf8(path);
     }
 

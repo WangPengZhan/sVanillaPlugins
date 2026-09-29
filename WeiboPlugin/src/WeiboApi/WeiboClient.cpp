@@ -7,6 +7,7 @@
 #include "WeiboClient.h"
 #include "WeiboApiConstants.h"
 #include "Util/JsonProcess.h"
+#include "Util/NumberParse.h"
 #include "WeiboLog.h"
 #include "WeiboUtils.h"
 #include "NetWork/NetworkLog.h"
@@ -70,7 +71,15 @@ VideoTemplate parseTemplate(std::string_view tpl)
     if (dots.size() != 3)
         return {0, 0, 0, 0};
 
-    return {std::stoi(std::string(xsplit[0])), std::stoi(std::string(dots[0])), std::stoi(std::string(dots[1])), std::stoi(std::string(dots[2]))};
+    VideoTemplate result{};
+    const bool ok = util::parseNumber(std::string(xsplit[0]), result.width) && util::parseNumber(std::string(dots[0]), result.height) &&
+                    util::parseNumber(std::string(dots[1]), result.fps) && util::parseNumber(std::string(dots[2]), result.reserved);
+    if (!ok)
+    {
+        WEIBO_LOG_WARN("ignore malformed template: {}", std::string(tpl));
+        return {0, 0, 0, 0};
+    }
+    return result;
 }
 
 std::string getBestTemplate(const std::map<std::string, std::string>& templates)
@@ -171,7 +180,14 @@ WeiboAjaxData WeiboClient::getPlayInfoByWid(const std::string& wid)
     get(url, response, header, false, CurlOptions(), true);
 
     WeiboAjaxData ret;
-    ret = getDataFromRespones(response);
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        WEIBO_LOG_ERROR("Error converting status response: {}", e.what());
+    }
 
     return ret;
 }
@@ -195,11 +211,20 @@ UserMblogResponse WeiboClient::getUserMlog(const std::string& uid)
 
 std::string WeiboClient::getStreamInfo(const std::string& wid)
 {
-    std::string mid;
-    if (wid.find(":") != std::string::npos)
+    if (wid.empty())
     {
-        mid = wid.substr(wid.find(":") + 1);
+        WEIBO_LOG_ERROR("getStreamInfo: empty video id");
+        return {};
     }
+
+    const auto separator = wid.find(":");
+    const std::string mid = (separator == std::string::npos) ? wid : wid.substr(separator + 1);
+    if (mid.empty())
+    {
+        WEIBO_LOG_ERROR("getStreamInfo: cannot derive a mid from id: {}", wid);
+        return {};
+    }
+
     auto ret = getPlayInfoByMid(mid);
 
     const auto baseName = getBestTemplate(ret.data.Component_Play_Playinfo.urls.urls);
@@ -212,20 +237,9 @@ std::string WeiboClient::getStreamInfo(const std::string& wid)
 
 bool WeiboClient::downloadImage(const std::string& url, const std::filesystem::path& path)
 {
-    FILE* file = fopen(path.string().c_str(), "wb");
-    if (!file)
-    {
-        std::string str = strerror(errno);
-        WEIBO_LOG_ERROR("fopen error: {}, filePath: {}", str, path.string());
-        return false;
-    }
-
     network::CurlHeader header;
     header.add(std::string("referer: ") + weiboapi::weiboHomeUrl);
-    get(url, file, header, true);
-    fclose(file);
-
-    return true;
+    return network::downloadFileChecked(*this, url, path, header, true);
 }
 
 std::string WeiboClient::getCurrentUserId()
@@ -253,7 +267,14 @@ UserInfoResponse WeiboClient::getUserInfo(const std::string& uid)
 
     get(url, response, headers, true);
     UserInfoResponse ret;
-    ret = getDataFromRespones(response);
+    try
+    {
+        ret = getDataFromRespones(response);
+    }
+    catch (const std::exception& e)
+    {
+        WEIBO_LOG_ERROR("Error converting user info response: {}", e.what());
+    }
 
     return ret;
 }
@@ -289,20 +310,9 @@ QRCResponse WeiboClient::getLoginUrl()
 
 bool WeiboClient::getQrcImage(const std::string& url, const std::filesystem::path& path)
 {
-    FILE* file = fopen(path.string().c_str(), "wb");
-    if (!file)
-    {
-        std::string str = strerror(errno);
-        WEIBO_LOG_ERROR("fopen error: {}, filePath: {}", str, path.string());
-        return false;
-    }
-
     network::CurlHeader header;
     header.add(std::string("referer: ") + weiboapi::weiboReferer);
-    get(url, file, header, true);
-    fclose(file);
-
-    return true;
+    return network::downloadFileChecked(*this, url, path, header, true);
 }
 
 LoginScaningStatus WeiboClient::getLoginStatus(const std::string& qrid)

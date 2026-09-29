@@ -10,7 +10,26 @@
 #include "WeiboApi/WeiboLog.h"
 #include "Util/LocaleHelper.h"
 
+#include <functional>
 #include <Util/UrlProccess.h>
+
+namespace
+{
+std::string coverFileName(const adapter::BaseVideoView& view)
+{
+    const std::string invalidChars = "\\/:*?\"<>|";
+    std::string name = view.Identifier;
+    for (char& character : name)
+    {
+        if (invalidChars.find(character) != std::string::npos)
+        {
+            character = '_';
+        }
+    }
+
+    return name + "_" + std::to_string(std::hash<std::string>{}(view.Cover)) + ".jpg";
+}
+}  // namespace
 
 PluginMessage WeiboPlugin::m_pluginMessage = {
     weiboplugin::pluginID, weiboplugin::name, weiboplugin::version, weiboplugin::description, weiboplugin::domain,
@@ -36,32 +55,50 @@ const std::vector<uint8_t>& WeiboPlugin::websiteIcon()
 
 bool WeiboPlugin::canParseUrl(const std::string& url)
 {
-    return isValidUrl(url);
+    return weiboapi::isValidUrl(url);
 }
 
 adapter::VideoView WeiboPlugin::getVideoView(const std::string& url)
 {
     WEIBO_LOG_INFO("getVideoView url: {}", url);
-    std::string id = getID(url);
-    WEIBO_LOG_INFO("id: {}", id);
+    const weiboapi::IDInfo id = weiboapi::getID(url);
+    WEIBO_LOG_INFO("id: {}", id.to_string());
+    if (id.id.empty())
+    {
+        WEIBO_LOG_ERROR("cannot resolve a video id from url: {}", url);
+        return {};
+    }
+
     adapter::VideoView views;
-
-    if (id.starts_with("mid"))
+    switch (id.type)
     {
-        id = id.substr(4);
-        auto ret = m_client.getPlayInfoByMid(id);
-        views = convertVideoView(ret);
-    }
-    else
-    {
-        id = id.substr(4);
-        auto ret = m_client.getPlayInfoByWid(id);
-        views = convertVideoView(ret);
+    case weiboapi::IDType::Status:
+        views = convertVideoView(m_client.getPlayInfoByWid(id.id));
+        break;
+    case weiboapi::IDType::TV:
+        views = convertVideoView(m_client.getPlayInfoByMid(id.id));
+        break;
+    default:
+        WEIBO_LOG_ERROR("unsupported id type for url: {}", url);
+        return {};
     }
 
+    if (views.empty())
+    {
+        WEIBO_LOG_ERROR("no video view resolved for id: {}", id.id);
+        return views;
+    }
+
+    const std::string idType = weiboapi::typeToString(id.type);
     for (auto& view : views)
     {
-        std::string path = m_dir + "cover/" + view.Identifier + std::to_string(std::rand() % 10000) + ".jpg";
+        view.IdType = idType;
+        if (view.Cover.empty() || view.Identifier.empty())
+        {
+            continue;
+        }
+
+        std::string path = m_dir + "cover/" + coverFileName(view);
         if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
         {
             std::filesystem::create_directories(std::filesystem::path(path).parent_path());

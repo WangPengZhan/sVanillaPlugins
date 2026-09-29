@@ -55,6 +55,12 @@ adapter::VideoView XHSPlugin::getVideoView(const std::string& url)
     case xhsapi::IDType::NoteId:
     {
         xhsapi::NoteDetailResponse noteDetail = m_client.getNoteDetail(id.id, id.xsecToken);
+        if (noteDetail.code != 0 || noteDetail.data.note_card.note_id.empty())
+        {
+            XHS_LOG_ERROR("getVideoView note detail unavailable, code: {}, noteId: {}", noteDetail.code, id.id);
+            return {};
+        }
+
         adapter::BaseVideoView view = convertNoteDetail(noteDetail.data.note_card);
         // Preserve the URL's optional xsec_token for the later detail request.
         view.Option1 = id.xsecToken;
@@ -63,17 +69,32 @@ adapter::VideoView XHSPlugin::getVideoView(const std::string& url)
     }
     case xhsapi::IDType::UserId:
     {
+        constexpr size_t maxAccountNotePages = 100;
         xhsapi::NoteItemList noteList;
         std::string cursor;
         std::string previousCursor;
+        size_t pageCount = 0;
         do
         {
-            noteList = m_client.getAccountNotes(id.id, cursor, 10, id.xsecToken).data;
+            xhsapi::NoteItemListResponse noteListResponse = m_client.getAccountNotes(id.id, cursor, 10, id.xsecToken);
+            if (noteListResponse.code != 0)
+            {
+                XHS_LOG_ERROR("getVideoView account notes unavailable, code: {}, userId: {}", noteListResponse.code, id.id);
+                break;
+            }
+
+            noteList = noteListResponse.data;
             auto viewList = convertNoteDetail(noteList);
             views.insert(views.end(), viewList.begin(), viewList.end());
             previousCursor = cursor;
             cursor = noteList.cursor;
-        } while (noteList.has_more && !cursor.empty() && cursor != previousCursor);
+            ++pageCount;
+        } while (noteList.has_more && !cursor.empty() && cursor != previousCursor && pageCount < maxAccountNotePages);
+
+        if (noteList.has_more && pageCount >= maxAccountNotePages)
+        {
+            XHS_LOG_WARN("getVideoView stopped at the page limit, userId: {}, pages: {}", id.id, pageCount);
+        }
 
         return views;
     }
@@ -91,6 +112,11 @@ std::shared_ptr<download::FileDownloader> XHSPlugin::getDownloader(const VideoIn
     copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     xhsapi::NoteDetailResponse noteDetail = m_client.getNoteDetail(copyedVideoInfo.videoView->Identifier, copyedVideoInfo.videoView->Option1);
+    if (noteDetail.code != 0 || noteDetail.data.note_card.note_id.empty())
+    {
+        XHS_LOG_ERROR("getDownloader note detail unavailable, code: {}, noteId: {}", noteDetail.code, copyedVideoInfo.videoView->Identifier);
+        return {};
+    }
 
     download::ResourceInfo info;
     info.videoUris.push_back(getVideoUrl(noteDetail.data.note_card.video.media));

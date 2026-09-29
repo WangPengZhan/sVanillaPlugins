@@ -5,14 +5,19 @@
 
 std::string getVideoUrl(const std::vector<xhsapi::StreamItem>& stream)
 {
+    const auto isBetterStream = [](const xhsapi::StreamItem& item, const xhsapi::StreamItem* selected) {
+        return !selected || item.height > selected->height || (item.height == selected->height && item.video_bitrate > selected->video_bitrate);
+    };
+
     const xhsapi::StreamItem* selected = nullptr;
+    // Prefer streams that expose a master url; backup urls are a fallback only.
     for (const auto& item : stream)
     {
-        if (item.master_url.empty() && item.backup_urls.empty())
+        if (item.master_url.empty())
         {
             continue;
         }
-        if (!selected || item.height > selected->height || (item.height == selected->height && item.video_bitrate > selected->video_bitrate))
+        if (isBetterStream(item, selected))
         {
             selected = &item;
         }
@@ -20,13 +25,25 @@ std::string getVideoUrl(const std::vector<xhsapi::StreamItem>& stream)
 
     if (!selected)
     {
+        for (const auto& item : stream)
+        {
+            if (item.backup_urls.empty())
+            {
+                continue;
+            }
+            if (isBetterStream(item, selected))
+            {
+                selected = &item;
+            }
+        }
+    }
+
+    if (!selected)
+    {
         return "";
     }
-    if (!selected->master_url.empty())
-    {
-        return selected->master_url;
-    }
-    return selected->backup_urls.front();
+
+    return selected->master_url.empty() ? selected->backup_urls.front() : selected->master_url;
 }
 
 std::string getVideoUrl(const xhsapi::Media& media)
@@ -80,9 +97,6 @@ adapter::BaseVideoView convertNoteDetail(const xhsapi::NoteCard& note)
     adapter::BaseVideoView view;
 
     view.Identifier = note.note_id;
-    view.IdType;
-    view.ParentId;
-    view.ParentIdType;
     view.Title = note.title;
     view.Publisher = note.user.nickname;
     view.Cover = note.image_list.empty() ? "" : note.image_list.front().url_default;
@@ -99,9 +113,9 @@ adapter::VideoView convertNoteDetail(const xhsapi::NoteItemList& note)
     adapter::VideoView views;
     views.reserve(note.notes.size());
 
-    for (const auto& note : note.notes)
+    for (const auto& item : note.notes)
     {
-        views.push_back(convertNoteDetail(note));
+        views.push_back(convertNoteDetail(item));
     }
 
     return views;

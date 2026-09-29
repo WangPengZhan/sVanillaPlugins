@@ -24,10 +24,10 @@ public:
     QRCodeResponse getQRCode();
 
     AwemeDetailResponse getAwemeDetail(const std::string& awemeId);
-    SeriesDetail getSeriesDetail(const std::string& seriesId, int cursor, int count);
-    SeriesDetail getMixDetail(const std::string& mixId, int cursor, int count);
-    SeriesDetail getUserAll(const std::string& userId, int cursor, int count);
-    SeriesDetail getUserHistory(int cursor, int count);
+    SeriesDetail getSeriesDetail(const std::string& seriesId, int64_t cursor, int count);
+    SeriesDetail getMixDetail(const std::string& mixId, int64_t cursor, int count);
+    SeriesDetail getUserAll(const std::string& userId, int64_t cursor, int count);
+    SeriesDetail getUserHistory(int64_t cursor, int count);
     SeriesDetail getUserCollection(int cursor, int count);
 
     QRCodeStatusResponse getLoginStatus(const std::string& token, const std::string& captcha = "");

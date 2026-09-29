@@ -50,6 +50,17 @@ TEST(DedaoUrlUnitTest, RejectsUnsupportedUrls)
     EXPECT_EQ(getID("https://example.com/course/detail?id=course30003").type, IDType::Unkown);
 }
 
+TEST(DedaoUrlUnitTest, AcceptsIdsWithTrailingQueryOrFragment)
+{
+    EXPECT_TRUE(isValidUrl("https://www.dedao.cn/course/detail?id=course30003&from=share"));
+    const auto course = getID("https://www.dedao.cn/course/detail?id=course30003&from=share#/detail");
+    EXPECT_EQ(course.id, "course30003");
+    EXPECT_EQ(course.type, IDType::Course);
+
+    EXPECT_TRUE(isValidUrl("https://dedao.cn/ebook/reader?id=ebook10001#/catalog"));
+    EXPECT_EQ(getID("https://dedao.cn/ebook/reader?id=ebook10001#/catalog").id, "ebook10001");
+}
+
 TEST(DedaoConvertUnitTest, ConvertsLiveMetadataAndTeachers)
 {
     dedaoapi::LiveDetail detail;

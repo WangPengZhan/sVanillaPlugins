@@ -133,7 +133,7 @@ QRCodeStatusResponse DouYinClient::getLoginStatus(const std::string& token, cons
     auto header = parseHeader(response.header);
     if (header.end() != header.find(network::set_cookies))
     {
-        DOUYIN_LOG_INFO("Login success!");
+        DOUYIN_LOG_INFO("Login cookies updated!");
         std::lock_guard lk(m_mutexRequest);
         network::CurlCookie cookie(header.at(network::set_cookies));
         cookie.setDomain(domain);
@@ -149,6 +149,11 @@ QRCodeStatusResponse DouYinClient::getLoginStatus(const std::string& token, cons
     catch (const std::exception& e)
     {
         DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response.body);
+    }
+
+    if (ret.data.status == "success")
+    {
+        DOUYIN_LOG_INFO("Login success!");
     }
 
     return ret;
@@ -250,7 +255,7 @@ AwemeDetailResponse DouYinClient::getAwemeDetail(const std::string& awemeId)
     return ret;
 }
 
-SeriesDetail DouYinClient::getSeriesDetail(const std::string& seriesId, int cursor, int count)
+SeriesDetail DouYinClient::getSeriesDetail(const std::string& seriesId, int64_t cursor, int count)
 {
     std::string url = home + Api::Series;
     network::CurlHeader headers = createDetailHeaders();
@@ -279,7 +284,7 @@ SeriesDetail DouYinClient::getSeriesDetail(const std::string& seriesId, int curs
     return ret;
 }
 
-SeriesDetail DouYinClient::getMixDetail(const std::string& mixId, int cursor, int count)
+SeriesDetail DouYinClient::getMixDetail(const std::string& mixId, int64_t cursor, int count)
 {
     std::string url = home + Api::Mix;
     network::CurlHeader headers = createDetailHeaders();
@@ -308,7 +313,7 @@ SeriesDetail DouYinClient::getMixDetail(const std::string& mixId, int cursor, in
     return ret;
 }
 
-SeriesDetail DouYinClient::getUserAll(const std::string& userId, int cursor, int count)
+SeriesDetail DouYinClient::getUserAll(const std::string& userId, int64_t cursor, int count)
 {
     std::string url = home + Api::UserAll;
     network::CurlHeader headers = createDetailHeaders();
@@ -337,7 +342,7 @@ SeriesDetail DouYinClient::getUserAll(const std::string& userId, int cursor, int
     return ret;
 }
 
-SeriesDetail DouYinClient::getUserHistory(int cursor, int count)
+SeriesDetail DouYinClient::getUserHistory(int64_t cursor, int count)
 {
     std::string url = home + Api::UserHistory;
     network::CurlHeader headers = createDetailHeaders();
@@ -455,20 +460,9 @@ std::string DouYinClient::encryptionParams(const ParamType& params, const std::s
 
 bool DouYinClient::downloadImage(const std::string& url, const std::filesystem::path& path)
 {
-    FILE* file = fopen(path.string().c_str(), "wb");
-    if (!file)
-    {
-        std::string str = strerror(errno);
-        DOUYIN_LOG_ERROR("fopen error: {}, filePath: {}", str, path.string());
-        return false;
-    }
-
     network::CurlHeader header;
     header.add(std::string("Referer: ") + douyinapi::home);
-    get(url, file, header, true);
-    fclose(file);
-
-    return true;
+    return network::downloadFileChecked(*this, url, path, header, true);
 }
 
 void DouYinClient::initDefaultOptions()

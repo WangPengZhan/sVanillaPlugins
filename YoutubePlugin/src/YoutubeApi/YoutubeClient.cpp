@@ -21,6 +21,11 @@
 namespace youtubeapi
 {
 
+namespace
+{
+constexpr std::chrono::hours visitorDataValidDuration = std::chrono::hours(5);
+}  // namespace
+
 YoutubeClient::YoutubeClient()
     : network::NetWork()
     , m_cookies(youtube_default_cookies)
@@ -37,18 +42,25 @@ YoutubeClient& YoutubeClient::globalClient()
 
 bool YoutubeClient::isLogined() const
 {
+    std::lock_guard lock(m_mutexRequest);
     return !m_cookies.cookie(domain).value(youtubeMustKey).empty();
 }
 
 void YoutubeClient::setCookie(const std::string& cookie)
 {
+    std::lock_guard lock(m_mutexRequest);
+    std::string merged = cookie;
+    if (!merged.empty() && !merged.ends_with(';'))
+    {
+        merged += "; ";
+    }
+
     network::CurlCookies cookies;
-    cookies.addCurlCookie(network::CurlCookie::parseCookie(cookie + youtube_default_cookies));
+    cookies.addCurlCookie(network::CurlCookie::parseCookie(merged + youtube_default_cookies));
     m_cookies = cookies;
 
     if (!std::string(m_cookies).empty())
     {
-        std::lock_guard lock(m_mutexRequest);
         m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
     }
 }
@@ -62,6 +74,7 @@ void YoutubeClient::setCookies(const std::string& cookies)
 
 std::string YoutubeClient::cookies() const
 {
+    std::lock_guard lock(m_mutexRequest);
     return std::string(m_cookies);
 }
 
@@ -104,7 +117,7 @@ nlohmann::json YoutubeClient::getDataFromRespones(const std::string& respones)
     }
     catch (std::exception& e)
     {
-        std::string error = e.what();
+        YOUTUBE_LOG_WARN("getDataFromRespones error: {}", e.what());
     }
 
     return json;
@@ -112,7 +125,7 @@ nlohmann::json YoutubeClient::getDataFromRespones(const std::string& respones)
 
 MainResponse YoutubeClient::getVideoInfo(const std::string& videoId)
 {
-    YOUTUBE_LOG_WARN("getVideoInfo videoId: {}", videoId);
+    YOUTUBE_LOG_INFO("getVideoInfo videoId: {}", videoId);
     network::CurlHeader header;
     header.add(youtube_player_user_agent);
     header.add(youtube_origin);
@@ -235,18 +248,27 @@ bool YoutubeClient::logout()
 std::string YoutubeClient::visitorData()
 {
     std::lock_guard<std::mutex> lock(m_vistorDataMutex);
-    if (!m_visitorData.empty())
+    const auto now = std::chrono::steady_clock::now();
+    if (!m_visitorData.empty() && now < m_visitorDataExpireTime)
     {
         return m_visitorData;
     }
 
-    m_visitorData = getVisitorData();
+    std::string visitorData = getVisitorData();
+    if (visitorData.empty())
+    {
+        YOUTUBE_LOG_WARN("getVisitorData failed, keep current visitorData: {}", m_visitorData);
+        return m_visitorData;
+    }
+
+    m_visitorData = std::move(visitorData);
+    m_visitorDataExpireTime = now + visitorDataValidDuration;
     return m_visitorData;
 }
 
 PlayListInfo YoutubeClient::playlistInfo(const std::string& listId)
 {
-    YOUTUBE_LOG_WARN("playlistInfo videoId: {}", listId);
+    YOUTUBE_LOG_INFO("playlistInfo listId: {}", listId);
     network::CurlHeader header;
     header.add("Content-Type: application/json");
     nlohmann::json content = nlohmann::json::parse(youtubeBrowsePostContent);
@@ -263,7 +285,7 @@ PlayListInfo YoutubeClient::playlistInfo(const std::string& listId)
     catch (const std::exception& e)
     {
         std::cout << "error: " << e.what() << std::endl;
-        YOUTUBE_LOG_WARN("getVideoInfo error: {}", e.what());
+        YOUTUBE_LOG_WARN("playlistInfo error: {}", e.what());
     }
     return ret;
 }
@@ -347,15 +369,11 @@ void YoutubeClient::initDefaultHeaders()
 
 void YoutubeClient::initDefaultOptions()
 {
-    constexpr long timeoutSecond = 5000;
+    constexpr long timeoutSecond = 30;
     auto timeout = std::make_shared<network::TimeOut>(timeoutSecond);
     m_commonOptions.insert({timeout->getOption(), timeout});
     auto acceptEncoding = std::make_shared<network::AcceptEncoding>("gzip");
     m_commonOptions.insert({acceptEncoding->getOption(), acceptEncoding});
-    auto sslVerifyHost = std::make_shared<network::SSLVerifyHost>(false);
-    m_commonOptions.insert({sslVerifyHost->getOption(), sslVerifyHost});
-    auto sslVerifyPeer = std::make_shared<network::SSLVerifyPeer>(false);
-    m_commonOptions.insert({sslVerifyPeer->getOption(), sslVerifyPeer});
     if (!std::string(m_cookies).empty())
     {
         m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));

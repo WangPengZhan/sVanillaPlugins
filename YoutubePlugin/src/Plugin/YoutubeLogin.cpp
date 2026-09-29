@@ -59,7 +59,7 @@ bool YoutubeLogin::isLoggedIn() const
 
 bool YoutubeLogin::logout()
 {
-    return youtubeapi::YoutubeClient::globalClient().isLogined();
+    return youtubeapi::YoutubeClient::globalClient().logout();
 }
 
 std::string YoutubeLogin::domain() const

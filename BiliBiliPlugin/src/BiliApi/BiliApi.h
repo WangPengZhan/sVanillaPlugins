@@ -225,12 +225,12 @@ class PlayUrlDurl
 {
 public:
     int order;
-    std::string length;
+    int length;
     long long size;
     std::string url;
     std::list<std::string> backup_url;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(PlayUrlDurl, order, length, size, backup_url)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(PlayUrlDurl, order, length, size, url, backup_url)
 };
 
 class PlayUrlDashVideo
@@ -279,7 +279,8 @@ public:
     bool need_login{};
     bool need_vip{};
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(SupportFormat, quality, format, new_description, description, superscript, display_desc, codecs, need_vip)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(SupportFormat, quality, format, new_description, description, superscript, display_desc, codecs, need_login,
+                                                need_vip)
 };
 
 class PlayUrl
@@ -341,7 +342,7 @@ public:
     int codecid;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(DashInfo, id, baseUrl, base_url, backupUrl, backup_url, bandwidth, mimeType, mime_type, codecs, width, height,
-                                                frameRate, frame_rate, startWithSap, start_with_sap, SegmentBase, segment_base)
+                                                frameRate, frame_rate, startWithSap, start_with_sap, SegmentBase, segment_base, codecid)
 };
 
 class DashDobly
@@ -371,7 +372,7 @@ public:
     std::list<DashInfo> audio;
     DashDobly dolby;
     DashFlac flac;
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(PlayDash, duration, minBufferTime, min_buffer_time, video, audio)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(PlayDash, duration, minBufferTime, min_buffer_time, video, audio, dolby, flac)
 };
 
 class PlayUrlData

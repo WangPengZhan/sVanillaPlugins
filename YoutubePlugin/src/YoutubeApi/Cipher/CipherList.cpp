@@ -23,6 +23,11 @@ SpliceCipher::SpliceCipher(int index)
 
 std::string SpliceCipher::decipher(const std::string& input)
 {
+    if (index() < 0 || static_cast<std::size_t>(index()) > input.size())
+    {
+        return input;
+    }
+
     return input.substr(index());
 }
 
@@ -49,8 +54,8 @@ SwapCipher::SwapCipher(int index)
 
 std::string SwapCipher::decipher(const std::string& input)
 {
-    int i = index();
-    if (i >= input.size() || index() < 0)
+    const int i = index();
+    if (i <= 0 || static_cast<std::size_t>(i) >= input.size())
     {
         return input;
     }

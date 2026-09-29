@@ -10,8 +10,13 @@ adapter::VideoView convertVideoView(const weiboapi::ComponentPlayPlayinfoRespons
 {
     adapter::VideoView views;
 
-    adapter::BaseVideoView baseView;
     const auto& playInfo = data.data.Component_Play_Playinfo;
+    if (playInfo.id.empty())
+    {
+        return views;
+    }
+
+    adapter::BaseVideoView baseView;
     baseView.Identifier = playInfo.id;
     baseView.Option1 = playInfo.mid;
     baseView.Option2 = std::to_string(playInfo.media_id);
@@ -35,7 +40,7 @@ adapter::VideoView convertVideoView(const weiboapi::WeiboAjaxData& data)
 
     for (const auto& item : data.mix_media_info.items)
     {
-        if (!item.type.starts_with("video"))
+        if (!item.type.starts_with("video") || item.id.empty())
         {
             continue;
         }
@@ -56,6 +61,10 @@ adapter::BaseVideoView convertMediaInfoItem(const weiboapi::MediaInfoItem& data)
     baseView.Title = data.data.media_info.name + data.data.media_info.media_id;
     baseView.Publisher = data.data.media_info.author_name;
     baseView.Cover = data.data.media_info.big_pic_info.pic_big.url;
+    if (baseView.Cover.starts_with("//"))
+    {
+        baseView.Cover = "https:" + baseView.Cover;
+    }
     baseView.Duration = formatDuration(data.data.media_info.duration);
     baseView.Description = data.data.content2;
     baseView.PublishDate = convertTimestamp(data.data.media_info.video_publish_time);

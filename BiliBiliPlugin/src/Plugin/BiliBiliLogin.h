@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include <LoginApi.h>
 
 class BiliBiliLogin : public AbstractLoginApi
@@ -30,5 +32,6 @@ public:
 
 private:
     std::string m_qrcodeKey;
+    mutable std::mutex m_mutex;  // guards m_qrcodeKey
     static LoginResource m_biliRes;
 };

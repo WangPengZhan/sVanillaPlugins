@@ -1,6 +1,7 @@
 #include <regex>
 #include <filesystem>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <fstream>
 #include <mutex>
@@ -21,7 +22,13 @@ namespace xhsapi
 XHSClient::XHSClient()
 {
     initDefaultOptions();
-    registerAnonymous();
+}
+
+void XHSClient::ensureAnonymous()
+{
+    std::call_once(m_anonymousOnce, [this] {
+        registerAnonymous();
+    });
 }
 
 XHSClient& XHSClient::globalClient()
@@ -49,6 +56,7 @@ QRCodeResponse XHSClient::getQRCode()
     catch (const std::exception& e)
     {
         XHS_LOG_ERROR("getQRCode response parsing failed: {}", e.what());
+        ret.code = responseErrorCode;
     }
 
     return ret;
@@ -64,17 +72,31 @@ LoginStatusResponse XHSClient::getLoginStatus(const std::string& code, const std
     network::CurlHeader headers = createSignedHeaders("POST", Login::QRCheck, dataStr);
     headers.add("service-tag: webcn");
 
-    std::string response;
+    network::ResponseHeaderAndBody response;
     post(url, response, dataStr, headers, false);
 
     LoginStatusResponse ret;
     try
     {
-        ret = getDataFromRespones(response);
+        ret = getDataFromRespones(response.body);
     }
     catch (const std::exception& e)
     {
         XHS_LOG_ERROR("getLoginStatus response parsing failed: {}", e.what());
+        ret.code = responseErrorCode;
+        return ret;
+    }
+
+    const auto header = parseHeader(response.header);
+    if (header.end() != header.find(network::set_cookies))
+    {
+        XHS_LOG_INFO("getLoginStatus received session cookies!");
+        network::CurlCookie cookie(header.at(network::set_cookies));
+        cookie.setDomain(domain);
+
+        std::lock_guard lk(m_mutexRequest);
+        m_cookies.addCurlCookie(cookie);
+        m_commonOptions[network::CookieFields::opt] = std::make_shared<network::CookieFields>(m_cookies.cookie(domain));
     }
 
     return ret;
@@ -96,6 +118,7 @@ AccountInfoResponse XHSClient::getAccountInfo()
     catch (const std::exception& e)
     {
         XHS_LOG_ERROR("getAccountInfo response parsing failed: {}", e.what());
+        ret.code = responseErrorCode;
     }
 
     return ret;
@@ -126,6 +149,7 @@ NoteDetailResponse XHSClient::getNoteDetail(const std::string& noteId, const std
     catch (const std::exception& e)
     {
         XHS_LOG_ERROR("getNoteDetail response parsing failed, noteId: {}, error: {}", noteId, e.what());
+        ret.code = responseErrorCode;
     }
 
     return ret;
@@ -157,6 +181,7 @@ NoteItemListResponse XHSClient::getAccountNotes(const std::string& userId, const
     catch (const std::exception& e)
     {
         XHS_LOG_ERROR("getAccountNotes response parsing failed, userId: {}, error: {}", userId, e.what());
+        ret.code = responseErrorCode;
     }
 
     return ret;
@@ -188,6 +213,7 @@ NoteItemListResponse XHSClient::getFavoriteNotes(const std::string& userId, cons
     catch (const std::exception& e)
     {
         XHS_LOG_ERROR("getFavoriteNotes response parsing failed, userId: {}, error: {}", userId, e.what());
+        ret.code = responseErrorCode;
     }
 
     return ret;
@@ -195,14 +221,14 @@ NoteItemListResponse XHSClient::getFavoriteNotes(const std::string& userId, cons
 
 bool XHSClient::isLogined() const
 {
-    std::lock_guard lk(m_mutexRequest);
+    std::shared_lock lk(m_mutexRequest);
     const auto cookie = m_cookies.cookie(domain).content();
     return cookie.find("web_session=") != std::string::npos;
 }
 
 std::string XHSClient::cookies() const
 {
-    std::lock_guard lk(m_mutexRequest);
+    std::shared_lock lk(m_mutexRequest);
     return std::string(m_cookies);
 }
 
@@ -307,6 +333,7 @@ void XHSClient::setScriptingCookie()
     catch (const std::exception& e)
     {
         XHS_LOG_ERROR("setScriptingCookie response parsing failed: {}", e.what());
+        ret.code = responseErrorCode;
     }
 
     if (!ret.data.data.empty())
@@ -344,11 +371,13 @@ network::CurlHeader XHSClient::createLoginHeaders()
     return headers;
 }
 
-network::CurlHeader XHSClient::createSignedHeaders(const std::string& method, const std::string& uri, const std::string& body, SignFormat format) const
+network::CurlHeader XHSClient::createSignedHeaders(const std::string& method, const std::string& uri, const std::string& body, SignFormat format)
 {
+    ensureAnonymous();
+
     std::string cookieHeader;
     {
-        std::lock_guard lk(m_mutexRequest);
+        std::shared_lock lk(m_mutexRequest);
         cookieHeader = m_cookies.cookie(domain).content();
     }
     const auto signature = signRequest(method, uri, body, parseSignCookies(cookieHeader), format);
@@ -374,16 +403,18 @@ std::string XHSClient::encodeData(const ParamType& params)
 
 nlohmann::json XHSClient::getDataFromRespones(const std::string& respones)
 {
-    nlohmann::json json;
-    try
+    if (respones.empty())
     {
-        json = nlohmann::json::parse(respones);
-        util::JsonProcess::removeNullValues(json);
+        throw std::runtime_error("empty response body");
     }
-    catch (std::exception& e)
+
+    auto json = nlohmann::json::parse(respones);
+    if (!json.is_object())
     {
-        XHS_LOG_ERROR("Error parsing response: {}", e.what());
+        throw std::runtime_error("response body is not a json object");
     }
+
+    util::JsonProcess::removeNullValues(json);
 
     return json;
 }

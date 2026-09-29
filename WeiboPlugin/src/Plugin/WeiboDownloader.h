@@ -42,12 +42,11 @@ private:
     ResourceInfo m_resourceInfo;
     std::string m_path;
     std::string m_filename;
-    std::string m_uniqueId;
     std::list<std::string> m_uris;
     AriaDownloader m_videoDownloader;
     AriaDownloader m_audioDownloader;
-    bool m_finished;
-    bool m_haveTwoPart;
+    bool m_finished = false;
+    bool m_haveTwoPart = false;
 };
 
 void freeDownload(WeiboDownloader* downloader);

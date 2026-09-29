@@ -7,11 +7,16 @@
 namespace xhsapi
 {
 
+// Reported when a request never produced a parsable json object (network
+// failure or an unexpected body), so callers can tell it apart from a real
+// server response that legitimately uses code == 0.
+constexpr int responseErrorCode = -1;
+
 template <typename Result>
 struct XHSBasicResponse
 {
     int code{};
-    bool success;
+    bool success{};
     std::string msg;
     Result data;
 

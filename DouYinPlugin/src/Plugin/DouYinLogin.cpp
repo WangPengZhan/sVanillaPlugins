@@ -6,6 +6,7 @@
 #include "DouYinResource.h"
 #include "DouYinApi/DouYinClient.h"
 #include "DouYinApi/DouYinConstants.h"
+#include "DouYinApi/DouYinLog.h"
 #include "PluginCrypto/Encoding.h"
 #include "Util/TimerUtil.h"
 #include "Util/LocaleHelper.h"
@@ -58,6 +59,11 @@ DouYinLogin::LoginStatus DouYinLogin::getLoginStatus()
 bool DouYinLogin::getScanContext(std::string& content)
 {
     douyinapi::QRCodeResponse qrc = m_client.getQRCode();
+    if (qrc.data.qrcode.empty())
+    {
+        DOUYIN_LOG_ERROR("get scan context failed, empty qrcode image, code: {}, message: {}", qrc.code, qrc.message);
+        return false;
+    }
 
     {
         std::lock_guard lc(m_mutexData);
@@ -73,7 +79,13 @@ bool DouYinLogin::getScanContext(std::string& content)
     std::string base_content = qrc.data.qrcode;
     auto bin = encoding::base64Decode(base_content);
     std::ofstream qrFile(path, std::ios::binary);
+    if (!qrFile)
+    {
+        DOUYIN_LOG_ERROR("get scan context failed, cannot write qrcode file: {}", path);
+        return false;
+    }
     qrFile << bin;
+    qrFile.close();
     content = util::localeToUtf8(path);
 
     return true;
@@ -148,7 +160,7 @@ std::string DouYinLogin::domain() const
 std::vector<adapter::BaseVideoView> DouYinLogin::history()
 {
     std::vector<adapter::BaseVideoView> views;
-    int cursor = 0;
+    int64_t cursor = 0;
     douyinapi::SeriesDetail detail;
 
     do
@@ -160,7 +172,7 @@ std::vector<adapter::BaseVideoView> DouYinLogin::history()
         }
         auto batch = convertSeriesDetail(detail);
         views.insert(views.end(), batch.begin(), batch.end());
-        const int nextCursor = detail.max_cursor;
+        const int64_t nextCursor = detail.max_cursor;
         if (detail.has_more && nextCursor == cursor)
         {
             break;

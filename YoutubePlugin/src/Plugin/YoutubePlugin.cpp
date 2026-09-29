@@ -10,6 +10,20 @@
 
 #include <Util/UrlProccess.h>
 
+namespace
+{
+std::string appendRange(const youtubeapi::AdaptiveFormat& format)
+{
+    if (format.contentLength.empty())
+    {
+        return format.url;
+    }
+
+    const char separator = format.url.find('?') == std::string::npos ? '?' : '&';
+    return format.url + separator + "range=0-" + format.contentLength;
+}
+}  // namespace
+
 PluginMessage YoutubePlugin::m_pluginMessage = {
     youtubeplugin::pluginID, youtubeplugin::name, youtubeplugin::version, youtubeplugin::description, youtubeplugin::domain,
 };
@@ -38,7 +52,6 @@ adapter::VideoView YoutubePlugin::getVideoView(const std::string& url)
     if (id.type == youtubeapi::IDType::VideoId && id.parentType != youtubeapi::IDType::PlaylistId)
     {
         youtubeapi::MainResponse mainResponse = client.getVideoInfo(id.id);
-        client.getBaseJs(client.getIFrameVersion());
         views = convertVideoView(mainResponse);
     }
     else if (id.type == youtubeapi::IDType::PlaylistId || id.parentType == youtubeapi::IDType::PlaylistId)
@@ -53,6 +66,11 @@ adapter::VideoView YoutubePlugin::getVideoView(const std::string& url)
     }
     else if (id.type == youtubeapi::IDType::ChannelId)
     {
+        if (id.id.size() <= 2 || !id.id.starts_with("UC"))
+        {
+            return views;
+        }
+
         std::string playlistUrl = "https://www.youtube.com/playlist?list=UU" + id.id.substr(2);
         views = getVideoView(playlistUrl);
     }
@@ -91,10 +109,10 @@ std::shared_ptr<download::FileDownloader> YoutubePlugin::getDownloader(const Vid
     }
 
     download::ResourceInfo info;
-    std::string videoUrl = result.front().url + "&range=0-" + result.front().contentLength;
+    std::string videoUrl = appendRange(result.front());
     if (result.size() != 1)
     {
-        std::string audioUrl = result.back().url + "&range=0-" + result.back().contentLength;
+        std::string audioUrl = appendRange(result.back());
         info.audioUris = {audioUrl};
     }
 

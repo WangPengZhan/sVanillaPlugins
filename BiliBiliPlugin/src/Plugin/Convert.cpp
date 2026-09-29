@@ -20,13 +20,15 @@ adapter::VideoView convertVideoView(const biliapi::VideoView& data)
 
     if (checkSeason(data))
     {
-        const auto episodes = data.ugc_season.sections.front().episodes;
-        for (const auto& e : episodes)
+        for (const auto& section : data.ugc_season.sections)
         {
-            auto item = convertEpisodes(e);
-            item.Publisher = data.owner.name;
-            item.PlayListTitle = data.ugc_season.title;
-            videoListView.push_back(item);
+            for (const auto& e : section.episodes)
+            {
+                auto item = convertEpisodes(e);
+                item.Publisher = data.owner.name;
+                item.PlayListTitle = data.ugc_season.title;
+                videoListView.push_back(item);
+            }
         }
         return videoListView;
     }
@@ -120,11 +122,15 @@ adapter::VideoView convertVideoView(const biliapi::VideoWorks& data)
 
 bool checkSeason(const biliapi::VideoView& data)
 {
-    if (data.ugc_season.sections.empty())
+    for (const auto& section : data.ugc_season.sections)
     {
-        return false;
+        if (!section.episodes.empty())
+        {
+            return true;
+        }
     }
-    return !data.ugc_season.sections.front().episodes.empty();
+
+    return false;
 }
 
 bool checkPages(const biliapi::VideoView& data)

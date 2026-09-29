@@ -19,9 +19,10 @@ struct UrlCase
     youtubeapi::IDType parentType = youtubeapi::IDType::Unkown;
 };
 
-constexpr std::array<UrlCase, 10> kUrlCases = {
+constexpr std::array<UrlCase, 11> kUrlCases = {
     {
      {"https://www.youtube.com/watch?v=abcdefghijk", "abcdefghijk", youtubeapi::IDType::VideoId},
+     {"https://youtube.com/watch?v=hijklmnopqr", "hijklmnopqr", youtubeapi::IDType::VideoId},
      {"https://music.youtube.com/watch?v=bcdefghijkl", "bcdefghijkl", youtubeapi::IDType::VideoId},
      {"https://www.youtubekids.com/watch?v=cdefghijklm", "cdefghijklm", youtubeapi::IDType::VideoId},
      {"https://youtu.be/defghijklmn", "defghijklmn", youtubeapi::IDType::VideoId},
@@ -168,6 +169,17 @@ TEST(YoutubeConvertUnitTest, ConvertsPlayerResponseAndHandlesInvalidDuration)
     EXPECT_EQ(views[0].Duration, "0:00");
     EXPECT_TRUE(views[0].Cover.empty());
     EXPECT_TRUE(views[0].PublishDate.empty());
+}
+
+TEST(YoutubeConvertUnitTest, SkipsUnplayablePlayerResponse)
+{
+    youtubeapi::MainResponse response;
+    response.videoDetails.videoId = "abcdefghijk";
+    response.playabilityStatus.status = "ERROR";
+    response.playabilityStatus.reason = "This video is not available";
+
+    EXPECT_FALSE(response.isPlayable());
+    EXPECT_TRUE(convertVideoView(response).empty());
 }
 
 TEST(YoutubeConvertUnitTest, ConvertsPlaylistItemMetadata)

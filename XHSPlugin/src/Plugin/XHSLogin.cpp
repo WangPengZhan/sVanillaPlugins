@@ -31,26 +31,32 @@ XHSLogin::LoginStatus XHSLogin::getLoginStatus()
         qrId = m_qrId;
     }
 
+    if (code.empty() || qrId.empty())
+    {
+        // getScanContext has not produced a qrcode yet, so there is nothing to
+        // poll and the request would be meaningless.
+        return LoginStatus::Unknow;
+    }
+
     const auto loginStatus = m_client.getLoginStatus(code, qrId);
     if (loginStatus.code != 0)
     {
         return LoginStatus::Unknow;
     }
 
-    if (loginStatus.data.codeStatus == 0)
+    switch (loginStatus.data.codeStatus)
     {
+    case 0:
         return LoginStatus::NoScan;
-    }
-    else if (loginStatus.data.codeStatus == 1)
-    {
+    case 1:
         return LoginStatus::ScannedNoAck;
-    }
-    else if (loginStatus.data.codeStatus == 2)
-    {
+    case 2:
         return LoginStatus::Success;
+    default:
+        // Any other status means the current qrcode is no longer usable
+        // (expired or replaced); report a timeout so the host can refresh it.
+        return LoginStatus::Timeout;
     }
-
-    return LoginStatus::Unknow;
 }
 
 bool XHSLogin::getScanContext(std::string& content)
@@ -74,6 +80,11 @@ bool XHSLogin::getScanContext(std::string& content)
     }
 
     std::ofstream file(path);
+    if (!file.is_open())
+    {
+        return false;
+    }
+
     file << QrCodeGenerator::generateQR(login.data.url);
     file.close();
 

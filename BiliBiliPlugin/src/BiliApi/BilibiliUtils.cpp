@@ -86,11 +86,12 @@ std::string cookieDataFilePath()
 
 std::string hmac_sha256(const std::string& key, const std::string& message)
 {
-    unsigned char* digest;
-    digest = HMAC(EVP_sha256(), key.data(), (int)key.size(), reinterpret_cast<const unsigned char*>(message.data()), (int)message.size(), nullptr, nullptr);
+    unsigned char digest[EVP_MAX_MD_SIZE] = {0};
+    unsigned int digestLength = 0;
+    HMAC(EVP_sha256(), key.data(), (int)key.size(), reinterpret_cast<const unsigned char*>(message.data()), (int)message.size(), digest, &digestLength);
 
     std::ostringstream oss;
-    for (int i = 0; i < 32; i++)
+    for (unsigned int i = 0; i < digestLength; i++)
     {
         oss << std::hex << std::setw(2) << std::setfill('0') << (int)digest[i];
     }

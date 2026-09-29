@@ -38,6 +38,7 @@ public:
 
 private:
     void initDefaultOptions();
+    void ensureAnonymous();
     void registerAnonymous();
 
     void setExploreCookie();
@@ -46,13 +47,13 @@ private:
 
 private:
     static network::CurlHeader createLoginHeaders();
-    network::CurlHeader createSignedHeaders(const std::string& method, const std::string& uri, const std::string& body,
-                                            SignFormat format = SignFormat::Xys) const;
+    network::CurlHeader createSignedHeaders(const std::string& method, const std::string& uri, const std::string& body, SignFormat format = SignFormat::Xys);
     static std::string encodeData(const ParamType& params);
     static nlohmann::json getDataFromRespones(const std::string& respones);
 
 private:
     network::CurlCookies m_cookies;
+    std::once_flag m_anonymousOnce;
 };
 
 }  // namespace xhsapi

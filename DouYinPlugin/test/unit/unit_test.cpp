@@ -88,6 +88,19 @@ TEST(DouYinUrlUnitTest, RejectsUnsupportedUrls)
     EXPECT_EQ(douyinapi::getID("https://example.com/video/7000000000000000001").type, douyinapi::IDType::Unkown);
 }
 
+TEST(DouYinSeriesDetailUnitTest, ParsesCursorFieldsWithoutTruncation)
+{
+    const auto json = nlohmann::json::parse(
+        R"({"aweme_list":[],"has_more":true,"cursor":1700000000000,"max_cursor":1700000000123,"min_cursor":1699999999000,"status_code":0})");
+    const douyinapi::SeriesDetail detail = json.get<douyinapi::SeriesDetail>();
+
+    EXPECT_TRUE(detail.has_more);
+    EXPECT_EQ(detail.status_code, 0);
+    EXPECT_EQ(detail.cursor, 1700000000000LL);
+    EXPECT_EQ(detail.max_cursor, 1700000000123LL);
+    EXPECT_EQ(detail.min_cursor, 1699999999000LL);
+}
+
 TEST(DouYinABogusUnitTest, SignsExactQueryAndBody)
 {
     constexpr char userAgent[] = "Mozilla/5.0 test";

@@ -26,6 +26,7 @@ constexpr std::string_view x3B64 = "MfgqrsbcyzPQRStuvC7mn501HIJBo2DEFTKdeNOwxWXY
 constexpr std::string_view xorHex =
     "71a302257793271ddd273bcee3e4b98d9d7935e1da33f5765e2ea8afb6dc77a51a499d23b67c20660025860cbf13d4540d92497f58686c574e508f46e1956344f39139bf4faf22a3eef120b792"
     "58145b2feb5193b6478669961298e79bedca646e1a693a926154a5a7a1bd1cf0dedb742f917a747a1e388b234f2277516db7116035439730fa61e9822a0eca7bff72d8";
+static_assert(xorHex.size() == 144 * 2, "XYS xor key must cover the full payload length");
 
 std::string encodeCustom(const std::string& input, std::string_view alphabet)
 {
