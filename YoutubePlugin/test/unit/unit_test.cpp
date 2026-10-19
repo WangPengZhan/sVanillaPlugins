@@ -1,4 +1,5 @@
 #include <array>
+#include <string>
 
 #include <gtest/gtest.h>
 
@@ -73,6 +74,71 @@ TEST(YoutubeUrlUnitTest, RejectsUnsupportedUrls)
     EXPECT_FALSE(youtubeapi::isValidUrl("https://www.youtube.com/watch"));
     EXPECT_EQ(youtubeapi::getID("https://example.com/watch?v=abcdefghijk").type, youtubeapi::IDType::Unkown);
     EXPECT_EQ(youtubeapi::getID("https://youtu.be/too-short").type, youtubeapi::IDType::Unkown);
+}
+
+TEST(YoutubeUrlUnitTest, MapsTypesToAndFromTheirNames)
+{
+    EXPECT_EQ(youtubeapi::typeToString(youtubeapi::IDType::VideoId), "VideoId");
+    EXPECT_EQ(youtubeapi::typeToString(youtubeapi::IDType::PlaylistId), "PlaylistId");
+    EXPECT_EQ(youtubeapi::typeToString(youtubeapi::IDType::ChannelId), "ChannelId");
+    EXPECT_EQ(youtubeapi::typeToString(youtubeapi::IDType::AtChannelId), "AtChannelId");
+    EXPECT_EQ(youtubeapi::typeToString(youtubeapi::IDType::UserNameId), "UserNameId");
+    EXPECT_EQ(youtubeapi::typeToString(youtubeapi::IDType::CustomNameId), "CustomNameId");
+    EXPECT_EQ(youtubeapi::typeToString(youtubeapi::IDType::Unkown), "Unkown");
+
+    EXPECT_EQ(youtubeapi::stringToType("VideoId"), youtubeapi::IDType::VideoId);
+    EXPECT_EQ(youtubeapi::stringToType("PlaylistId"), youtubeapi::IDType::PlaylistId);
+    EXPECT_EQ(youtubeapi::stringToType("ChannelId"), youtubeapi::IDType::ChannelId);
+    EXPECT_EQ(youtubeapi::stringToType("AtChannelId"), youtubeapi::IDType::AtChannelId);
+    EXPECT_EQ(youtubeapi::stringToType("UserNameId"), youtubeapi::IDType::UserNameId);
+    EXPECT_EQ(youtubeapi::stringToType("CustomNameId"), youtubeapi::IDType::CustomNameId);
+    EXPECT_EQ(youtubeapi::stringToType("Unkown"), youtubeapi::IDType::Unkown);
+    EXPECT_EQ(youtubeapi::stringToType("unknown-type"), youtubeapi::IDType::Unkown);
+
+    for (const auto type : {youtubeapi::IDType::Unkown, youtubeapi::IDType::VideoId, youtubeapi::IDType::PlaylistId, youtubeapi::IDType::ChannelId,
+                            youtubeapi::IDType::AtChannelId, youtubeapi::IDType::UserNameId, youtubeapi::IDType::CustomNameId})
+    {
+        SCOPED_TRACE(youtubeapi::typeToString(type));
+        EXPECT_FALSE(youtubeapi::typeToString(type).empty());
+        EXPECT_EQ(youtubeapi::stringToType(youtubeapi::typeToString(type)), type);
+    }
+}
+
+TEST(YoutubeUrlUnitTest, DescribesIdInfoForDiagnostics)
+{
+    const auto video = youtubeapi::getID("https://www.youtube.com/watch?v=ghijklmnopq&list=PL0123456789ABCDEF");
+    const auto text = video.to_string();
+
+    EXPECT_NE(text.find("ghijklmnopq"), std::string::npos);
+    EXPECT_NE(text.find("VideoId"), std::string::npos);
+    EXPECT_NE(text.find("PL0123456789ABCDEF"), std::string::npos);
+    EXPECT_NE(text.find("PlaylistId"), std::string::npos);
+
+    const auto unclassified = youtubeapi::getID("https://example.com/watch?v=ghijklmnopq").to_string();
+    EXPECT_NE(unclassified.find("Unkown"), std::string::npos);
+}
+
+TEST(YoutubeUrlUnitTest, RejectsMalformedAndEmptyUrls)
+{
+    for (const char* url : {"", "not a url", "youtube.com/watch?v=abcdefghijk", "ftp://www.youtube.com/watch?v=abcdefghijk",
+                            "https://www.youtube.com/watch?v=", "https://www.youtube.com/playlist?list="})
+    {
+        SCOPED_TRACE(url);
+        EXPECT_FALSE(youtubeapi::isValidUrl(url));
+
+        const auto id = youtubeapi::getID(url);
+        EXPECT_TRUE(id.id.empty());
+        EXPECT_EQ(id.type, youtubeapi::IDType::Unkown);
+    }
+
+    // Validation happens in two stages: isValidUrl only matches the host and
+    // path shape, while getID additionally enforces the 11 character video id
+    // pattern.  A well-shaped URL with a bad id is therefore "valid" but
+    // unclassifiable, and both halves of that contract are asserted here.
+    EXPECT_TRUE(youtubeapi::isValidUrl("https://www.youtube.com/watch?v=tooshort"));
+    EXPECT_TRUE(youtubeapi::isValidUrl("https://www.youtube.com/watch?v=waytoolongvideoid"));
+    EXPECT_EQ(youtubeapi::getID("https://www.youtube.com/watch?v=tooshort").type, youtubeapi::IDType::Unkown);
+    EXPECT_EQ(youtubeapi::getID("https://www.youtube.com/watch?v=waytoolongvideoid").type, youtubeapi::IDType::Unkown);
 }
 
 TEST(YoutubeClientUnitTest, UsesAndroidVrPlayerIdentity)
@@ -211,4 +277,12 @@ TEST(YoutubeDownloaderUnitTest, PreservesResourceOutputWithoutStartingAria)
     EXPECT_EQ(downloader.path(), "download-dir");
     EXPECT_EQ(downloader.filename(), "video.mp4");
     EXPECT_FALSE(downloader.isFinished());
+}
+
+TEST(YoutubeDownloaderUnitTest, SetVideoUrisUpdatesReportedUris)
+{
+    download::YoutubeDownloader downloader;
+    const std::list<std::string> uris = {"https://example.invalid/video"};
+    downloader.setVideoUris(uris);
+    EXPECT_EQ(downloader.uris(), uris);
 }

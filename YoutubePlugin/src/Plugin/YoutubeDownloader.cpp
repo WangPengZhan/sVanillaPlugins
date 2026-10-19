@@ -111,7 +111,8 @@ void YoutubeDownloader::downloadStatus()
     m_info.complete = video.complete + audio.complete;
     m_info.speed = video.speed + audio.speed;
 
-    if (m_info.total == m_info.complete && m_videoDownloader.status() == Finished && (!m_haveTwoPart || m_audioDownloader.status() == Finished))
+    if (m_info.total > 0 && m_info.total == m_info.complete && m_videoDownloader.status() == Finished &&
+        (!m_haveTwoPart || m_audioDownloader.status() == Finished))
     {
         if (m_haveTwoPart)
         {
@@ -140,13 +141,17 @@ void YoutubeDownloader::finish()
 
 void YoutubeDownloader::setVideoUris(const std::list<std::string>& videoUris)
 {
+    m_uris = videoUris;
     m_videoDownloader.setUris(videoUris);
+    m_haveTwoPart = !videoUris.empty() && !m_audioDownloader.uris().empty();
+    setAriaFileName();
 }
 
 void YoutubeDownloader::setAudioUris(const std::list<std::string>& audioUri)
 {
     m_audioDownloader.setUris(audioUri);
-    m_haveTwoPart = !audioUri.empty();
+    m_haveTwoPart = !m_videoDownloader.uris().empty() && !audioUri.empty();
+    setAriaFileName();
 }
 
 void YoutubeDownloader::setPath(std::string path)

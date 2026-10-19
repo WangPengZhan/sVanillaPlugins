@@ -10,6 +10,7 @@ constexpr char awemeId[] = "AwemeId";
 constexpr char seriesId[] = "SeriesId";
 constexpr char mixId[] = "MixId";
 constexpr char userId[] = "UserId";
+constexpr char unkown[] = "Unkown";
 
 const std::regex accountLinkRegex(R"(\S*?https://www\.douyin\.com/user/([A-Za-z0-9_-]+)(?:\S*?\bmodal_id=(\d{19}))?)");
 const std::regex accountShareRegex(R"(\S*?https://www\.iesdouyin\.com/share/user/(\S*?)\?\S*?)");
@@ -40,6 +41,8 @@ std::string typeToString(IDType type)
         return mixId;
     case IDType::UserId:
         return userId;
+    case IDType::Unkown:
+        return unkown;
     default:
         break;
     }

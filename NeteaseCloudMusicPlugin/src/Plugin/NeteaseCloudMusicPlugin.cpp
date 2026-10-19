@@ -11,6 +11,7 @@
 #include "NeteaseCloudMusicResource.h"
 #include "NeteaseCloudMusicDownloader.h"
 #include "Convert.h"
+#include "Util/NumberParse.h"
 
 PluginMessage NeteaseCloudMusicPlugin::m_pluginMessage = {
     neteaseplugin::pluginID, neteaseplugin::name, neteaseplugin::version, neteaseplugin::description, neteaseplugin::home,
@@ -58,7 +59,11 @@ adapter::VideoView NeteaseCloudMusicPlugin::getVideoView(const std::string& url)
     }
 
     netease::IDType type = netease::stringToIDType(id.substr(0, pos));
-    uint64_t idNum = std::stoll(id.substr(pos + 1));
+    uint64_t idNum{};
+    if (!util::parseNumber(std::string_view(id).substr(pos + 1), idNum))
+    {
+        return {};
+    }
 
     adapter::VideoView views;
 
@@ -109,12 +114,22 @@ adapter::VideoView NeteaseCloudMusicPlugin::getVideoView(const std::string& url)
 
 std::shared_ptr<download::FileDownloader> NeteaseCloudMusicPlugin::getDownloader(const VideoInfoFull& videoInfo)
 {
+    if (!videoInfo.downloadConfig || !videoInfo.videoView)
+    {
+        return {};
+    }
     auto copyedVideoInfo = videoInfo;
     copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
     copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);
 
     std::string url;
-    auto type = static_cast<ContentType>(std::stoi(copyedVideoInfo.videoView->IdType));
+    int typeValue{};
+    uint64_t mediaId{};
+    if (!util::parseNumber(copyedVideoInfo.videoView->IdType, typeValue) || !util::parseNumber(copyedVideoInfo.videoView->Identifier, mediaId))
+    {
+        return {};
+    }
+    const auto type = static_cast<ContentType>(typeValue);
     switch (type)
     {
     case ContentType::MV:
@@ -125,7 +140,7 @@ std::shared_ptr<download::FileDownloader> NeteaseCloudMusicPlugin::getDownloader
     }
     case ContentType::SONG:
     {
-        auto data = m_client.getSongPlayUrl({std::stoull(copyedVideoInfo.videoView->Identifier)}, netease::SoundLevel::Lossless);
+        auto data = m_client.getSongPlayUrl({mediaId}, netease::SoundLevel::Lossless);
         if (!data.data.empty())
         {
             url = data.data[0].url;
@@ -134,6 +149,11 @@ std::shared_ptr<download::FileDownloader> NeteaseCloudMusicPlugin::getDownloader
     }
     default:
         break;
+    }
+
+    if (!url.starts_with("https://") && !url.starts_with("http://"))
+    {
+        return {};
     }
 
     download::ResourceInfo info;

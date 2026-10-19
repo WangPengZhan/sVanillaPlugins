@@ -34,7 +34,7 @@ if(OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
-file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE release CACHE STRING "Build Type" FORCE)
@@ -135,7 +135,7 @@ install(FILES "$<TARGET_FILE:spdlog>" DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES "$<TARGET_FILE:FFmpeg>" DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
-file(GLOB_RECURSE HLS_SOURCES "src/HLSApi/*.cpp" "src/Plugin/*.cpp")
+file(GLOB_RECURSE HLS_SOURCES CONFIGURE_DEPENDS "src/HLSApi/*.cpp" "src/Plugin/*.cpp")
 add_library(HLSDownloader STATIC ${HLS_SOURCES})
 
 target_include_directories(HLSDownloader

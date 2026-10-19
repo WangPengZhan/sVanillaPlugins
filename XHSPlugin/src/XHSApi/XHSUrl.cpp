@@ -8,6 +8,7 @@ namespace xhsapi
 
 constexpr char noteId[] = "NoteId";
 constexpr char userId[] = "UserId";
+constexpr char unkown[] = "Unkown";
 
 const std::regex noteRegex(R"(https?://(?:www\.)?xiaohongshu\.com/(?:discovery/item|note|explore)/([0-9a-fA-F]+)[^?]*\?[^#]*xsec_token=([^&]+))");
 const std::regex userRegex(R"(https?://(?:www\.)?xiaohongshu\.com/user/profile/([0-9a-fA-F]+)[^?]*\?[^#]*xsec_token=([^&]+))");
@@ -22,6 +23,8 @@ std::string typeToString(IDType type)
         return noteId;
     case IDType::UserId:
         return userId;
+    case IDType::Unkown:
+        return unkown;
     default:
         break;
     }

@@ -24,11 +24,10 @@ NeteaseCloudMusicDownloader::NeteaseCloudMusicDownloader(std::list<std::string> 
     , m_videoDownloader(videoUris, m_path)
     , m_audioDownloader(audioUris, m_path)
 {
-    m_haveTwoPart = !videoUris.empty() && audioUris.empty();
+    m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
     setAriaFileName();
     m_videoDownloader.setStatus(Ready);
     m_audioDownloader.setStatus(Ready);
-    m_haveTwoPart = !videoUris.empty() && !audioUris.empty();
 }
 
 NeteaseCloudMusicDownloader::NeteaseCloudMusicDownloader(ResourceInfo info)
@@ -114,7 +113,8 @@ void NeteaseCloudMusicDownloader::downloadStatus()
     m_info.complete = video.complete + audio.complete;
     m_info.speed = video.speed + audio.speed;
 
-    if (m_info.total == m_info.complete && m_videoDownloader.status() == Finished && (!m_haveTwoPart || m_audioDownloader.status() == Finished))
+    if (m_info.total > 0 && m_info.total == m_info.complete && m_videoDownloader.status() == Finished &&
+        (!m_haveTwoPart || m_audioDownloader.status() == Finished))
     {
         if (m_haveTwoPart)
         {
@@ -124,7 +124,12 @@ void NeteaseCloudMusicDownloader::downloadStatus()
             merge.targetVideo = path() + "/" + filename();
             m_info.stage = "ffmpeg mixed!";
 
-            ffmpeg::FFmpegHelper::mergeVideo(merge);
+            if (!ffmpeg::FFmpegHelper::mergeVideo(merge))
+            {
+                m_info.stage = "ffmpeg merge failed";
+                m_status = Error;
+                return;
+            }
         }
 
         m_status = Finished;
@@ -138,13 +143,17 @@ void NeteaseCloudMusicDownloader::finish()
 
 void NeteaseCloudMusicDownloader::setVideoUris(const std::list<std::string>& videoUris)
 {
+    m_uris = videoUris;
     m_videoDownloader.setUris(videoUris);
+    m_haveTwoPart = !videoUris.empty() && !m_audioDownloader.uris().empty();
+    setAriaFileName();
 }
 
 void NeteaseCloudMusicDownloader::setAudioUris(const std::list<std::string>& audioUri)
 {
     m_audioDownloader.setUris(audioUri);
-    m_haveTwoPart = !audioUri.empty();
+    m_haveTwoPart = !m_videoDownloader.uris().empty() && !audioUri.empty();
+    setAriaFileName();
 }
 
 void NeteaseCloudMusicDownloader::setPath(std::string path)

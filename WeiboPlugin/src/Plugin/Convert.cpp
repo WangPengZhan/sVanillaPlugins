@@ -18,11 +18,11 @@ adapter::VideoView convertVideoView(const weiboapi::ComponentPlayPlayinfoRespons
 
     adapter::BaseVideoView baseView;
     baseView.Identifier = playInfo.id;
-    baseView.Option1 = playInfo.mid;
+    baseView.Option1 = std::to_string(playInfo.mid);
     baseView.Option2 = std::to_string(playInfo.media_id);
     baseView.Title = playInfo.title;
     baseView.Publisher = playInfo.author;
-    baseView.Cover = "https:" + playInfo.cover_image;
+    baseView.Cover = playInfo.cover_image.starts_with("//") ? "https:" + playInfo.cover_image : playInfo.cover_image;
     baseView.Duration = formatDuration(playInfo.duration_time);
     baseView.Description = playInfo.text;
     baseView.PublishDate = convertTimestamp(playInfo.real_date);

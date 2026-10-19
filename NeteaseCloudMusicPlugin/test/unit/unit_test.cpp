@@ -1,7 +1,10 @@
 #include <array>
+#include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
+#include "NeteaseCloudMusicApi/NeteaseCloudMusicApi.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicUrl.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicUtils.h"
 #include "Plugin/Convert.h"
@@ -52,7 +55,29 @@ TEST(NeteaseCloudMusicUrlUnitTest, ExtractsToplistAsPlaylist)
 TEST(NeteaseCloudMusicUrlUnitTest, RejectsUnsupportedUrls)
 {
     EXPECT_FALSE(isValidUrl("https://music.163.com/song"));
+    EXPECT_FALSE(isValidUrl("https://music.163.com/artist?id=6452"));
+    EXPECT_TRUE(getID("https://music.163.com/artist?id=6452").empty());
     EXPECT_TRUE(getID("https://example.com/song?id=347230").empty());
+}
+
+TEST(NeteaseCloudMusicUnitTest, MapsIdTypesToAndFromTheirNames)
+{
+    // This plugin spells the sentinel "Unknown"; the other plugins use the
+    // historical "Unkown" spelling.  Each plugin only has to be internally
+    // consistent, but every enumerator must still round-trip.
+    const std::vector<netease::IDType> types = {netease::IDType::Song, netease::IDType::Album, netease::IDType::Artist,  netease::IDType::Playlist,
+                                                netease::IDType::MV,   netease::IDType::User,  netease::IDType::Comment, netease::IDType::Unknown};
+
+    for (const auto type : types)
+    {
+        SCOPED_TRACE(netease::idTypeToString(type));
+        EXPECT_FALSE(netease::idTypeToString(type).empty());
+        EXPECT_EQ(netease::stringToIDType(netease::idTypeToString(type)), type);
+    }
+
+    EXPECT_EQ(netease::idTypeToString(netease::IDType::Unknown), "unknown");
+    EXPECT_EQ(netease::stringToIDType("song"), netease::IDType::Song);
+    EXPECT_EQ(netease::stringToIDType("unknown-type"), netease::IDType::Unknown);
 }
 
 TEST(NeteaseCloudMusicUnitTest, KeepsLocalCryptoHelpersDeterministic)
@@ -140,4 +165,12 @@ TEST(NeteaseCloudMusicDownloaderUnitTest, PreservesResourceOutputWithoutStarting
     EXPECT_EQ(downloader.path(), "download-dir");
     EXPECT_EQ(downloader.filename(), "audio.mp3");
     EXPECT_FALSE(downloader.isFinished());
+}
+
+TEST(NeteaseCloudMusicDownloaderUnitTest, SetVideoUrisUpdatesReportedUris)
+{
+    download::NeteaseCloudMusicDownloader downloader;
+    const std::list<std::string> uris = {"https://example.invalid/audio"};
+    downloader.setVideoUris(uris);
+    EXPECT_EQ(downloader.uris(), uris);
 }

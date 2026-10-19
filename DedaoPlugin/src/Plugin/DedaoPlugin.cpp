@@ -104,6 +104,10 @@ adapter::VideoView DedaoPlugin::getVideoView(const std::string& url)
 
 std::shared_ptr<download::FileDownloader> DedaoPlugin::getDownloader(const VideoInfoFull& videoInfo)
 {
+    if (!videoInfo.downloadConfig || !videoInfo.videoView)
+    {
+        return {};
+    }
     auto copyedVideoInfo = videoInfo;
     copyedVideoInfo.downloadConfig = std::make_shared<DownloadConfig>(*videoInfo.downloadConfig);
     copyedVideoInfo.videoView = std::make_shared<adapter::BaseVideoView>(*videoInfo.videoView);

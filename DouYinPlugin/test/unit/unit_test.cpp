@@ -1,4 +1,5 @@
 #include <array>
+#include <string>
 
 #include <gtest/gtest.h>
 
@@ -86,6 +87,56 @@ TEST(DouYinUrlUnitTest, RejectsUnsupportedUrls)
     EXPECT_FALSE(douyinapi::isValidUrl("https://www.douyin.com/video/123"));
     EXPECT_FALSE(douyinapi::isValidUrl("https://live.douyin.com/123456"));
     EXPECT_EQ(douyinapi::getID("https://example.com/video/7000000000000000001").type, douyinapi::IDType::Unkown);
+}
+
+TEST(DouYinUrlUnitTest, MapsTypesToAndFromTheirNames)
+{
+    EXPECT_EQ(douyinapi::typeToString(douyinapi::IDType::AwemeId), "AwemeId");
+    EXPECT_EQ(douyinapi::typeToString(douyinapi::IDType::SeriesId), "SeriesId");
+    EXPECT_EQ(douyinapi::typeToString(douyinapi::IDType::MixId), "MixId");
+    EXPECT_EQ(douyinapi::typeToString(douyinapi::IDType::UserId), "UserId");
+    EXPECT_EQ(douyinapi::typeToString(douyinapi::IDType::Unkown), "Unkown");
+
+    EXPECT_EQ(douyinapi::stringToType("AwemeId"), douyinapi::IDType::AwemeId);
+    EXPECT_EQ(douyinapi::stringToType("SeriesId"), douyinapi::IDType::SeriesId);
+    EXPECT_EQ(douyinapi::stringToType("MixId"), douyinapi::IDType::MixId);
+    EXPECT_EQ(douyinapi::stringToType("UserId"), douyinapi::IDType::UserId);
+    EXPECT_EQ(douyinapi::stringToType("Unkown"), douyinapi::IDType::Unkown);
+    EXPECT_EQ(douyinapi::stringToType("unknown-type"), douyinapi::IDType::Unkown);
+
+    for (const auto type :
+         {douyinapi::IDType::Unkown, douyinapi::IDType::AwemeId, douyinapi::IDType::SeriesId, douyinapi::IDType::MixId, douyinapi::IDType::UserId})
+    {
+        SCOPED_TRACE(douyinapi::typeToString(type));
+        EXPECT_FALSE(douyinapi::typeToString(type).empty());
+        EXPECT_EQ(douyinapi::stringToType(douyinapi::typeToString(type)), type);
+    }
+}
+
+TEST(DouYinUrlUnitTest, DescribesIdInfoForDiagnostics)
+{
+    const auto aweme = douyinapi::getID("https://www.douyin.com/video/7000000000000000001");
+    const auto text = aweme.to_string();
+
+    EXPECT_NE(text.find("7000000000000000001"), std::string::npos);
+    EXPECT_NE(text.find("AwemeId"), std::string::npos);
+
+    const auto unclassified = douyinapi::getID("https://example.com/video/7000000000000000001").to_string();
+    EXPECT_NE(unclassified.find("Unkown"), std::string::npos);
+}
+
+TEST(DouYinUrlUnitTest, RejectsMalformedAndEmptyUrls)
+{
+    for (const char* url : {"", "not a url", "douyin.com/video/7000000000000000001", "ftp://www.douyin.com/video/7000000000000000001",
+                            "https://www.douyin.com/video/", "https://www.douyin.com/collection/123"})
+    {
+        SCOPED_TRACE(url);
+        EXPECT_FALSE(douyinapi::isValidUrl(url));
+
+        const auto id = douyinapi::getID(url);
+        EXPECT_TRUE(id.id.empty());
+        EXPECT_EQ(id.type, douyinapi::IDType::Unkown);
+    }
 }
 
 TEST(DouYinSeriesDetailUnitTest, ParsesCursorFieldsWithoutTruncation)

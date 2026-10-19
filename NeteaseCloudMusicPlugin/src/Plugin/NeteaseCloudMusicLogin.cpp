@@ -119,11 +119,11 @@ UserInfo NeteaseCloudMusicLogin::getUserInfo(std::string dir)
     userInfo.uname = accountInfo.profile.nickname;
     if (!accountInfo.profile.avatarUrl.empty())
     {
-        userInfo.facePath = dir + "/" + userInfo.id + ".jpg";
-        FILE* file = fopen(userInfo.facePath.c_str(), "wb");
-        m_client.get(accountInfo.profile.avatarUrl, file, network::CurlHeader(), false);
-        fclose(file);
-        userInfo.facePath = util::localeToUtf8(userInfo.facePath);
+        const std::string path = dir + "/" + userInfo.id + ".jpg";
+        if (network::downloadFileChecked(m_client, accountInfo.profile.avatarUrl, path))
+        {
+            userInfo.facePath = util::localeToUtf8(path);
+        }
     }
     userInfo.vipType = std::to_string(accountInfo.account.vipType);
     userInfo.home = netease::home;

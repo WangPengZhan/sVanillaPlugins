@@ -8,6 +8,7 @@
 #include "WeiboApiConstants.h"
 #include "Util/JsonProcess.h"
 #include "Util/NumberParse.h"
+#include "PluginCrypto/Encoding.h"
 #include "WeiboLog.h"
 #include "WeiboUtils.h"
 #include "NetWork/NetworkLog.h"
@@ -132,7 +133,7 @@ ComponentPlayPlayinfoResponse WeiboClient::getPlayInfoByMid(const std::string& m
     std::string url = weiboapi::weiboVideoInfoUrl + page;
     nlohmann::json content = nlohmann::json::parse(weiboapi::weiboPostContent);
     content["Component_Play_Playinfo"]["oid"] = "1034:" + mid;
-    std::string param = "data=" + content.dump();
+    std::string param = "data=" + encoding::urlEncode(content.dump());
     std::string response;
     network::CurlHeader header;
     std::string userAgent = std::string("User-Agent: ") + network::chrome;
@@ -230,7 +231,8 @@ std::string WeiboClient::getStreamInfo(const std::string& wid)
     const auto baseName = getBestTemplate(ret.data.Component_Play_Playinfo.urls.urls);
     if (!baseName.empty())
     {
-        return "http:" + ret.data.Component_Play_Playinfo.urls.urls[baseName];
+        const auto& url = ret.data.Component_Play_Playinfo.urls.urls[baseName];
+        return url.starts_with("//") ? "https:" + url : url;
     }
     return ret.data.Component_Play_Playinfo.stream_url;
 }

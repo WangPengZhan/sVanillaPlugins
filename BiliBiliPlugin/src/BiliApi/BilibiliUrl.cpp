@@ -8,6 +8,7 @@ namespace biliapi
 
 constexpr char aid[] = "Aid";
 constexpr char bid[] = "Bid";
+constexpr char cid[] = "Cid";
 constexpr char bangumiSS[] = "BangumiSS";
 constexpr char bangumiEP[] = "BangumiEP";
 constexpr char bangumiMD[] = "BangumiMD";
@@ -15,6 +16,7 @@ constexpr char cheeseSS[] = "CheeseSS";
 constexpr char cheeseEP[] = "CheeseEP";
 constexpr char favoritesId[] = "FavoritesId";
 constexpr char userId[] = "UserId";
+constexpr char unkown[] = "Unkown";
 
 const std::regex avPattern(R"(https?://(?:www\.)?(?:bilibili\.com|b23\.tv)(?:/video)?/av(\d+).*)");
 const std::regex bvPattern(R"(https?://(?:www\.)?(?:bilibili\.com|b23\.tv)(?:/video)?/BV([0-9A-Za-z]{10}).*)");
@@ -37,6 +39,8 @@ std::string typeToString(IDType type)
         return aid;
     case IDType::Bid:
         return bid;
+    case IDType::Cid:
+        return cid;
     case IDType::BangumiSS:
         return bangumiSS;
     case IDType::BangumiEP:
@@ -51,6 +55,8 @@ std::string typeToString(IDType type)
         return favoritesId;
     case IDType::UserId:
         return userId;
+    case IDType::Unkown:
+        return unkown;
     default:
         break;
     }
@@ -67,6 +73,10 @@ IDType stringToType(const std::string& type)
     else if (type == bid)
     {
         return IDType::Bid;
+    }
+    else if (type == cid)
+    {
+        return IDType::Cid;
     }
     else if (type == bangumiSS)
     {

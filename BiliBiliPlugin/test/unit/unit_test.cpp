@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -27,6 +28,7 @@
 #include "LoginProxy.h"
 #include "FFmpeg/FFmpegHelper.h"
 #include "Util/TimerUtil.h"
+#include "Util/NumberParse.h"
 #include "Util/process.hpp"
 
 namespace
@@ -331,6 +333,28 @@ TEST(BiliBiliUrlUnitTest, RejectsUnsupportedUrls)
 {
     EXPECT_FALSE(biliapi::isValidUrl("https://www.bilibili.com/read/cv123"));
     EXPECT_EQ(biliapi::getID("https://example.com/video/av170001").type, biliapi::IDType::Unkown);
+}
+
+TEST(BiliBiliUrlUnitTest, MapsTypesToAndFromTheirNames)
+{
+    // Every enumerator of biliapi::IDType must have a stable name and survive
+    // a round-trip.  Cid used to be missing from both mappings, which made the
+    // name lookup return an empty string and silently degrade to Unkown.
+    const std::vector<biliapi::IDType> types = {biliapi::IDType::Unkown,    biliapi::IDType::Aid,         biliapi::IDType::Bid,       biliapi::IDType::Cid,
+                                                biliapi::IDType::BangumiSS, biliapi::IDType::BangumiEP,   biliapi::IDType::BangumiMD, biliapi::IDType::CheeseSS,
+                                                biliapi::IDType::CheeseEP,  biliapi::IDType::FavoritesId, biliapi::IDType::UserId};
+
+    for (const auto type : types)
+    {
+        SCOPED_TRACE(static_cast<int>(type));
+        EXPECT_FALSE(biliapi::typeToString(type).empty());
+        EXPECT_EQ(biliapi::stringToType(biliapi::typeToString(type)), type);
+    }
+
+    EXPECT_EQ(biliapi::typeToString(biliapi::IDType::Cid), "Cid");
+    EXPECT_EQ(biliapi::typeToString(biliapi::IDType::Unkown), "Unkown");
+    EXPECT_EQ(biliapi::stringToType("Cid"), biliapi::IDType::Cid);
+    EXPECT_EQ(biliapi::stringToType("unknown-type"), biliapi::IDType::Unkown);
 }
 
 TEST(BiliBiliUtilsUnitTest, ReplaceCharacterAndFilterCharacters)
@@ -997,4 +1021,64 @@ TEST(BiliBiliClientRequestTest, RequestsWebBootstrapAndLoginInterfaces)
     EXPECT_EQ(loginStatus.code, 0);
     const auto nav = client.getNavInfo();
     EXPECT_TRUE(nav.code == 0 || nav.code == -101);
+}
+
+TEST(UtilNumberParseTest, ParsesIntegralValuesWithSharedRules)
+{
+    int value = -1;
+    EXPECT_TRUE(util::parseNumber("42", value));
+    EXPECT_EQ(value, 42);
+
+    EXPECT_TRUE(util::parseNumber("  -7\t", value));
+    EXPECT_EQ(value, -7);
+
+    value = 123;
+    EXPECT_FALSE(util::parseNumber("", value));
+    EXPECT_FALSE(util::parseNumber("   ", value));
+    EXPECT_FALSE(util::parseNumber("5junk", value));
+    EXPECT_FALSE(util::parseNumber("0x10", value));
+    EXPECT_FALSE(util::parseNumber("99999999999999999999", value));
+    EXPECT_EQ(value, 123);
+}
+
+TEST(UtilNumberParseTest, RejectsSignsForUnsignedTargets)
+{
+    uint32_t value = 1;
+    EXPECT_TRUE(util::parseNumber("4294967295", value));
+    EXPECT_EQ(value, 4294967295U);
+
+    EXPECT_FALSE(util::parseNumber("-1", value));
+    EXPECT_FALSE(util::parseNumber("+1", value));
+    EXPECT_EQ(value, 4294967295U);
+}
+
+TEST(UtilNumberParseTest, ParsesFloatingPointValuesWithSharedRules)
+{
+    double value = -1.0;
+    EXPECT_TRUE(util::parseNumber("30.000", value));
+    EXPECT_DOUBLE_EQ(value, 30.0);
+
+    EXPECT_TRUE(util::parseNumber(" 12.5 ", value));
+    EXPECT_DOUBLE_EQ(value, 12.5);
+
+    EXPECT_TRUE(util::parseNumber("4", value));
+    EXPECT_DOUBLE_EQ(value, 4.0);
+
+    value = -1.0;
+    EXPECT_FALSE(util::parseNumber("", value));
+    EXPECT_FALSE(util::parseNumber("   ", value));
+    EXPECT_FALSE(util::parseNumber("4.0,", value));
+    EXPECT_FALSE(util::parseNumber("1.2.3", value));
+    EXPECT_FALSE(util::parseNumber("frame-rate", value));
+    EXPECT_DOUBLE_EQ(value, -1.0);
+}
+
+TEST(UtilNumberParseTest, RejectsNonFiniteAndOutOfRangeFloats)
+{
+    double value = 1.0;
+    EXPECT_FALSE(util::parseNumber("inf", value));
+    EXPECT_FALSE(util::parseNumber("-inf", value));
+    EXPECT_FALSE(util::parseNumber("nan", value));
+    EXPECT_FALSE(util::parseNumber("1e999", value));
+    EXPECT_DOUBLE_EQ(value, 1.0);
 }

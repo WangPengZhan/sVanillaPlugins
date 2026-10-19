@@ -10,6 +10,7 @@ namespace weiboapi
 
 constexpr char statusIdType[] = "Status";
 constexpr char tvIdType[] = "TV";
+constexpr char unkownIdType[] = "Unkown";
 
 std::regex widPattern(R"(https?://(?:m\.weibo\.cn/(?:status|detail)|(?:www\.)?weibo\.com/\d+)/([a-zA-Z0-9]+)(?:[/?&#][^\s]*)?)");
 std::regex tvPattern(R"(https?://(?:video\.weibo\.com/show\?fid=|weibo\.com/tv/show/|h5\.video\.weibo\.com/show/)(\d+:[a-fA-F0-9]+)(?:[/?&#][^\s]*)?)");
@@ -24,6 +25,8 @@ std::string typeToString(IDType type)
         return statusIdType;
     case IDType::TV:
         return tvIdType;
+    case IDType::Unkown:
+        return unkownIdType;
     default:
         break;
     }

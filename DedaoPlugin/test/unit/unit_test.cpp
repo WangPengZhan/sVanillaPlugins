@@ -1,4 +1,5 @@
 #include <array>
+#include <string>
 
 #include <gtest/gtest.h>
 
@@ -59,6 +60,56 @@ TEST(DedaoUrlUnitTest, AcceptsIdsWithTrailingQueryOrFragment)
 
     EXPECT_TRUE(isValidUrl("https://dedao.cn/ebook/reader?id=ebook10001#/catalog"));
     EXPECT_EQ(getID("https://dedao.cn/ebook/reader?id=ebook10001#/catalog").id, "ebook10001");
+}
+
+TEST(DedaoUrlUnitTest, MapsTypesToAndFromTheirNames)
+{
+    EXPECT_EQ(typeToString(IDType::Live), "Live");
+    EXPECT_EQ(typeToString(IDType::EBook), "EBook");
+    EXPECT_EQ(typeToString(IDType::Course), "Course");
+    EXPECT_EQ(typeToString(IDType::Article), "Article");
+    EXPECT_EQ(typeToString(IDType::Unkown), "Unkown");
+
+    EXPECT_EQ(stringToType("Live"), IDType::Live);
+    EXPECT_EQ(stringToType("EBook"), IDType::EBook);
+    EXPECT_EQ(stringToType("Course"), IDType::Course);
+    EXPECT_EQ(stringToType("Article"), IDType::Article);
+    EXPECT_EQ(stringToType("Unkown"), IDType::Unkown);
+    EXPECT_EQ(stringToType("unknown-type"), IDType::Unkown);
+
+    for (const auto type : {IDType::Unkown, IDType::Live, IDType::EBook, IDType::Course, IDType::Article})
+    {
+        SCOPED_TRACE(typeToString(type));
+        EXPECT_FALSE(typeToString(type).empty());
+        EXPECT_EQ(stringToType(typeToString(type)), type);
+    }
+}
+
+TEST(DedaoUrlUnitTest, DescribesIdInfoForDiagnostics)
+{
+    const auto course = getID("https://www.dedao.cn/course/detail?id=course30003");
+    const auto text = course.to_string();
+
+    EXPECT_NE(text.find("course30003"), std::string::npos);
+    EXPECT_NE(text.find("Course"), std::string::npos);
+
+    const auto unclassified = getID("https://example.com/course/detail?id=course30003").to_string();
+    EXPECT_NE(unclassified.find("Unkown"), std::string::npos);
+}
+
+TEST(DedaoUrlUnitTest, RejectsMalformedAndEmptyUrls)
+{
+    // A live id shorter than the 20 character minimum must not be accepted.
+    for (const char* url : {"", "not a url", "dedao.cn/course/detail?id=course30003", "ftp://www.dedao.cn/course/detail?id=course30003",
+                            "https://www.dedao.cn/course/detail", "https://www.dedao.cn/course/detail?id=", "https://www.dedao.cn/live/detail?id=short"})
+    {
+        SCOPED_TRACE(url);
+        EXPECT_FALSE(isValidUrl(url));
+
+        const auto id = getID(url);
+        EXPECT_TRUE(id.id.empty());
+        EXPECT_EQ(id.type, IDType::Unkown);
+    }
 }
 
 TEST(DedaoConvertUnitTest, ConvertsLiveMetadataAndTeachers)

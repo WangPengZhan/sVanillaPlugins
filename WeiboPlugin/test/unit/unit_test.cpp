@@ -69,14 +69,48 @@ TEST(WeiboUrlUnitTest, MapsTypesToAndFromTheirNames)
 {
     EXPECT_EQ(weiboapi::typeToString(weiboapi::IDType::Status), "Status");
     EXPECT_EQ(weiboapi::typeToString(weiboapi::IDType::TV), "TV");
-    EXPECT_EQ(weiboapi::typeToString(weiboapi::IDType::Unkown), "");
+    EXPECT_EQ(weiboapi::typeToString(weiboapi::IDType::Unkown), "Unkown");
 
     EXPECT_EQ(weiboapi::stringToType("Status"), weiboapi::IDType::Status);
     EXPECT_EQ(weiboapi::stringToType("TV"), weiboapi::IDType::TV);
+    EXPECT_EQ(weiboapi::stringToType("Unkown"), weiboapi::IDType::Unkown);
     EXPECT_EQ(weiboapi::stringToType("unknown-type"), weiboapi::IDType::Unkown);
 
-    EXPECT_EQ(weiboapi::stringToType(weiboapi::typeToString(weiboapi::IDType::Status)), weiboapi::IDType::Status);
-    EXPECT_EQ(weiboapi::stringToType(weiboapi::typeToString(weiboapi::IDType::TV)), weiboapi::IDType::TV);
+    // Every enumerator must survive a name round-trip, including the unknown
+    // sentinel: an empty name would silently lose the distinction between
+    // "recognised as unknown" and "mapping missing".
+    for (const auto type : {weiboapi::IDType::Unkown, weiboapi::IDType::Status, weiboapi::IDType::TV})
+    {
+        SCOPED_TRACE(weiboapi::typeToString(type));
+        EXPECT_FALSE(weiboapi::typeToString(type).empty());
+        EXPECT_EQ(weiboapi::stringToType(weiboapi::typeToString(type)), type);
+    }
+}
+
+TEST(WeiboUrlUnitTest, DescribesIdInfoForDiagnostics)
+{
+    const auto id = weiboapi::getID("https://weibo.com/1234567890/N1a2b3c4D");
+    const auto text = id.to_string();
+
+    EXPECT_NE(text.find("N1a2b3c4D"), std::string::npos);
+    EXPECT_NE(text.find("Status"), std::string::npos);
+
+    const auto unclassified = weiboapi::getID("https://example.com/1234567890/N1a2b3c4D").to_string();
+    EXPECT_NE(unclassified.find("Unkown"), std::string::npos);
+}
+
+TEST(WeiboUrlUnitTest, RejectsMalformedAndEmptyUrls)
+{
+    for (const char* url : {"", "not a url", "weibo.com/1234567890/N1a2b3c4D", "ftp://weibo.com/1234567890/N1a2b3c4D", "https://weibo.com/tv/show/",
+                            "https://weibo.com/tv/show/1034:"})
+    {
+        SCOPED_TRACE(url);
+        EXPECT_FALSE(weiboapi::isValidUrl(url));
+
+        const auto id = weiboapi::getID(url);
+        EXPECT_TRUE(id.id.empty());
+        EXPECT_EQ(id.type, weiboapi::IDType::Unkown);
+    }
 }
 
 TEST(WeiboUrlUnitTest, AcceptsIdsWithTrailingQueryOrFragment)
@@ -95,6 +129,7 @@ TEST(WeiboConvertUnitTest, ConvertsComponentPlaybackMetadata)
     weiboapi::ComponentPlayPlayinfoResponse response{};
     auto& playInfo = response.data.Component_Play_Playinfo;
     playInfo.id = "video-id";
+    playInfo.mid = 1234567890123;
     playInfo.media_id = 987654321;
     playInfo.title = "video title";
     playInfo.author = "publisher";
@@ -107,6 +142,7 @@ TEST(WeiboConvertUnitTest, ConvertsComponentPlaybackMetadata)
 
     ASSERT_EQ(views.size(), 1);
     EXPECT_EQ(views[0].Identifier, "video-id");
+    EXPECT_EQ(views[0].Option1, "1234567890123");
     EXPECT_EQ(views[0].Option2, "987654321");
     EXPECT_EQ(views[0].Title, "video title");
     EXPECT_EQ(views[0].Publisher, "publisher");

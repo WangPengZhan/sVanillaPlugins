@@ -74,23 +74,30 @@ adapter::VideoView YoutubePlugin::getVideoView(const std::string& url)
         std::string playlistUrl = "https://www.youtube.com/playlist?list=UU" + id.id.substr(2);
         views = getVideoView(playlistUrl);
     }
-    else if (id.type == youtubeapi::IDType::AtChannelId)
+    else if (id.type == youtubeapi::IDType::AtChannelId || id.type == youtubeapi::IDType::UserNameId || id.type == youtubeapi::IDType::CustomNameId)
     {
-        std::string requestUrl = "https://www.youtube.com/@" + id.id;
-        std::string ChannelUrl = client.getChannelUrl(requestUrl);
-        views = getVideoView(ChannelUrl);
-    }
-    else if (id.type == youtubeapi::IDType::UserNameId)
-    {
-        std::string requestUrl = "https://www.youtube.com/user/" + id.id;
-        std::string ChannelUrl = client.getChannelUrl(requestUrl);
-        views = getVideoView(ChannelUrl);
-    }
-    else if (id.type == youtubeapi::IDType::CustomNameId)
-    {
-        std::string requestUrl = "https://www.youtube.com/c/" + id.id;
-        std::string ChannelUrl = client.getChannelUrl(requestUrl);
-        views = getVideoView(ChannelUrl);
+        std::string requestUrl = "https://www.youtube.com";
+        if (id.type == youtubeapi::IDType::AtChannelId)
+        {
+            requestUrl += "/@";
+        }
+        else if (id.type == youtubeapi::IDType::UserNameId)
+        {
+            requestUrl += "/user/";
+        }
+        else
+        {
+            requestUrl += "/c/";
+        }
+        requestUrl += id.id;
+
+        const std::string channelUrl = client.getChannelUrl(requestUrl);
+        const auto resolvedId = youtubeapi::getID(channelUrl);
+        // A failed lookup may return an alias URL again; do not recurse on aliases.
+        if (resolvedId.type == youtubeapi::IDType::ChannelId || resolvedId.type == youtubeapi::IDType::PlaylistId)
+        {
+            views = getVideoView(channelUrl);
+        }
     }
     return views;
 }

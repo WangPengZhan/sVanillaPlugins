@@ -8,6 +8,7 @@
 #include "XHSApi/XHSUtils.h"
 #include "Plugin/Convert.h"
 #include "Plugin/XHSDownloader.h"
+#include "Util/TimerUtil.h"
 
 namespace
 {
@@ -66,6 +67,44 @@ TEST(XHSUrlUnitTest, RejectsUrlsWithoutXsecToken)
     EXPECT_TRUE(id.xsecToken.empty());
 }
 
+TEST(XHSUrlUnitTest, MapsTypesToAndFromTheirNames)
+{
+    EXPECT_EQ(xhsapi::typeToString(xhsapi::IDType::NoteId), "NoteId");
+    EXPECT_EQ(xhsapi::typeToString(xhsapi::IDType::UserId), "UserId");
+    EXPECT_EQ(xhsapi::typeToString(xhsapi::IDType::Unkown), "Unkown");
+
+    EXPECT_EQ(xhsapi::stringToType("NoteId"), xhsapi::IDType::NoteId);
+    EXPECT_EQ(xhsapi::stringToType("UserId"), xhsapi::IDType::UserId);
+    EXPECT_EQ(xhsapi::stringToType("Unkown"), xhsapi::IDType::Unkown);
+    EXPECT_EQ(xhsapi::stringToType("unknown-type"), xhsapi::IDType::Unkown);
+
+    for (const auto type : {xhsapi::IDType::Unkown, xhsapi::IDType::NoteId, xhsapi::IDType::UserId})
+    {
+        SCOPED_TRACE(xhsapi::typeToString(type));
+        EXPECT_FALSE(xhsapi::typeToString(type).empty());
+        EXPECT_EQ(xhsapi::stringToType(xhsapi::typeToString(type)), type);
+    }
+}
+
+TEST(XHSUrlUnitTest, RejectsMalformedAndEmptyUrls)
+{
+    // The note id must be hex and the xsec_token is mandatory; a bare path or
+    // a missing token must never classify.
+    for (const char* url :
+         {"", "not a url", "xiaohongshu.com/explore/69abf6df0000000028009901?xsec_token=token001",
+          "ftp://www.xiaohongshu.com/explore/69abf6df0000000028009901?xsec_token=token001", "https://www.xiaohongshu.com/explore/69abf6df0000000028009901",
+          "https://www.xiaohongshu.com/user/profile/69ac18060000000032019221"})
+    {
+        SCOPED_TRACE(url);
+        EXPECT_FALSE(xhsapi::isValidUrl(url));
+
+        const auto id = xhsapi::getID(url);
+        EXPECT_TRUE(id.id.empty());
+        EXPECT_EQ(id.type, xhsapi::IDType::Unkown);
+        EXPECT_TRUE(id.xsecToken.empty());
+    }
+}
+
 TEST(XHSUrlUnitTest, DoesNotExposeXsecTokenInDiagnosticText)
 {
     const auto id = xhsapi::getID("https://www.xiaohongshu.com/explore/69abf6df0000000028009901?xsec_token=secret-token");
@@ -113,6 +152,20 @@ TEST(XHSConvertUnitTest, FallsBackAcrossCodecFamilies)
     EXPECT_EQ(getVideoUrl(media), "av1-2160");
     media.stream.av1.clear();
     EXPECT_TRUE(getVideoUrl(media).empty());
+}
+
+// Guards the shared timestamp helper used for PublishDate. Services are not
+// consistent about the unit, so second and millisecond forms of the same instant
+// must render identically. Comparing the two keeps the assertion independent of
+// the machine timezone, which the helper deliberately follows now.
+TEST(XHSConvertUnitTest, RendersSecondAndMillisecondTimestampsAlike)
+{
+    constexpr long long publishedAt = 1700000000LL;
+
+    // convertTimestamp() lives in the global namespace in Util/TimerUtil.h, so it
+    // is called unqualified here.
+    EXPECT_FALSE(convertTimestamp(publishedAt).empty());
+    EXPECT_EQ(convertTimestamp(publishedAt), convertTimestamp(publishedAt * 1000));
 }
 
 TEST(XHSConvertUnitTest, ConvertsNoteCardsAndUserLists)

@@ -565,9 +565,6 @@ MVPlayUrl NeteaseCloudMusicClient::getMVPlayUrl(std::string id)
 
     std::string response;
     post(url, response, postFields, headers, false);
-    std::ofstream ss("test.json");
-    ss << response << std::endl;
-
     MVPlayUrl ret;
     try
     {

@@ -12,6 +12,7 @@ constexpr char channelId[] = "ChannelId";
 constexpr char atChannelId[] = "AtChannelId";
 constexpr char userNameId[] = "UserNameId";
 constexpr char customNameId[] = "CustomNameId";
+constexpr char unkown[] = "Unkown";
 
 const std::regex ytVideoPlaylistPattern(
     R"(https?://(?:www\.)?(?:youtube\.com/(?:watch\?v=|embed/)|youtu\.be/)([a-zA-Z0-9_-]+)(?:/)?(?:\?list=|&list=)([a-zA-Z0-9_-]+)(?:\S*)?)");
@@ -46,6 +47,8 @@ std::string typeToString(IDType type)
         return userNameId;
     case IDType::CustomNameId:
         return customNameId;
+    case IDType::Unkown:
+        return unkown;
     default:
         break;
     }
@@ -81,6 +84,13 @@ IDType stringToType(const std::string& type)
     {
         return IDType::Unkown;
     }
+}
+
+std::string IDInfo::to_string() const
+{
+    std::stringstream ss;
+    ss << "id=" << id << ", type=" << typeToString(type) << ", parentId=" << parentId << ", parentType=" << typeToString(parentType);
+    return ss.str();
 }
 
 bool isValidUrl(const std::string& url)
