@@ -1,135 +1,263 @@
 #include "HLSParser.h"
 
-#include <sstream>
+#include <limits>
 
 #include "HLSConstants.h"
+#include "Util/NumberParse.h"
+
 namespace hlsapi
 {
+namespace
+{
+std::string_view tagOf(std::string_view line)
+{
+    return line.substr(0, line.find(':'));
+}
+}  // namespace
 
 bool HLSParser::parse(std::string_view content)
 {
+    m_state = State::None;
+    m_playlist = {};
+    m_master = {};
+    m_activeKey = {};
+    m_activeKey.strMethod = key_method_none;
+    m_unparsedTags.clear();
+    m_previousRangeUri.clear();
+    m_previousRangeEnd = 0;
+    m_hasPreviousRange = false;
+    m_valid = true;
+
+    bool sawHeader = false;
     size_t start = 0;
-
-    while (start < content.size())
+    while (start <= content.size())
     {
-        size_t line_end = start;
-        while (line_end < content.size() && content[line_end] != '\n' && content[line_end] != '\r')
-        {
-            ++line_end;
-        }
-
-        std::string_view line = content.substr(start, line_end - start);
-        line = trim(line);
-
+        const size_t end = content.find_first_of("\r\n", start);
+        const auto line = trim(content.substr(start, end - start));
         if (!line.empty())
         {
-            parseLine(line);
-        }
-
-        if (line_end < content.size())
-        {
-            if (content[line_end] == '\r' && line_end + 1 < content.size() && content[line_end + 1] == '\n')
+            if (!sawHeader)
             {
-                start = line_end + 2;
+                sawHeader = (line == ext_m3u);
+                m_valid = sawHeader;
             }
             else
             {
-                start = line_end + 1;
+                parseLine(line);
             }
         }
-        else
+
+        if (end == std::string_view::npos)
         {
-            start = content.size();
+            break;
+        }
+
+        start = end + 1;
+        if (content[end] == '\r' && start < content.size() && content[start] == '\n')
+        {
+            ++start;
         }
     }
 
+    const bool pendingUri = m_state != State::None;
+    const bool mixed = (!m_master.streams.empty() || !m_master.mediaInfos.empty()) && (!m_playlist.segments.empty() || m_playlist.hasMap);
+    const bool hasContent = !m_master.streams.empty() || !m_playlist.segments.empty();
+    if (!sawHeader || pendingUri || mixed || !hasContent || !m_valid)
+    {
+        m_playlist = {};
+        m_master = {};
+        m_unparsedTags.clear();
+        m_state = State::None;
+        return false;
+    }
     return true;
 }
 
 void HLSParser::parseLine(std::string_view line)
 {
-    if (line.empty() || line[0] != '#')
+    if (!m_valid)
     {
-        if (m_state == State::WaitingForStreamUri)
+        return;
+    }
+    if (!line.starts_with('#'))
+    {
+        bool assigned = false;
+        if (m_state == State::WaitingForStreamUri && !m_master.streams.empty())
         {
-            if (m_pendingInfo != nullptr)
-            {
-                m_pendingInfo->uri = std::string(line);
-            }
-
-            m_state = State::None;
+            m_master.streams.back().uri = std::string(line);
+            assigned = !m_master.streams.back().getUri().empty();
         }
+        else if (m_state == State::WaitingForSegmentUri && !m_playlist.segments.empty())
+        {
+            auto& segment = m_playlist.segments.back();
+            segment.uri = std::string(line);
+            assigned = !segment.getUri().empty();
+            if (assigned && segment.byteRangeLength != 0)
+            {
+                const auto resolvedUri = segment.getUri();
+                if (!segment.hasByteRangeOffset)
+                {
+                    if (!m_hasPreviousRange || resolvedUri != m_previousRangeUri)
+                    {
+                        assigned = false;
+                    }
+                    else
+                    {
+                        segment.byteRangeOffset = m_previousRangeEnd;
+                        segment.hasByteRangeOffset = true;
+                    }
+                }
+                if (assigned && segment.byteRangeLength > (std::numeric_limits<std::size_t>::max)() - segment.byteRangeOffset)
+                {
+                    assigned = false;
+                }
+                if (assigned)
+                {
+                    m_previousRangeUri = resolvedUri;
+                    m_previousRangeEnd = segment.byteRangeOffset + segment.byteRangeLength;
+                    m_hasPreviousRange = true;
+                }
+            }
+            else
+            {
+                m_hasPreviousRange = false;
+                m_previousRangeUri.clear();
+            }
+        }
+        m_valid = assigned;
+        m_state = State::None;
+        return;
     }
 
-    if (line.starts_with(ext_x_media))
+    const auto tag = tagOf(line);
+    if (tag == ext_x_media)
     {
         MediaInfo media;
         media.baseUri = m_baseUri;
         media.originalUri = m_originUri;
-        media.parseContent(line);
-        m_master.mediaInfos.emplace_back(std::move(media));
+        m_valid = media.parseContent(line);
+        if (m_valid)
+        {
+            m_master.mediaInfos.emplace_back(std::move(media));
+        }
     }
-    else if (line.starts_with(ext_x_stream_inf))
+    else if (tag == ext_x_stream_inf)
     {
+        if (m_state != State::None)
+        {
+            m_valid = false;
+            return;
+        }
         StreamInfo stream;
         stream.baseUri = m_baseUri;
         stream.originalUri = m_originUri;
-        stream.parseContent(line);
-        m_master.streams.emplace_back(std::move(stream));
-        m_pendingInfo = &m_master.streams.back();
-        m_state = State::WaitingForStreamUri;
-    }
-    else if (line.starts_with(extinf))
-    {
-        MediaSegment segment;
-        segment.parseContent(line);
-        segment.originalUri = m_originUri;
-        segment.baseUri = m_baseUri;
-        m_playlist.segments.emplace_back(std::move(segment));
-        m_pendingInfo = &m_playlist.segments.back();
-        m_pendingMediaSegment = &m_playlist.segments.back();
-        m_state = State::WaitingForStreamUri;
-    }
-    else if (line.starts_with(ext_x_key))
-    {
-        KeyInfo key;
-        key.parseContent(line);
-        key.originalUri = m_originUri;
-        key.baseUri = m_baseUri;
-        m_playlist.keyInfo = std::move(key);
-    }
-    else if (line.starts_with(ext_x_byterange))
-    {
-        if (m_pendingMediaSegment == nullptr)
+        m_valid = stream.parseContent(line);
+        if (m_valid)
         {
+            m_master.streams.emplace_back(std::move(stream));
+            m_state = State::WaitingForStreamUri;
+        }
+    }
+    else if (tag == extinf)
+    {
+        if (m_state != State::None || m_playlist.hasEndList ||
+            m_playlist.segments.size() > (std::numeric_limits<std::uint64_t>::max)() - m_playlist.mediaSequence)
+        {
+            m_valid = false;
             return;
         }
-
-        std::string value = std::string(line.substr(line.find(':') + 1));
-        value = trim(value);
-        size_t at = value.find('@');
-        size_t length = std::stoul(value.substr(0, at));
-        m_pendingMediaSegment->byteRangeLength = length;
-        if (at != std::string::npos)
+        MediaSegment segment;
+        segment.originalUri = m_originUri;
+        segment.baseUri = m_baseUri;
+        segment.mediaSequence = m_playlist.mediaSequence + m_playlist.segments.size();
+        segment.keyInfo = m_activeKey;
+        if (m_playlist.hasMap)
         {
-            size_t offset = std::stoul(value.substr(at + 1));
-            m_pendingMediaSegment->byteRangeOffset = offset;
+            segment.mediaMapIndex = m_playlist.mediaMaps.size() - 1;
+        }
+        m_valid = segment.parseContent(line);
+        if (m_valid)
+        {
+            m_playlist.segments.emplace_back(std::move(segment));
+            m_state = State::WaitingForSegmentUri;
         }
     }
-    else if (line.starts_with(ext_x_map))
+    else if (tag == ext_x_key)
     {
-        MediaMap mediaMap;
-        mediaMap.baseUri = m_baseUri;
-        mediaMap.originalUri = m_originUri;
-        mediaMap.parseContent(line);
+        KeyInfo key;
+        key.originalUri = m_originUri;
+        key.baseUri = m_baseUri;
+        m_valid = key.parseContent(line) && (key.method == KeyInfo::None || !key.getUri().empty());
+        if (m_valid)
+        {
+            m_activeKey = key;
+            m_playlist.keyInfo = std::move(key);
+        }
     }
-    else if (line.starts_with(ext_x_targetduration))
+    else if (tag == ext_x_targetduration)
     {
-        m_targetDuration = std::atof(line.substr(ext_x_targetduration.size()).data() + 1);
+        m_valid = util::parseNumber(line.substr(line.find(':') + 1), m_playlist.targetDuration) && m_playlist.targetDuration > 0;
     }
-    else if (line.starts_with(ext_x_media_sequence))
+    else if (tag == ext_x_media_sequence)
     {
-        m_mediaSequence = std::atoi(line.substr(ext_x_media_sequence.size()).data() + 1);
+        m_valid = m_playlist.segments.empty() && util::parseNumber(line.substr(line.find(':') + 1), m_playlist.mediaSequence);
+    }
+    else if (tag == ext_x_byterange)
+    {
+        if (m_state != State::WaitingForSegmentUri || m_playlist.segments.empty())
+        {
+            m_valid = false;
+            return;
+        }
+        auto& segment = m_playlist.segments.back();
+        const auto range = line.substr(line.find(':') + 1);
+        const auto at = range.find('@');
+        m_valid = segment.byteRangeLength == 0 && util::parseNumber(range.substr(0, at), segment.byteRangeLength) && segment.byteRangeLength != 0;
+        if (m_valid && at != std::string_view::npos)
+        {
+            m_valid = util::parseNumber(range.substr(at + 1), segment.byteRangeOffset);
+            segment.hasByteRangeOffset = m_valid;
+        }
+        m_playlist.hasByteRange = m_valid;
+    }
+    else if (tag == ext_x_map)
+    {
+        MediaMap map;
+        map.originalUri = m_originUri;
+        map.baseUri = m_baseUri;
+        map.keyInfo = m_activeKey;
+        m_valid = map.parseContent(line) && !(map.keyInfo.method == KeyInfo::Aes128 && map.keyInfo.iv.empty());
+        if (m_valid)
+        {
+            m_playlist.mediaMap = map;
+            m_playlist.mediaMaps.emplace_back(std::move(map));
+            m_playlist.hasMap = true;
+            if (m_state == State::WaitingForSegmentUri && !m_playlist.segments.empty())
+            {
+                m_playlist.segments.back().mediaMapIndex = m_playlist.mediaMaps.size() - 1;
+            }
+        }
+    }
+    else if (tag == ext_x_discontinuity)
+    {
+        m_playlist.hasDiscontinuity = true;
+    }
+    else if (tag == ext_x_gap)
+    {
+        m_playlist.hasGap = true;
+    }
+    else if (tag == ext_i_frames_only)
+    {
+        m_playlist.hasIFramesOnly = true;
+    }
+    else if (tag == ext_x_endlist)
+    {
+        m_valid = m_state == State::None;
+        m_playlist.hasEndList = true;
+    }
+    else
+    {
+        m_unparsedTags.emplace_back(line);
     }
 }
 
@@ -140,7 +268,7 @@ const M3U8Master& HLSParser::master() const
 
 bool HLSParser::isMaster() const
 {
-    return m_playlist.segments.empty();
+    return !m_master.streams.empty();
 }
 
 const M3U8Playlist& HLSParser::playlist() const
@@ -148,10 +276,18 @@ const M3U8Playlist& HLSParser::playlist() const
     return m_playlist;
 }
 
+const std::vector<std::string>& HLSParser::unparsedTags() const
+{
+    return m_unparsedTags;
+}
+
 void HLSParser::setOriginUri(std::string uri)
 {
     m_originUri = std::move(uri);
-    m_baseUri = m_originUri.substr(0, m_originUri.find_last_of('/') + 1);
+    const auto query = m_originUri.find_first_of("?#");
+    const auto pathEnd = query == std::string::npos ? m_originUri.size() : query;
+    const auto slash = m_originUri.rfind('/', pathEnd);
+    m_baseUri = slash == std::string::npos ? m_originUri : m_originUri.substr(0, slash + 1);
 }
 
 const std::string& HLSParser::originUri() const

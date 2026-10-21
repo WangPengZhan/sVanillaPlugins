@@ -28,6 +28,7 @@ const std::string ext_x_cue_start = "#EXT-X-CUE-OUT";
 const std::string ext_x_cue_end = "#EXT-X-CUE-IN";
 const std::string ext_x_cue_span = "#EXT-X-CUE-SPAN";
 const std::string ext_x_map = "#EXT-X-MAP";
+const std::string ext_x_gap = "#EXT-X-GAP";
 const std::string ext_x_start = "#EXT-X-START";
 
 const std::string str_none = "NONE";

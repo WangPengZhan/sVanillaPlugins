@@ -1,8 +1,10 @@
 #pragma once
+#include <cstdint>
+#include <optional>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <string_view>
+#include <vector>
 
 namespace hlsapi
 {
@@ -22,12 +24,12 @@ struct PendingInfo
 
 struct StreamInfo : PendingInfo
 {
-    int bandwidth{};
+    std::uint64_t bandwidth{};
     double score{};
     std::string codecs;
     std::string supplementalCodecs;
     std::string resolution;
-    int frameRate{};
+    double frameRate{};
     std::string hdcpLevel;
     std::string allowedCPC;
     std::string videoRange;
@@ -83,15 +85,6 @@ struct M3U8Master
     std::vector<MediaInfo> mediaInfos;
 };
 
-struct MediaSegment : PendingInfo
-{
-    double duration{};
-    std::string title;
-    std::size_t byteRangeLength{};
-    std::size_t byteRangeOffset{};
-    bool parseContent(std::string_view content);
-};
-
 struct KeyInfo : PendingInfo
 {
     enum KeyMethod
@@ -119,18 +112,43 @@ struct MediaMap : PendingInfo
 {
     std::size_t byteRangeLength{};
     std::size_t byteRangeOffset{};
+    bool hasByteRange{};
+    bool hasByteRangeOffset{};
+    KeyInfo keyInfo;
 
+    bool parseContent(std::string_view content);
+};
+
+struct MediaSegment : PendingInfo
+{
+    double duration{};
+    std::string title;
+    std::size_t byteRangeLength{};
+    std::size_t byteRangeOffset{};
+    bool hasByteRangeOffset{};
+    std::uint64_t mediaSequence{};
+    KeyInfo keyInfo;
+    std::optional<std::size_t> mediaMapIndex;
     bool parseContent(std::string_view content);
 };
 
 struct M3U8Playlist
 {
-    int mediaSequence = 0;
+    std::uint64_t mediaSequence = 0;
     double targetDuration = 0;
     KeyInfo keyInfo;
+    MediaMap mediaMap;
+    std::vector<MediaMap> mediaMaps;
     std::vector<MediaSegment> segments;
+    bool hasEndList{};
+    bool hasMap{};
+    bool hasByteRange{};
+    bool hasDiscontinuity{};
+    bool hasGap{};
+    bool hasIFramesOnly{};
 
     double durationAll() const;
+    bool isSupportedVod() const;
 };
 
 }  // namespace hlsapi

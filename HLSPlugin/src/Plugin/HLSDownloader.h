@@ -25,7 +25,7 @@ public:
     HLSDownloader();
     explicit HLSDownloader(std::shared_ptr<hlsapi::HLSClient> client, std::unordered_map<hlsapi::MediaInfo::MediaType, hlsapi::M3U8Playlist> downloadedFiles,
                            int downloadThreadNum = 5);
-    ~HLSDownloader() = default;
+    ~HLSDownloader();
 
     void start() override;
     void stop() override;
@@ -52,7 +52,8 @@ private:
     std::string m_tempDir;
     std::shared_ptr<hlsapi::HLSClient> m_client;
     int m_downloadThreadNum{5};
-    bool m_finished;
+    bool m_finished{};
+    bool m_setupValid{true};
     std::unordered_map<hlsapi::MediaInfo::MediaType, std::shared_ptr<hlsapi::HLSPlaylistDownloader>> m_downloadedFiles;
     std::unordered_set<hlsapi::MediaInfo::MediaType> m_mergedType;
 };

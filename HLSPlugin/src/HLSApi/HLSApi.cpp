@@ -1,9 +1,14 @@
 #include "HLSApi.h"
 
+#include <algorithm>
+#include <curl/curl.h>
+
 #include "HLSConstants.h"
+#include "Util/NumberParse.h"
 
 namespace hlsapi
 {
+
 bool attrBool(std::string_view attr)
 {
     return attr == "YES" || attr == "true" || attr == "1";
@@ -21,85 +26,108 @@ std::string_view trim(std::string_view sv)
 std::unordered_map<std::string_view, std::string_view> parseAttributes(std::string_view line)
 {
     std::unordered_map<std::string_view, std::string_view> attrs;
-    size_t start = 0;
-
-    while (start < line.size())
+    while (!line.empty())
     {
-        size_t eq = line.find('=', start);
+        const auto eq = line.find('=');
         if (eq == std::string_view::npos)
         {
-            break;
+            return {};
         }
-        auto key = line.substr(start, eq - start);
-        size_t valStart = eq + 1;
-        std::string_view val;
-        if (line[valStart] == '"')
+
+        const auto key = trim(line.substr(0, eq));
+        if (key.empty() || key.find(',') != std::string_view::npos)
         {
-            size_t end = line.find('"', valStart + 1);
-            val = line.substr(valStart + 1, end - valStart - 1);
-            start = (line.find(',', end) != std::string_view::npos) ? line.find(',', end) + 1 : line.size();
+            return {};
+        }
+        if (attrs.contains(key))
+        {
+            return {};
+        }
+
+        line = trim(line.substr(eq + 1));
+        if (line.empty())
+        {
+            return {};
+        }
+
+        std::string_view val;
+        if (line.front() == '"')
+        {
+            const auto end = line.find('"', 1);
+            if (end == std::string_view::npos)
+            {
+                return {};
+            }
+
+            val = line.substr(1, end - 1);
+            line = trim(line.substr(end + 1));
+            if (!line.empty() && line.front() != ',')
+            {
+                return {};
+            }
         }
         else
         {
-            size_t end = line.find(',', valStart);
-            val = line.substr(valStart, end - valStart);
-            start = (end != std::string_view::npos) ? end + 1 : line.size();
+            const auto end = line.find(',');
+            val = trim(line.substr(0, end));
+            if (val.empty())
+            {
+                return {};
+            }
+
+            line = (end == std::string_view::npos) ? std::string_view{} : line.substr(end);
         }
-        attrs[key] = val;
+        attrs.emplace(key, val);
+        if (!line.empty())
+        {
+            line = trim(line.substr(1));
+            if (line.empty())
+            {
+                return {};
+            }
+        }
     }
 
     return attrs;
 }
 
-size_t findNthOccurrence(const std::string& str, char c, int n)
-{
-    size_t pos = 0;
-    int count = 0;
-
-    while (count < n && (pos = str.find(c, pos + 1)) != std::string::npos)
-    {
-        count++;
-    }
-
-    return (count == n) ? pos : std::string::npos;
-}
-
 std::string PendingInfo::getUri() const
 {
-    if (uri.starts_with("http://") || uri.starts_with("https://"))
+    if (uri.empty())
     {
-        return uri;
+        return {};
     }
-
-    if (uri.starts_with('/'))
+    CURLU* handle = curl_url();
+    if (!handle)
     {
-        auto pos = findNthOccurrence(baseUri, '/', 3);
-        if (pos != std::string::npos)
-        {
-            return baseUri.substr(0, pos) + uri;
-        }
+        return {};
     }
-
-    std::string basePath = baseUri;
-    if (uri.starts_with("../"))
+    const std::string base = originalUri.empty() ? baseUri : originalUri;
+    if ((!base.empty() && curl_url_set(handle, CURLUPART_URL, base.c_str(), 0) != CURLUE_OK) ||
+        curl_url_set(handle, CURLUPART_URL, uri.c_str(), 0) != CURLUE_OK)
     {
-        std::string_view relativePath = uri;
-        std::string basePath = baseUri.ends_with('/') ? baseUri.substr(0, baseUri.size() - 1) : baseUri;
-        while (relativePath.starts_with("../"))
-        {
-            basePath = basePath.substr(0, basePath.find_last_of('/'));
-            relativePath = relativePath.substr(3);
-        }
-        return basePath + '/' + relativePath.data();
+        curl_url_cleanup(handle);
+        return {};
     }
-
-    return baseUri + uri;
+    char* scheme = nullptr;
+    char* resolved = nullptr;
+    std::string output;
+    if (curl_url_get(handle, CURLUPART_SCHEME, &scheme, 0) == CURLUE_OK && scheme &&
+        (std::string_view(scheme) == "http" || std::string_view(scheme) == "https") && curl_url_get(handle, CURLUPART_URL, &resolved, 0) == CURLUE_OK &&
+        resolved)
+    {
+        output = resolved;
+    }
+    curl_free(scheme);
+    curl_free(resolved);
+    curl_url_cleanup(handle);
+    return output;
 }
 
 bool StreamInfo::isVideoStream() const
 {
-    if (codecs.find("avc1") != std::string::npos || codecs.find("hev1") != std::string::npos || codecs.find("vp09") != std::string::npos ||
-        codecs.find("av01") != std::string::npos)
+    if (codecs.find("avc1") != std::string::npos || codecs.find("hvc1") != std::string::npos || codecs.find("hev1") != std::string::npos ||
+        codecs.find("vp09") != std::string::npos || codecs.find("av01") != std::string::npos)
     {
         return true;
     }
@@ -124,8 +152,16 @@ bool StreamInfo::parseContent(std::string_view content)
     content = content.substr(content.find(':') + 1);
     content = trim(content);
     auto attrs = parseAttributes(content);
-    auto bandwidthString = (attrs.find("BANDWIDTH") == attrs.end()) ? attrs["AVERAGE-BANDWIDTH"] : attrs["BANDWIDTH"];
-    bandwidth = std::atoi(bandwidthString.data());
+    if (attrs.empty())
+    {
+        return false;
+    }
+
+    const auto bandwidthIt = attrs.contains("BANDWIDTH") ? attrs.find("BANDWIDTH") : attrs.find("AVERAGE-BANDWIDTH");
+    if (bandwidthIt == attrs.end() || !util::parseNumber(bandwidthIt->second, bandwidth))
+    {
+        return false;
+    }
 
     if (attrs.find("CODECS") != attrs.end())
     {
@@ -144,7 +180,10 @@ bool StreamInfo::parseContent(std::string_view content)
 
     if (attrs.find("FRAME-RATE") != attrs.end())
     {
-        frameRate = std::atoi(attrs["FRAME-RATE"].data());
+        if (!util::parseNumber(attrs.at("FRAME-RATE"), frameRate))
+        {
+            return false;
+        }
     }
 
     if (attrs.find("HDCP-LEVEL") != attrs.end())
@@ -197,7 +236,7 @@ bool StreamInfo::parseContent(std::string_view content)
         pathwayId = attrs["PATHWAY-ID"];
     }
 
-    return false;
+    return true;
 }
 
 bool parseContent(std::string_view content);
@@ -253,6 +292,17 @@ bool MediaInfo::parseContent(std::string_view content)
     content = content.substr(content.find(':') + 1);
     content = trim(content);
     auto attrs = parseAttributes(content);
+
+    if (attrs.empty() || !attrs.contains("TYPE") || !attrs.contains("GROUP-ID") || !attrs.contains("NAME"))
+    {
+        return false;
+    }
+    if (attrs.at("TYPE") != media_type_video && attrs.at("TYPE") != media_type_audio && attrs.at("TYPE") != media_type_subtitle &&
+        attrs.at("TYPE") != media_type_closed_caption)
+    {
+        return false;
+    }
+
     if (attrs.find("URI") != attrs.end())
     {
         uri = attrs["URI"];
@@ -300,11 +350,17 @@ bool MediaInfo::parseContent(std::string_view content)
     }
     if (attrs.find("BITRATE") != attrs.end())
     {
-        bitDepth = std::atoi(attrs["BITRATE"].data());
+        if (!util::parseNumber(attrs.at("BITRATE"), bitDepth))
+        {
+            return false;
+        }
     }
     if (attrs.find("SAMPLE-RATE") != attrs.end())
     {
-        sampleRate = std::atoi(attrs["SAMPLE-RATE"].data());
+        if (!util::parseNumber(attrs.at("SAMPLE-RATE"), sampleRate))
+        {
+            return false;
+        }
     }
     if (attrs.find("CHARACTERISTICS") != attrs.end())
     {
@@ -325,23 +381,18 @@ bool MediaSegment::parseContent(std::string_view content)
         return false;
     }
 
-    auto pos = content.find(":");
-    if (pos != std::string_view::npos)
+    const auto pos = content.find(':');
+    const auto endPos = content.find(',', pos == std::string_view::npos ? 0 : pos + 1);
+    if (pos == std::string_view::npos || endPos == std::string_view::npos)
     {
-        auto endPos = content.find(",");
-        if (endPos != std::string_view::npos)
-        {
-            auto strDuration = content.substr(pos + 1, endPos - pos - 1);
-            strDuration = strDuration.substr(0, strDuration.find_last_not_of(" ") + 1);
-            strDuration = strDuration.substr(0, strDuration.find_last_not_of("\n") + 1);
-            duration = std::atof(strDuration.data());
-            if (endPos + 1 < content.size())
-            {
-                title = content.substr(endPos + 1, content.size() - endPos - 1);
-            }
-        }
+        return false;
     }
-
+    const auto strDuration = trim(content.substr(pos + 1, endPos - pos - 1));
+    if (!util::parseNumber(strDuration, duration))
+    {
+        return false;
+    }
+    title = content.substr(endPos + 1);
     return true;
 }
 
@@ -395,6 +446,10 @@ bool KeyInfo::parseContent(std::string_view content)
     content = content.substr(content.find(':') + 1);
     content = trim(content);
     auto attrs = parseAttributes(content);
+    if (attrs.empty() || !attrs.contains("METHOD"))
+    {
+        return false;
+    }
 
     if (attrs.find("METHOD") != attrs.end())
     {
@@ -418,39 +473,65 @@ bool KeyInfo::parseContent(std::string_view content)
         keyFormatVersions = attrs["KEYFORMATVERSIONS"];
     }
 
+    if (method != KeyMethod::None && uri.empty())
+    {
+        return false;
+    }
+
     return true;
 }
 
 bool MediaMap::parseContent(std::string_view content)
 {
-    if (!content.starts_with(ext_x_map))
+    if (!content.starts_with(ext_x_map + ":"))
     {
         return false;
     }
 
     content = content.substr(content.find(':') + 1);
     content = trim(content);
-    auto attrs = parseAttributes(content);
-
-    if (attrs.find("URI") != attrs.end())
+    const auto attrs = parseAttributes(content);
+    const auto uriAttribute = attrs.find("URI");
+    if (uriAttribute == attrs.end() || uriAttribute->second.empty())
     {
-        uri = attrs["URI"];
+        return false;
     }
 
-    if (attrs.find("BYTERANGE") != attrs.end())
+    uri = uriAttribute->second;
+    hasByteRange = false;
+    hasByteRangeOffset = false;
+    byteRangeLength = 0;
+    byteRangeOffset = 0;
+
+    const auto range = attrs.find("BYTERANGE");
+    if (range == attrs.end())
     {
-        auto value = attrs["BYTERANGE"];
-        value = trim(value);
-        size_t at = value.find('@');
-        size_t length = std::stoul(std::string(value.substr(0, at)));
-        byteRangeLength = length;
-        if (at != std::string::npos)
+        return true;
+    }
+
+    const auto value = range->second;
+    const size_t at = value.find('@');
+    if (!util::parseNumber(value.substr(0, at), byteRangeLength))
+    {
+        return false;
+    }
+    if (byteRangeLength == 0)
+    {
+        return false;
+    }
+    if (at != std::string::npos)
+    {
+        if (!util::parseNumber(value.substr(at + 1), byteRangeOffset))
         {
-            size_t offset = std::stoul(std::string(value.substr(at + 1)));
-            byteRangeOffset = offset;
+            return false;
         }
+        if (byteRangeLength > (std::numeric_limits<std::size_t>::max)() - byteRangeOffset)
+        {
+            return false;
+        }
+        hasByteRangeOffset = true;
     }
-
+    hasByteRange = true;
     return true;
 }
 double M3U8Playlist::durationAll() const
@@ -462,4 +543,39 @@ double M3U8Playlist::durationAll() const
     }
     return duration;
 }
+
+bool M3U8Playlist::isSupportedVod() const
+{
+    if (!hasEndList || hasGap || hasIFramesOnly)
+    {
+        return false;
+    }
+    const auto supportedKey = [](const KeyInfo& key) {
+        return key.method == KeyInfo::None ||
+               (key.method == KeyInfo::Aes128 && (key.keyFormat.empty() || key.keyFormat == "identity"));
+    };
+    for (const auto& segment : segments)
+    {
+        if (!supportedKey(segment.keyInfo) || (segment.byteRangeLength != 0 && !segment.hasByteRangeOffset))
+        {
+            return false;
+        }
+    }
+
+    if (!hasMap)
+    {
+        return std::none_of(segments.begin(), segments.end(), [](const MediaSegment& segment) { return segment.mediaMapIndex.has_value(); });
+    }
+    if (mediaMaps.empty() || std::any_of(mediaMaps.begin(), mediaMaps.end(), [&](const MediaMap& map) {
+            return map.getUri().empty() || !supportedKey(map.keyInfo) || (map.keyInfo.method == KeyInfo::Aes128 && map.keyInfo.iv.empty()) ||
+                   (map.hasByteRange && !map.hasByteRangeOffset);
+        }))
+    {
+        return false;
+    }
+    return std::all_of(segments.begin(), segments.end(), [&](const MediaSegment& segment) {
+        return segment.mediaMapIndex.has_value() && *segment.mediaMapIndex < mediaMaps.size();
+    });
+}
+
 }  // namespace hlsapi

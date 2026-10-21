@@ -17,6 +17,7 @@ public:
     bool isMaster() const;
 
     const M3U8Playlist& playlist() const;
+    const std::vector<std::string>& unparsedTags() const;
 
     void setOriginUri(std::string uri);
     const std::string& originUri() const;
@@ -25,19 +26,21 @@ private:
     enum State
     {
         None,
-        WaitingForStreamUri
+        WaitingForStreamUri,
+        WaitingForSegmentUri
     };
     State m_state = State::None;
-
-    int m_mediaSequence = 0;
-    double m_targetDuration = 0.0;
 
     std::string m_originUri;
     std::string m_baseUri;
     M3U8Playlist m_playlist;
     M3U8Master m_master;
-    PendingInfo* m_pendingInfo = nullptr;
-    MediaSegment* m_pendingMediaSegment = nullptr;
+    KeyInfo m_activeKey;
+    std::vector<std::string> m_unparsedTags;
+    std::string m_previousRangeUri;
+    std::size_t m_previousRangeEnd{};
+    bool m_hasPreviousRange{};
+    bool m_valid{true};
 };
 
 }  // namespace hlsapi

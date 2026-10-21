@@ -21,7 +21,8 @@ bool HLSLogin::supportsLogin() const
 
 bool HLSLogin::getScanContext(std::string& content)
 {
-    return true;
+    content.clear();
+    return false;
 }
 
 void HLSLogin::loginSuccess()
