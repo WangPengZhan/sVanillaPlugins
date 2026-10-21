@@ -85,9 +85,11 @@ bool BiliBiliLogin::getScanContext(std::string& content)
     }
 
     std::string path = BiliBiliPlugin::getDir() + "login/bilibili_qrc.svg";
-    if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
+    std::error_code error;
+    std::filesystem::create_directories(std::filesystem::path(path).parent_path(), error);
+    if (error)
     {
-        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+        return false;
     }
 
     std::ofstream file(path);
@@ -97,7 +99,12 @@ bool BiliBiliLogin::getScanContext(std::string& content)
     }
 
     file << QrCodeGenerator::generateQR(login.data.url);
+    const bool written = static_cast<bool>(file);
     file.close();
+    if (!written || file.fail())
+    {
+        return false;
+    }
 
     {
         std::lock_guard lk(m_mutex);

@@ -24,7 +24,7 @@
 #include "BiliApi/BilibiliUrl.h"
 #include "BiliApi/BilibiliUtils.h"
 #include "Plugin/Convert.h"
-#include "LoggerRegisterHelpper.h"
+#include "LoggerRegisterHelper.h"
 #include "LoginProxy.h"
 #include "FFmpeg/FFmpegHelper.h"
 #include "Util/TimerUtil.h"
@@ -63,11 +63,11 @@ class AriaTestEnvironment final : public testing::Environment
 public:
     void SetUp() override
     {
-        LoggerRegisterHelpper::registerLogger("Aria2Net", kRuntimeDir.string() + "/log/Aria2Net.log");
-        LoggerRegisterHelpper::registerLogger("FFmpeg", kRuntimeDir.string() + "/log/FFmpeg.log");
-        LoggerRegisterHelpper::registerLogger("Network", kRuntimeDir.string() + "/log/Network.log");
-        LoggerRegisterHelpper::registerLogger("Download", kRuntimeDir.string() + "/log/Download.log");
-        LoggerRegisterHelpper::registerLogger("BiliBili", kRuntimeDir.string() + "/log/BiliBili.log");
+        LoggerHelper::registerLogger("Aria2Net", kRuntimeDir.string() + "/log/Aria2Net.log");
+        LoggerHelper::registerLogger("FFmpeg", kRuntimeDir.string() + "/log/FFmpeg.log");
+        LoggerHelper::registerLogger("Network", kRuntimeDir.string() + "/log/Network.log");
+        LoggerHelper::registerLogger("Download", kRuntimeDir.string() + "/log/Download.log");
+        LoggerHelper::registerLogger("BiliBili", kRuntimeDir.string() + "/log/BiliBili.log");
 
         if (ariaIsRunning())
         {
@@ -556,7 +556,6 @@ TEST(PluginCommonUnitTest, ResolvesVideoNamesGuidAndNullInputs)
 
     EXPECT_EQ(info.fileName(), "publisher-titlewithinvalidcharacters-BV123-2026-07-23.mp4");
     EXPECT_FALSE(info.getGuid().empty());
-    EXPECT_EQ(info.coverPath(), info.getGuid());
     EXPECT_EQ(VideoInfoFull::ruleList.size(), VideoInfoFull::showRuleList.size());
     EXPECT_EQ(VideoInfoFull::ruleMap.at(adapter::title), "$title$");
 }

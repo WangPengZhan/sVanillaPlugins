@@ -112,9 +112,11 @@ UserInfo DouYinLogin::getUserInfo(std::string dir)
 
     if (!user.avatar_thumb.url_list.empty())
     {
-        userInfo.facePath = dir + "/" + userInfo.id + ".jpg";
-        m_client.downloadImage(user.avatar_thumb.url_list[0], userInfo.facePath);
-        userInfo.facePath = util::localeToUtf8(userInfo.facePath);
+        const auto path = dir + "/" + userInfo.id + ".jpg";
+        if (m_client.downloadImage(user.avatar_thumb.url_list[0], path))
+        {
+            userInfo.facePath = util::localeToUtf8(path);
+        }
     }
 
     return userInfo;

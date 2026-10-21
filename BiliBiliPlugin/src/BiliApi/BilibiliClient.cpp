@@ -136,7 +136,7 @@ VideoViewOrigin BilibiliClient::getVideoView(const std::string& bvid, IDType typ
 
     std::string response;
     get(VideoURL::View, response, param);
-    BILIBILI_LOG_DEBUG("getVideoView response: {}: {}", VideoURL::View, response);
+    BILIBILI_LOG_DEBUG("getVideoView response: {}, {} bytes", VideoURL::View, response.size());
     VideoViewOrigin ret;
     try
     {
@@ -146,6 +146,7 @@ VideoViewOrigin BilibiliClient::getVideoView(const std::string& bvid, IDType typ
     {
         BILIBILI_LOG_ERROR("getVideoView error! {}: {}, error: {}", idType, bvid, e.what());
         BILIBILI_LOG_ERROR("response is {}", response);
+        ret.code = -1;
     }
     return ret;
 }
@@ -617,7 +618,7 @@ LoginStatusScanning BilibiliClient::getLoginStatus(const std::string& qrcodeKey)
     }
     catch (const std::exception& e)
     {
-        BILIBILI_LOG_ERROR("getLoginStatus error! qrcodeKey: {}, error: {}", qrcodeKey, e.what());
+        BILIBILI_LOG_ERROR("getLoginStatus error: {}", e.what());
         BILIBILI_LOG_ERROR("response is {}", response.body);
     }
 
@@ -646,8 +647,12 @@ Nav BilibiliClient::getNavInfo()
 LogoutExitV2 BilibiliClient::getLogoutExitV2()
 {
     std::string response;
-
-    auto keys = m_cookies.cookie(domain).keys();
+    network::CurlCookie currentCookie;
+    {
+        std::lock_guard lk(m_mutexRequest);
+        currentCookie = m_cookies.cookie(domain);
+    }
+    auto keys = currentCookie.keys();
     int haveId = 3;
 
     for (const auto& key : keys)
@@ -661,17 +666,17 @@ LogoutExitV2 BilibiliClient::getLogoutExitV2()
     if (haveId == 0)
     {
         std::string cookie = "Cookie: ";
-        cookie += std::string(cookie_dedeUserId) + "=" + m_cookies.cookie(domain).value(cookie_dedeUserId);
+        cookie += std::string(cookie_dedeUserId) + "=" + currentCookie.value(cookie_dedeUserId);
         cookie += "; ";
-        cookie += std::string(cookie_biliJct) + "=" + m_cookies.cookie(domain).value(cookie_biliJct);
+        cookie += std::string(cookie_biliJct) + "=" + currentCookie.value(cookie_biliJct);
         cookie += "; ";
-        cookie += std::string(cookie_sessdata) + "=" + m_cookies.cookie(domain).value(cookie_sessdata);
+        cookie += std::string(cookie_sessdata) + "=" + currentCookie.value(cookie_sessdata);
 
         network::CurlHeader header;
         header.add("Content-Type: application/x-www-form-urlencoded");
         header.add(cookie);
 
-        std::string param = "biliCSRF=" + m_cookies.cookie(domain).value(cookie_biliJct);
+        std::string param = "biliCSRF=" + currentCookie.value(cookie_biliJct);
 
         post(PassportURL::Logout, response, param, header, false);
     }
@@ -719,6 +724,7 @@ History BilibiliClient::getHistory(HistoryQueryParam param)
 
 std::string BilibiliClient::cookies() const
 {
+    std::lock_guard lk(m_mutexRequest);
     return std::string(m_cookies);
 }
 
@@ -784,7 +790,12 @@ void BilibiliClient::encodeWithWbi(ParamType& params)
 
 void BilibiliClient::ensureWebCookies(bool forceRefresh)
 {
-    const auto currentCookie = m_cookies.cookie(domain);
+    network::CurlCookie currentCookie;
+    {
+        std::lock_guard lk(m_mutexRequest);
+        currentCookie = m_cookies.cookie(domain);
+    }
+
     std::vector<network::CurlCookie> newCookies;
     if (forceRefresh || currentCookie.value("buvid3").empty() || currentCookie.value("buvid4").empty())
     {

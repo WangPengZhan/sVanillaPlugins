@@ -89,6 +89,11 @@ void NeteaseCloudMusicDownloader::resume()
 
 void NeteaseCloudMusicDownloader::downloadStatus()
 {
+    if (m_status == Finished || m_status == Error)
+    {
+        return;
+    }
+
     if (m_videoDownloader.status() == Error || (m_haveTwoPart && m_audioDownloader.status() == Error))
     {
         // DOWNLOAD_LOG_ERROR("WeiboDownloader downloadStatus error, filename: {}", filename());

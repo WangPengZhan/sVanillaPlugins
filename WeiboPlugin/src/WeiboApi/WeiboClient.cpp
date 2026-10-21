@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <fstream>
+#include <unordered_set>
 
 #include "WeiboClient.h"
 #include "WeiboApiConstants.h"
@@ -141,7 +142,13 @@ ComponentPlayPlayinfoResponse WeiboClient::getPlayInfoByMid(const std::string& m
     std::string accept = "Accept: application/json, text/plain, */*";
     std::string content_type = "Content-Type: application/x-www-form-urlencoded";
     std::string origin = std::string("origin: ") + weiboapi::weiboHomeUrl;
-    std::string x_xsrf_token = std::string("x-xsrf-token: ") + m_cookies.cookie(domain).value("XSRF-TOKEN");
+
+    std::string x_xsrf_token;
+    {
+        std::lock_guard lk(m_mutexRequest);
+        x_xsrf_token = std::string("x-xsrf-token: ") + m_cookies.cookie(domain).value("XSRF-TOKEN");
+    }
+
     std::string referer = std::string("referer: ") + weiboapi::weiboMidRefererUrl + "1034:" + mid + "?from=old_pc_videoshow";
     header.add(userAgent);
     header.add(acceptEncoding);
@@ -397,16 +404,19 @@ bool WeiboClient::crossDomainRequest(std::vector<std::string> urls)
 
 bool WeiboClient::isLogined() const
 {
+    std::lock_guard lk(m_mutexRequest);
     return m_cookies.cookie(domain).contains("XSRF-TOKEN");
 }
 
 std::string WeiboClient::cookie() const
 {
+    std::lock_guard lk(m_mutexRequest);
     return network::CurlCookieOpt(m_cookies.cookie(domain)).shortContent();
 }
 
 std::string WeiboClient::cookies() const
 {
+    std::lock_guard lk(m_mutexRequest);
     return std::string(m_cookies);
 }
 
@@ -436,17 +446,30 @@ bool WeiboClient::getLogout()
     header.add(std::string("referer: ") + weiboapi::weiboReferer);
     header.add(std::string("host: login.sina.com.cn"));
 
-    get(weiboapi::weiboLogoutUrl, locationUrl, params, header, true);
-    if (locationUrl.locationUrl.empty())
+    if (!get(weiboapi::weiboLogoutUrl, locationUrl, params, header, true) || locationUrl.locationUrl.empty())
     {
         return false;
     }
 
-    while (!locationUrl.locationUrl.empty())
+    std::unordered_set<std::string> visited;
+    for (int hop = 0; hop < 8 && !locationUrl.locationUrl.empty(); ++hop)
     {
         std::string url = locationUrl.locationUrl;
+        if (!visited.insert(url).second)
+        {
+            return false;
+        }
+
         locationUrl.locationUrl.clear();
-        get(url, locationUrl);
+        if (!get(url, locationUrl))
+        {
+            return false;
+        }
+    }
+
+    if (!locationUrl.locationUrl.empty())
+    {
+        return false;
     }
 
     WEIBO_LOG_INFO("Logout success!");

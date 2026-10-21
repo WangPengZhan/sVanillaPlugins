@@ -42,6 +42,12 @@ constexpr std::array<UrlCase, 10> kUrlCases = {
 };
 }  // namespace
 
+TEST(XHSDecoderUnitTest, RejectsMissingOrMalformedPayload)
+{
+    EXPECT_TRUE(xhsapi::genWebsection("").empty());
+    EXPECT_TRUE(xhsapi::genWebsection(R"({"b":"AA", "d":[1,2]})").empty());
+}
+
 TEST(XHSUrlUnitTest, ExtractsSupportedUrlIdsAndTokens)
 {
     for (const auto& testCase : kUrlCases)
@@ -154,18 +160,17 @@ TEST(XHSConvertUnitTest, FallsBackAcrossCodecFamilies)
     EXPECT_TRUE(getVideoUrl(media).empty());
 }
 
-// Guards the shared timestamp helper used for PublishDate. Services are not
-// consistent about the unit, so second and millisecond forms of the same instant
-// must render identically. Comparing the two keeps the assertion independent of
-// the machine timezone, which the helper deliberately follows now.
+// The plugin must normalize remote seconds and milliseconds before calling the
+// shared timestamp formatter, which only accepts seconds.
 TEST(XHSConvertUnitTest, RendersSecondAndMillisecondTimestampsAlike)
 {
     constexpr long long publishedAt = 1700000000LL;
-
-    // convertTimestamp() lives in the global namespace in Util/TimerUtil.h, so it
-    // is called unqualified here.
-    EXPECT_FALSE(convertTimestamp(publishedAt).empty());
-    EXPECT_EQ(convertTimestamp(publishedAt), convertTimestamp(publishedAt * 1000));
+    xhsapi::NoteCard note;
+    note.time = publishedAt;
+    const auto secondsDate = convertNoteDetail(note).PublishDate;
+    note.time = publishedAt * 1000;
+    EXPECT_FALSE(secondsDate.empty());
+    EXPECT_EQ(secondsDate, convertNoteDetail(note).PublishDate);
 }
 
 TEST(XHSConvertUnitTest, ConvertsNoteCardsAndUserLists)

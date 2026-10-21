@@ -67,16 +67,12 @@ bool XHSLogin::getScanContext(std::string& content)
         return false;
     }
 
-    {
-        std::lock_guard lc(m_mutexData);
-        m_qrId = login.data.qr_id;
-        m_code = login.data.code;
-    }
-
     std::string path = xhsplugin::XHSPlugin::getDir() + "login/xhs_qrc.svg";
-    if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
+    std::error_code error;
+    std::filesystem::create_directories(std::filesystem::path(path).parent_path(), error);
+    if (error)
     {
-        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+        return false;
     }
 
     std::ofstream file(path);
@@ -86,7 +82,18 @@ bool XHSLogin::getScanContext(std::string& content)
     }
 
     file << QrCodeGenerator::generateQR(login.data.url);
+    const bool written = static_cast<bool>(file);
     file.close();
+    if (!written || file.fail())
+    {
+        return false;
+    }
+
+    {
+        std::lock_guard lc(m_mutexData);
+        m_qrId = login.data.qr_id;
+        m_code = login.data.code;
+    }
 
     content = util::localeToUtf8(path);
     return true;

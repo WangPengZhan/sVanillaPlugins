@@ -11,7 +11,7 @@
 #include "Util/LocaleHelper.h"
 #include "Plugin/HLSPlugin.h"
 
-#include <Util/UrlProccess.h>
+#include <Util/UrlProcess.h>
 
 PluginMessage DedaoPlugin::m_pluginMessage = {
     dedaoplugin::pluginID, dedaoplugin::name, dedaoplugin::version, dedaoplugin::description, dedaoplugin::domain,

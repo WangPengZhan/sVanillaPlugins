@@ -87,6 +87,11 @@ void YoutubeDownloader::resume()
 
 void YoutubeDownloader::downloadStatus()
 {
+    if (m_status == Finished || m_status == Error)
+    {
+        return;
+    }
+
     if (m_videoDownloader.status() == Error || (m_haveTwoPart && m_audioDownloader.status() == Error))
     {
         // DOWNLOAD_LOG_ERROR("YoutubeDownloader downloadStatus error, filename: {}", filename());

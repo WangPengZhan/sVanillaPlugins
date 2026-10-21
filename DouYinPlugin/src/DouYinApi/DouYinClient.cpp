@@ -106,7 +106,7 @@ QRCodeResponse DouYinClient::getQRCode()
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
     return ret;
 }
@@ -148,7 +148,7 @@ QRCodeStatusResponse DouYinClient::getLoginStatus(const std::string& token, cons
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response.body);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response.body);
     }
 
     if (ret.data.status == "success")
@@ -177,7 +177,7 @@ AccountInfoResponse DouYinClient::getAccountInfo()
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
     return ret;
 }
@@ -204,7 +204,7 @@ FollowingResponse DouYinClient::getFollowing()
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
     return ret;
 }
@@ -249,7 +249,7 @@ AwemeDetailResponse DouYinClient::getAwemeDetail(const std::string& awemeId)
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
 
     return ret;
@@ -278,7 +278,7 @@ SeriesDetail DouYinClient::getSeriesDetail(const std::string& seriesId, int64_t 
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
 
     return ret;
@@ -307,7 +307,7 @@ SeriesDetail DouYinClient::getMixDetail(const std::string& mixId, int64_t cursor
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
 
     return ret;
@@ -336,7 +336,7 @@ SeriesDetail DouYinClient::getUserAll(const std::string& userId, int64_t cursor,
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
 
     return ret;
@@ -364,7 +364,7 @@ SeriesDetail DouYinClient::getUserHistory(int64_t cursor, int count)
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
 
     return ret;
@@ -394,7 +394,7 @@ SeriesDetail DouYinClient::getUserCollection(int cursor, int count)
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
 
     return ret;
@@ -574,7 +574,7 @@ void DouYinClient::getWebId()
     }
     catch (const std::exception& e)
     {
-        DOUYIN_LOG_ERROR("parsing response error, error msg : {}, response : {}", e.what(), response);
+        DOUYIN_LOG_ERROR("parsing response error: {}, response: {}", e.what(), response);
     }
 
     if (!ret.web_id.empty())

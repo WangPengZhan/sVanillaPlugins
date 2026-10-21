@@ -1,6 +1,6 @@
 #include "NeteaseCloudMusicPlugin.h"
 
-#include <Util/UrlProccess.h>
+#include <Util/UrlProcess.h>
 
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicClient.h"
 #include "NeteaseCloudMusicApi/NeteaseCloudMusicLog.h"

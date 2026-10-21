@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
-#include "LoggerRegisterHelpper.h"
+#include "LoggerRegisterHelper.h"
 #include "HLSApi/HLSApi.h"
 #include "HLSApi/HLSClient.h"
 #include "HLSApi/HLSLog.h"
@@ -32,15 +32,15 @@ class HLSLoggerEnvironment final : public testing::Environment
 public:
     void SetUp() override
     {
-        m_logDir = std::filesystem::temp_directory_path() /
-                   ("hls-unit-test-log-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        m_logDir =
+            std::filesystem::temp_directory_path() / ("hls-unit-test-log-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
         std::filesystem::create_directories(m_logDir);
-        LoggerRegisterHelpper::registerLogger(HLSModuleName, (m_logDir / "HLS.log").string());
+        LoggerHelper::registerLogger(HLSModuleName, (m_logDir / "HLS.log").string());
     }
 
     void TearDown() override
     {
-        LoggerRegisterHelpper::unregisterLogger(HLSModuleName);
+        LoggerHelper::unregisterLogger(HLSModuleName);
         std::filesystem::remove_all(m_logDir);
     }
 
@@ -67,6 +67,18 @@ std::vector<std::uint8_t> encryptAes(const std::string& plaintext, const std::st
 }
 
 }  // namespace
+
+TEST(HLSAttributesUnitTest, RejectsInvalidNamesAndBareValues)
+{
+    EXPECT_TRUE(hlsapi::parseAttributes("ATTR IBUTE=1").empty());
+    EXPECT_TRUE(hlsapi::parseAttributes("ATTR=a b").empty());
+    EXPECT_TRUE(hlsapi::parseAttributes("ATTR=a=b").empty());
+    EXPECT_TRUE(hlsapi::parseAttributes("ATTR=val\"ue").empty());
+    EXPECT_TRUE(hlsapi::parseAttributes("ATTR=a@b").empty());
+    const auto attributes = hlsapi::parseAttributes("TYPE=AUDIO,URI=\"audio.m3u8\"");
+    ASSERT_EQ(attributes.size(), 2);
+    EXPECT_EQ(attributes.at("TYPE"), "AUDIO");
+}
 
 TEST(HLSParserUnitTest, ParsesMediaPlaylistWithTenSegmentUris)
 {
@@ -398,8 +410,8 @@ TEST(HLSMapRegression, QueuesMapRotationsAndByteRanges)
     ASSERT_TRUE(playlist.isSupportedVod());
 
     hlsapi::HLSClient client;
-    const auto directory = std::filesystem::temp_directory_path() /
-                           ("hls-map-range-regression-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto directory =
+        std::filesystem::temp_directory_path() / ("hls-map-range-regression-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     hlsapi::HLSPlaylistDownloader downloader(client, directory.string());
     ASSERT_TRUE(downloader.downloadTsToFiles({playlist}));
     EXPECT_EQ(downloader.totalCount(), 4);

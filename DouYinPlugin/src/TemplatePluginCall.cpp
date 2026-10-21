@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include <TemplatePluginCall.h>
-#include <LoggerRegisterHelpper.h>
+#include <LoggerRegisterHelper.h>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/rotating_file_sink.h>
@@ -19,7 +19,7 @@ void initDir(const char* dir)
     {
         if (!spdlog::get(douyinModuleName))
         {
-            LoggerRegisterHelpper::registerLogger(douyinModuleName, std::string(dir) + "log/" + douyinModuleName + ".log");
+            LoggerHelper::registerLogger(douyinModuleName, std::string(dir) + "log/" + douyinModuleName + ".log");
         }
     }
     catch (const std::exception& e)
@@ -48,5 +48,5 @@ void pluginDeinit()
 
 void deinit()
 {
-    LoggerRegisterHelpper::unregisterLogger(douyinModuleName);
+    LoggerHelper::unregisterLogger(douyinModuleName);
 }

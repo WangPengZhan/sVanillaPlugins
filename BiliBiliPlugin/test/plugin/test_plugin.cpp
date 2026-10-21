@@ -15,7 +15,7 @@
 #include "IPlugin.h"
 #include "TemplatePluginCall.h"
 #include "Aria2Net/AriaClient/AriaClient.h"
-#include "LoggerRegisterHelpper.h"
+#include "LoggerRegisterHelper.h"
 #include "Util/TimerUtil.h"
 #include "Util/process.hpp"
 #include "Util/LocaleHelper.h"
@@ -55,10 +55,10 @@ class AriaTestEnvironment final : public testing::Environment
 public:
     void SetUp() override
     {
-        LoggerRegisterHelpper::registerLogger("Aria2Net", kRuntimeDir.string() + "/log/Aria2Net.log");
-        LoggerRegisterHelpper::registerLogger("FFmpeg", kRuntimeDir.string() + "/log/FFmpeg.log");
-        LoggerRegisterHelpper::registerLogger("Network", kRuntimeDir.string() + "/log/Network.log");
-        LoggerRegisterHelpper::registerLogger("Download", kRuntimeDir.string() + "/log/Download.log");
+        LoggerHelper::registerLogger("Aria2Net", kRuntimeDir.string() + "/log/Aria2Net.log");
+        LoggerHelper::registerLogger("FFmpeg", kRuntimeDir.string() + "/log/FFmpeg.log");
+        LoggerHelper::registerLogger("Network", kRuntimeDir.string() + "/log/Network.log");
+        LoggerHelper::registerLogger("Download", kRuntimeDir.string() + "/log/Download.log");
         if (ariaIsRunning())
         {
             return;

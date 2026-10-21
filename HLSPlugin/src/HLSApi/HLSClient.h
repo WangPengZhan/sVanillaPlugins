@@ -25,7 +25,7 @@ public:
     std::string downloadM3u8(const std::string& url, std::string* effectiveUrl = nullptr);
     bool downloadKey(const std::string& url, std::string& key);
     bool downloadTsToFiles(const std::string& uri, const std::string& filename, const KeyInfo& keyInfo = {}, std::uint64_t mediaSequence = 0,
-                                  std::size_t byteRangeLength = 0, std::size_t byteRangeOffset = 0);
+                           std::size_t byteRangeLength = 0, std::size_t byteRangeOffset = 0);
 
     void mergeTs(const std::string& dir, const std::string& output);
 

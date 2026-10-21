@@ -9,7 +9,7 @@
 #include <nlohmann/json.hpp>
 
 #include "IPlugin.h"
-#include "LoggerRegisterHelpper.h"
+#include "LoggerRegisterHelper.h"
 #include "TemplatePluginCall.h"
 
 namespace
@@ -94,10 +94,10 @@ int main(int argc, char** argv)
         const auto casesPath = std::filesystem::absolute(argc < 2 ? "./business_flow_cases.json" : argv[1]);
         const std::string runtime = argc < 3 ? "./" : argv[2];
 
-        LoggerRegisterHelpper::registerLogger("Aria2Net", runtime + "log/Aria2Net.log");
-        LoggerRegisterHelpper::registerLogger("FFmpeg", runtime + "log/FFmpeg.log");
-        LoggerRegisterHelpper::registerLogger("Network", runtime + "log/Network.log");
-        LoggerRegisterHelpper::registerLogger("Download", runtime + "log/Download.log");
+        LoggerHelper::registerLogger("Aria2Net", runtime + "log/Aria2Net.log");
+        LoggerHelper::registerLogger("FFmpeg", runtime + "log/FFmpeg.log");
+        LoggerHelper::registerLogger("Network", runtime + "log/Network.log");
+        LoggerHelper::registerLogger("Download", runtime + "log/Download.log");
 
         initDir(runtime.c_str());
         const auto handle = pluginInit();

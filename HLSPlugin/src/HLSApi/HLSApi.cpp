@@ -551,8 +551,7 @@ bool M3U8Playlist::isSupportedVod() const
         return false;
     }
     const auto supportedKey = [](const KeyInfo& key) {
-        return key.method == KeyInfo::None ||
-               (key.method == KeyInfo::Aes128 && (key.keyFormat.empty() || key.keyFormat == "identity"));
+        return key.method == KeyInfo::None || (key.method == KeyInfo::Aes128 && (key.keyFormat.empty() || key.keyFormat == "identity"));
     };
     for (const auto& segment : segments)
     {
@@ -564,7 +563,9 @@ bool M3U8Playlist::isSupportedVod() const
 
     if (!hasMap)
     {
-        return std::none_of(segments.begin(), segments.end(), [](const MediaSegment& segment) { return segment.mediaMapIndex.has_value(); });
+        return std::none_of(segments.begin(), segments.end(), [](const MediaSegment& segment) {
+            return segment.mediaMapIndex.has_value();
+        });
     }
     if (mediaMaps.empty() || std::any_of(mediaMaps.begin(), mediaMaps.end(), [&](const MediaMap& map) {
             return map.getUri().empty() || !supportedKey(map.keyInfo) || (map.keyInfo.method == KeyInfo::Aes128 && map.keyInfo.iv.empty()) ||

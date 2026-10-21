@@ -102,7 +102,8 @@ adapter::BaseVideoView convertNoteDetail(const xhsapi::NoteCard& note)
     view.Cover = note.image_list.empty() ? "" : note.image_list.front().url_default;
     view.Duration = formatDuration(note.video.capa.duration);
     view.Description = note.desc;
-    view.PublishDate = convertTimestamp(note.time);
+    const auto seconds = note.time >= 100'000'000'000LL ? note.time / 1000 : note.time;
+    view.PublishDate = convertTimestamp(seconds);
     view.pluginId = xhsplugin::pluginID;
 
     return view;

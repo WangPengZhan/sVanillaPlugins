@@ -13,7 +13,7 @@
 
 #include "Aria2Net/AriaClient/AriaClient.h"
 #include "IPlugin.h"
-#include "LoggerRegisterHelpper.h"
+#include "LoggerRegisterHelper.h"
 #include "TemplatePluginCall.h"
 #include "Util/LocaleHelper.h"
 #include "Util/TimerUtil.h"
@@ -54,10 +54,10 @@ public:
     void SetUp() override
     {
         std::filesystem::create_directories(kRuntimeDir / "log");
-        LoggerRegisterHelpper::registerLogger("Aria2Net", (kRuntimeDir / "log/Aria2Net.log").string());
-        LoggerRegisterHelpper::registerLogger("FFmpeg", (kRuntimeDir / "log/FFmpeg.log").string());
-        LoggerRegisterHelpper::registerLogger("Network", (kRuntimeDir / "log/Network.log").string());
-        LoggerRegisterHelpper::registerLogger("Download", (kRuntimeDir / "log/Download.log").string());
+        LoggerHelper::registerLogger("Aria2Net", (kRuntimeDir / "log/Aria2Net.log").string());
+        LoggerHelper::registerLogger("FFmpeg", (kRuntimeDir / "log/FFmpeg.log").string());
+        LoggerHelper::registerLogger("Network", (kRuntimeDir / "log/Network.log").string());
+        LoggerHelper::registerLogger("Download", (kRuntimeDir / "log/Download.log").string());
         if (ariaIsRunning())
         {
             return;

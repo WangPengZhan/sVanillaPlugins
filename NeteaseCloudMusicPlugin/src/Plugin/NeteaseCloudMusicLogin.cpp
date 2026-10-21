@@ -55,19 +55,28 @@ bool NeteaseCloudMusicLogin::getScanContext(std::string& content)
         return false;
     }
 
-    m_qrcodeKey = loginKey.unikey;
-
     std::string path = NeteaseCloudMusicPlugin::getDir() + "login/netease_qrc.svg";
-    if (!std::filesystem::exists(std::filesystem::path(path).parent_path()))
+    std::error_code error;
+    std::filesystem::create_directories(std::filesystem::path(path).parent_path(), error);
+    if (error)
     {
-        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+        return false;
     }
 
-    const std::string url = netease::Login::QRCreate + m_qrcodeKey;
     std::ofstream file(path);
-    file << QrCodeGenerator::generateQR(netease::Login::QRCreate + m_qrcodeKey);
+    if (!file)
+    {
+        return false;
+    }
+    file << QrCodeGenerator::generateQR(netease::Login::QRCreate + loginKey.unikey);
+    const bool written = static_cast<bool>(file);
     file.close();
+    if (!written || file.fail())
+    {
+        return false;
+    }
 
+    m_qrcodeKey = loginKey.unikey;
     content = util::localeToUtf8(path);
     return true;
 }

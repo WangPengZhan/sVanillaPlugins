@@ -189,14 +189,7 @@ std::string commonSignature(const std::string& a1, int64_t timestamp)
         {"x82", "_0x17a2|_0x1954"}
     };
     const auto quoted = encoding::urlEncode(crypto::rc4(fingerprint.dump(), "xhswebmplfbt"));
-    std::string bytes;
-    for (size_t percent = quoted.find('%'); percent != std::string::npos && percent + 2 < quoted.size();)
-    {
-        bytes.push_back(static_cast<char>(std::stoul(quoted.substr(percent + 1, 2), nullptr, 16)));
-        const auto next = quoted.find('%', percent + 3);
-        bytes.append(quoted, percent + 3, (next == std::string::npos ? quoted.size() : next) - percent - 3);
-        percent = next;
-    }
+    const auto bytes = encoding::urlDecode(quoted);
     const auto b1 = encodeCustom(bytes, customB64);
     const nlohmann::json common = {
         {"s0",  5                                                      },
@@ -230,7 +223,7 @@ std::string getCurrentTimeHexMs()
 
 std::string generateRandomString(size_t length, const char* chars)
 {
-    static std::mt19937 rng(std::random_device{}());
+    static thread_local std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<> dist(0, strlen(chars) - 1);
 
     std::string result;
@@ -267,7 +260,7 @@ std::pair<std::string, std::string> generateCookieA1AndWebId()
 std::pair<std::string, std::string> searchJsvmpData(const std::string& data)
 {
     std::regex bRegex(R"("b":"(.*?)\",)");
-    std::regex dRegex(R"("d":(.*?)\)})");
+    std::regex dRegex(R"("d":(.*?)\)\})");
     std::smatch match;
 
     std::string b;
@@ -319,7 +312,12 @@ std::string genWebsection(const std::string& data)
     auto [b, d] = searchJsvmpData(data);
     std::vector<std::vector<int>> logicList = decodeJsvmpToLogicList(b);
 
-    nlohmann::json dArr = nlohmann::json::parse(d);
+    const auto dArr = nlohmann::json::parse(d, nullptr, false);
+    if (!dArr.is_array() || dArr.size() <= 93 || !dArr[92].is_number_integer() || !dArr[93].is_number_integer())
+    {
+        return {};
+    }
+
     int start = dArr[92].get<int>();
     int end = dArr[93].get<int>();
     if (start < 0 || end >= static_cast<int>(logicList.size()) || start > end)
@@ -337,7 +335,18 @@ std::string genWebsection(const std::string& data)
         {
             return {};
         }
+
+        if (targetList[targetIndex].size() <= 2)
+        {
+            return {};
+        }
+
         int dIndex = targetList[targetIndex][2];
+        if (dIndex < 0 || static_cast<size_t>(dIndex) >= dArr.size() || !dArr[dIndex].is_number_integer())
+        {
+            return {};
+        }
+
         key[i / 2] = dArr[dIndex].get<int>();
     }
 
